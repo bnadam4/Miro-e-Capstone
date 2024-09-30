@@ -19,7 +19,7 @@ import rospy
 from std_msgs.msg import Float32MultiArray
 import miro2 as miro
 
-# Generate enum and constants for the breathing exercise states and joints
+# Generate enum and constants
 outward, inward= range(2)
 droop, wag, left_eye, right_eye, left_ear, right_ear = range(6)
 state_duration = 2.0 #change the speed movement
