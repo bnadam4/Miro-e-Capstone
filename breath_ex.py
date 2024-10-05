@@ -41,10 +41,6 @@ neck_upper = 15.0 # deg
 neck_lower = 40.0 # deg
 state_duration = 4.0
 
-TRACK_FILE = 'sunflower.mp3'
-TRACK_PATH= f'../../../share/media/{TRACK_FILE}'
-
-
 # Audio file paths for different states
 AUDIO_FILES = {
     "breathe_in": 'alice_breathe_in.mp3',
@@ -103,10 +99,7 @@ class breath_ex:
         self.neck_pos = 40.0
         self.eyelid_pos = 0.0
 
-        #load decoded audio files into memory
-        # load wav
-        # Check if the decoded file exists
-        # Construct the full path of the decoded file
+        self.audio_finished = False
 
         # robot name
         topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
@@ -155,6 +148,7 @@ class breath_ex:
         # Main control loop iteration counter
         self.counter = 0
         self.last_state = None
+        self.audio_finished = False  # Reset flag on loop start
 
         print("MiRo does some deep breathing")
 
@@ -186,6 +180,7 @@ class breath_ex:
 
                 # Update last_state to the current state
                 self.last_state = self.state
+                self.audio_finished = False  # Reset flag when changing state
 
             if self.state == breath_in:
                  # Make it look like MiRo is breathing in
@@ -258,7 +253,11 @@ class breath_ex:
                 # count tenths
                 count -= 1
             else:
-                print("audio playback finished")
+                # Print only once when audio playback finishes
+                if not self.audio_finished:
+                    print("audio playback finished")
+                    self.audio_finished = True  # Set flag to true
+
 
             # end audio stream
             
