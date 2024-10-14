@@ -57,6 +57,7 @@ class NodeDetectAruco:
         self.t0 = time.time()
         self.cam_names = ['left', 'right', 'stitched']
         self.breath_ex_ON = False
+        self.breath_ex_reset = False
 
         # Main control loop iteration counter
         self.counter = 0
@@ -104,16 +105,19 @@ class NodeDetectAruco:
                 # Detect the markers
                 corners, ids, rejected = detector.detectMarkers(gray)
                 # Print the detected markers
-                print("Detected markers:", ids)
+                # if len(ids) > 0:
+                #    print("Detected markers:", ids)
+
                 if ids is not None:
                     cv2.aruco.drawDetectedMarkers(image, corners, ids)
                     for id in ids:
                         if id == START_ARUCO:
                             self.breath_ex_ON = True
-                            print("START_ARUCO has been seen")
+                            # print("START_ARUCO has been seen")
                         elif id == END_ARUCO:
                             self.breath_ex_ON = False
-                            print("END_ARUCO has been seen")
+                            self.breath_ex_reset = True
+                            # print("END_ARUCO has been seen")
 
                 # show
                 cv2.imshow("Camera Feed: " + self.cam_names[index], image)

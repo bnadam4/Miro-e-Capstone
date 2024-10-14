@@ -21,6 +21,7 @@ import miro2 as miro
 
 # Sensor nodes to import
 from node_detect_aruco import *
+from detect_touch import *
 
 # messages larger than this will be dropped by the receiver
 MAX_STREAM_MSG_SIZE = (4096 - 48)
@@ -95,9 +96,9 @@ class breath_ex:
         self.buffer_total = 0
 
     def __init__(self):
-        self.neck_speed = (neck_lower - neck_upper)/(state_duration/self.TICK)
-        self.eyelid_speed = 1.0/(state_duration/self.TICK)
-        self.state = breath_in
+        self.neck_speed = ((neck_lower - neck_upper)/(state_duration/self.TICK))*1.25 # Increase neck speed by 25%
+        self.eyelid_speed = (1.0/(state_duration/self.TICK))*1.25 # Increase eyelid speed by 25%
+        self.state = hold_2
         self.last_time = time.time()
         self.current_time = time.time()
         self.neck_pos = 40.0
@@ -110,7 +111,7 @@ class breath_ex:
         print("subscribing to topics under", topic_base_name)
 
         # Initialize a ROS node to communicate with MiRo
-        rospy.init_node("move_neck")
+        rospy.init_node("Capstone")
         # Give it some time to make sure everything is initialised
         rospy.sleep(2.0)
 
@@ -138,14 +139,13 @@ class breath_ex:
 
         # Make detector nodes
         self.aruco_detect = NodeDetectAruco()
+        self.touch_detect = see_touch()
 
 
     def loop(self):
         """
         Main control loop
         """
-
-
 
         # periodic reports
         count = 0
@@ -163,22 +163,23 @@ class breath_ex:
 
         while not rospy.core.is_shutdown():
 
-            # Create breathing cycle state machine
-            if time.time() > self.last_time + 4.0:
-                self.last_time = time.time()
-                if self.state == breath_in:
-                    self.state = hold_1
-                elif self.state == hold_1:
-                    self.state = breath_out
-                elif self.state == breath_out:
-                    self.state = hold_2
-                elif self.state == hold_2:
-                    self.state = breath_in
-
             # Detect aruco markers
             self.aruco_detect.tick_camera()
+            # Detect touch
+            self.touch_detect.check_touch()
 
-            if self.aruco_detect.breath_ex_ON:
+            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
+                # Create breathing cycle state machine
+                if time.time() > self.last_time + 4.0:
+                    self.last_time = time.time()
+                    if self.state == breath_in:
+                        self.state = hold_1
+                    elif self.state == hold_1:
+                        self.state = breath_out
+                    elif self.state == breath_out:
+                        self.state = hold_2
+                    elif self.state == hold_2:
+                        self.state = breath_in
 
                 # Check if state has changed
                 if self.state != self.last_state:
@@ -207,6 +208,7 @@ class breath_ex:
                 elif self.state == hold_1:
                     # Hold the fully inhaled position
                     self.neck_pos = neck_upper
+                    self.eyelid_pos = 1.0
                     self.kin_joints.position = [0.0, math.radians(neck_upper), 0.0, 0.0]
                 elif self.state == breath_out:
                     # Make it look like MiRo is breathing out
@@ -219,6 +221,7 @@ class breath_ex:
                 elif self.state == hold_2:
                     # Hold the fully exhaled position
                     self.neck_pos = neck_lower
+                    self.eyelid_pos = 0.0
                     self.kin_joints.position = [0.0, math.radians(neck_lower), 0.0, 0.0]
 
                 self.cos_joints.data[left_eye] = self.eyelid_pos
@@ -272,6 +275,11 @@ class breath_ex:
                         print("audio playback finished")
                         self.audio_finished = True  # Set flag to true
 
+            if self.aruco_detect.breath_ex_reset or self.touch_detect.breath_ex_reset:
+                self.aruco_detect.breath_ex_reset = False
+                self.touch_detect.breath_ex_reset = False
+
+                self.state = hold_2
 
                 # end audio stream
             
