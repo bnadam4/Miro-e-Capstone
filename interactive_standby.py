@@ -37,7 +37,7 @@ def error(msg):
 	sys.exit(0)
 
 # Generate enum and constants for the breathing exercise states and joints
-breath_in, hold_1, breath_out, hold_2 = range(4)
+intro, breath_in, hold_1, breath_out, hold_2, silent_cycles, outro = range(7)
 droop, wag, left_eye, right_eye, left_ear, right_ear = range(6)
 NECK_MAX = miro.constants.LIFT_RAD_MAX
 NECK_MIN = miro.constants.LIFT_RAD_MIN
@@ -47,10 +47,12 @@ state_duration = 4.0
 
 # Audio file paths for different states
 AUDIO_FILES = {
-    "breathe_in": 'alice_breathe_in.mp3',
-    "breathe_out": 'alice_breathe_out.mp3',
-    "hold_1": 'alice_hold.mp3',
-    "hold_2": 'alice_hold.mp3'
+    "intro": 'intro.mp3',
+    "breathe_in": 'breatheIn.mp3',
+    "breathe_out": 'breatheOut.mp3',
+    "hold_1": 'hold.mp3',
+    "hold_2": 'holdAgain.mp3',
+    "outro": 'one_more_time.mp3'
 }
 
 class breath_ex:
@@ -66,18 +68,18 @@ class breath_ex:
         self.buffer_total = msg.data[1]
 
     def play_audio(self, track_file):
-        decoded_file_path = f"../../../../../share/media/{track_file}.decode"
+        decoded_file_path = f"../../../share/media/{track_file}.decode"
         
         if not os.path.isfile(decoded_file_path):
             print(f"Error: No decoded file found at {decoded_file_path}.")
-            print("Make sure to run ../../../../../share/media/decode_audio.py before trying again.")
+            print("Make sure to run ../../../share/media/decode_audio.py before trying again.")
             print(f"The current directory is: {os.getcwd()}")
             return
         
         try:
             with open(decoded_file_path, 'rb') as f:
                 dat = f.read()
-                print(f"Read {len(dat)} bytes from {decoded_file_path}")
+                #print(f"Read {len(dat)} bytes from {decoded_file_path}")
         except Exception as e:
             print(f"Error while reading {decoded_file_path}: {e}")
             return
@@ -96,15 +98,13 @@ class breath_ex:
         self.buffer_total = 0
 
     def __init__(self):
-        self.neck_speed = ((neck_lower - neck_upper)/(state_duration/self.TICK))*1.25 # Increase neck speed by 25%
-        self.eyelid_speed = (1.0/(state_duration/self.TICK))*1.25 # Increase eyelid speed by 25%
-        self.state = hold_2
+        self.neck_speed = ((neck_lower - neck_upper)/(state_duration/self.TICK))*1.75# Increase neck speed by 25%
+        self.eyelid_speed = (1.0/(state_duration/self.TICK))*1.75 # Increase eyelid speed by 25%
+
         self.last_time = time.time()
         self.current_time = time.time()
         self.neck_pos = 40.0
         self.eyelid_pos = 0.0
-
-        self.audio_finished = False
 
         # robot name
         topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
@@ -147,6 +147,8 @@ class breath_ex:
         Main control loop
         """
 
+        global state_duration
+
         # periodic reports
         count = 0
 
@@ -156,10 +158,19 @@ class breath_ex:
 
         # Main control loop iteration counter
         self.counter = 0
+
+        self.state = intro
         self.last_state = None
         self.audio_finished = False  # Reset flag on loop start
+        
+        self.silent_cycle_count = 0
+
+        self.play_audio(AUDIO_FILES["intro"])
 
         print("MiRo does some deep breathing")
+
+        # Initialize state timer
+        state_start_time = time.time()
 
         while not rospy.core.is_shutdown():
 
@@ -168,35 +179,51 @@ class breath_ex:
             # Detect touch
             self.touch_detect.check_touch()
 
-            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
-                # Create breathing cycle state machine
-                if time.time() > self.last_time + 4.0:
-                    self.last_time = time.time()
-                    if self.state == breath_in:
-                        self.state = hold_1
-                    elif self.state == hold_1:
-                        self.state = breath_out
-                    elif self.state == breath_out:
-                        self.state = hold_2
-                    elif self.state == hold_2:
-                        self.state = breath_in
+            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON or True: ## HARDCODED TO START BREATHING EX
+                # Check if state duration has elapsed
+                if time.time() > (state_start_time + state_duration) and self.audio_finished:
+                    self.audio_finished = False
+                    state_start_time = time.time()  # Reset state timer
+                    # State transitions dictionary
+                    state_transitions = {
+                        intro: breath_in,
+                        breath_in: hold_1,
+                        hold_1: breath_out,
+                        breath_out: hold_2,
+                        hold_2: breath_in if self.silent_cycle_count < 2 else outro
+                    }
+                        
+                    # Transition to the next state
+                    self.state = state_transitions.get(self.state, self.state)
+
+                    # Add delay between intro and breathe_in
+                    if self.state == breath_in and self.last_state == intro:
+                        rospy.sleep(2.0)
 
                 # Check if state has changed
                 if self.state != self.last_state:
-                    # Play the appropriate audio for the current state
-                    if self.state == breath_in:
+                    # Play the audio for the current state
+                    if self.state == intro:
+                        self.play_audio(AUDIO_FILES["intro"])
+                    elif self.state == breath_in:
                         self.play_audio(AUDIO_FILES["breathe_in"])
+                        print("Breathing in")
+                        state_start_time = time.time()  # Reset state timer
                     elif self.state == hold_1:
                         self.play_audio(AUDIO_FILES["hold_1"])
+                        print("Holding breath_1")
                     elif self.state == breath_out:
                         self.play_audio(AUDIO_FILES["breathe_out"])
+                        print("Breathing out")
                     elif self.state == hold_2:
                         self.play_audio(AUDIO_FILES["hold_2"])
-
-                    # Update last_state to the current state
+                        print("Holding breath_2")
+                        self.silent_cycle_count += 1
+                    elif self.state == outro:
+                        self.play_audio(AUDIO_FILES["outro"])
                     self.last_state = self.state
-                    self.audio_finished = False  # Reset flag when changing state
 
+                # Perform movements based on the current state
                 if self.state == breath_in:
                     # Make it look like MiRo is breathing in
                     self.neck_pos = self.neck_pos - self.neck_speed
@@ -205,11 +232,13 @@ class breath_ex:
                         self.eyelid_pos = self.eyelid_pos + self.eyelid_speed
                     else:
                         self.eyelid_pos = 1.0
+
                 elif self.state == hold_1:
                     # Hold the fully inhaled position
                     self.neck_pos = neck_upper
                     self.eyelid_pos = 1.0
                     self.kin_joints.position = [0.0, math.radians(neck_upper), 0.0, 0.0]
+
                 elif self.state == breath_out:
                     # Make it look like MiRo is breathing out
                     self.neck_pos = self.neck_pos + self.neck_speed
@@ -218,6 +247,7 @@ class breath_ex:
                         self.eyelid_pos = self.eyelid_pos - self.eyelid_speed
                     else:
                         self.eyelid_pos = 0.0
+
                 elif self.state == hold_2:
                     # Hold the fully exhaled position
                     self.neck_pos = neck_lower
@@ -230,7 +260,6 @@ class breath_ex:
                 
                 self.pub_kin.publish(self.kin_joints)
                 self.pub_cos.publish(self.cos_joints)
-
 
                 # audio stream
 
@@ -255,7 +284,7 @@ class breath_ex:
                     # report once per second
                     if count == 0:
                         count = 10
-                        print ("streaming:", self.data_r, "/", len(self.data), "bytes")
+                        #print ("streaming:", self.data_r, "/", len(self.data), "bytes")
 
                         # check at those moments if we are making progress, also
                         if dropout_data_r == self.data_r:
@@ -279,7 +308,7 @@ class breath_ex:
                 self.aruco_detect.breath_ex_reset = False
                 self.touch_detect.breath_ex_reset = False
 
-                self.state = hold_2
+                self.state = intro
 
                 # end audio stream
             
