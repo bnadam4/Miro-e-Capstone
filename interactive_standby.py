@@ -15,7 +15,7 @@ import numpy as np
 
 # Robot specific libraries
 import rospy
-from std_msgs.msg import Float32MultiArray, Int16MultiArray, String, UInt16MultiArray
+from std_msgs.msg import Float32MultiArray, UInt32MultiArray, Int16MultiArray, String, UInt16MultiArray
 from sensor_msgs.msg import JointState
 import miro2 as miro
 
@@ -32,6 +32,10 @@ MAX_STREAM_MSG_SIZE = (4096 - 48)
 # buffer for quarter of a second, for instance.
 BUFFER_STUFF_BYTES = 4000
 
+# to generate LED colour and brightness
+def generate_illum(r, g, b, bright):
+	return (int(bright) << 24) | (r << 16) | (g << 8) | b
+
 def error(msg):
 	print(msg)
 	sys.exit(0)
@@ -39,6 +43,9 @@ def error(msg):
 # Generate enum and constants for the breathing exercise states and joints
 intro, breath_in, hold_1, breath_out, hold_2, silent_cycles, outro = range(7)
 droop, wag, left_eye, right_eye, left_ear, right_ear = range(6)
+# Generate enum and constants for the LEDS
+front_left, mid_left, rear_left, front_right, mid_right, rear_right = range(6)
+
 
 NECK_MAX = miro.constants.LIFT_RAD_MAX
 NECK_MIN = miro.constants.LIFT_RAD_MIN
@@ -49,6 +56,9 @@ PITCH_MAX = miro.constants.PITCH_RAD_MAX
 PITCH_MIN = miro.constants.PITCH_RAD_MIN
 pitch_upper = -5.0 # deg
 pitch_lower = -20.0 # deg
+
+led_lower = 20
+led_upper = 250
 
 state_duration = 4.0
 NUM_CYCLES = 3
@@ -110,12 +120,16 @@ class breath_ex:
         self.pitch_speed = ((pitch_lower - pitch_upper)/(state_duration/self.TICK))*1.75# Increase neck speed by 25%
         self.neck_speed = ((neck_lower - neck_upper)/(state_duration/self.TICK))*1.75# Increase neck speed by 25%
         self.eyelid_speed = (1.0/(state_duration/self.TICK))*1.75 # Increase eyelid speed by 25%
+        self.led_speed = ((led_upper - led_lower)/(state_duration/self.TICK))*1.75 # Increase LED speed by 25%
+
 
         self.last_time = time.time()
         self.current_time = time.time()
         self.neck_pos = 40.0
         self.pitch_pos = pitch_upper
         self.eyelid_pos = 0.0
+        self.led_brightness = led_lower
+        
 
         # robot name
         topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
@@ -130,6 +144,11 @@ class breath_ex:
         self.pub_kin = rospy.Publisher(topic_base_name + "/control/kinematic_joints", JointState, queue_size=0)
         self.pub_cos = rospy.Publisher(topic_base_name + "/control/cosmetic_joints", Float32MultiArray, queue_size=0)
         self.pub_stream = rospy.Publisher(topic_base_name + "/control/stream", Int16MultiArray, queue_size=0)
+
+        # Publishers
+        self.pub_illum = rospy.Publisher(topic_base_name + "/control/illum", UInt32MultiArray, queue_size=0)
+        self.illum = UInt32MultiArray()
+        self.illum.data = [0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF]
 
         #subscribe
         self.sub_log = rospy.Subscriber(topic_base_name + "/platform/log", String, self.callback_log, queue_size=5, tcp_nodelay=True)
@@ -190,7 +209,7 @@ class breath_ex:
             # Detect touch
             self.touch_detect.check_touch()
 
-            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
+            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON or True:
                 # Check if state duration has elapsed
                 if time.time() > (state_start_time + state_duration) and self.audio_finished:
                     self.audio_finished = False
@@ -235,6 +254,7 @@ class breath_ex:
                     # Make it look like MiRo is breathing in
                     self.neck_pos = self.neck_pos - self.neck_speed
                     self.pitch_pos = self.pitch_pos + self.pitch_speed  # Swapped
+                    self.led_brightness = min(max(self.led_brightness + self.led_speed, led_lower), led_upper)                    
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     if self.eyelid_pos < 1.0:
                         self.eyelid_pos = self.eyelid_pos + self.eyelid_speed
@@ -257,6 +277,7 @@ class breath_ex:
                         self.eyelid_pos = self.eyelid_pos - self.eyelid_speed
                     else:
                         self.eyelid_pos = 0.0
+                    self.led_brightness = min(max(self.led_brightness - self.led_speed, led_lower), led_upper)
 
                 elif self.state == hold_2:
                     # Hold the fully exhaled position
@@ -272,6 +293,20 @@ class breath_ex:
                 
                 self.pub_kin.publish(self.kin_joints)
                 self.pub_cos.publish(self.cos_joints)
+
+                self.illum.data[front_left] = generate_illum(0, 0, 255, int(self.led_brightness))
+                self.illum.data[front_right] = generate_illum(0, 0, 255, int(self.led_brightness))
+
+                self.illum.data[mid_left] = generate_illum(0, 0, 255, int(self.led_brightness))
+                self.illum.data[mid_right] = generate_illum(0, 0, 255, int(self.led_brightness))
+
+                self.illum.data[rear_left] = generate_illum(0, 0, 255, int(self.led_brightness))
+                self.illum.data[rear_right] = generate_illum(0, 0, 255, int(self.led_brightness))
+
+                
+                self.pub_illum.publish(self.illum)
+
+                print(self.led_brightness)
 
                 # audio stream
 
