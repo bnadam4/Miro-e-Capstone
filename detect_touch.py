@@ -16,7 +16,6 @@ import miro2 as miro
 
 class see_touch:
 
-
     def __init__(self):
 
         # robot name
@@ -33,6 +32,11 @@ class see_touch:
         self.time_touch = time.time() # Used to determine time between touches
         print("MiRo detects whether it has been touched")
 
+        # Initialize a ROS node to communicate with MiRo
+        # rospy.init_node("node_aruco_detector")
+        # Give it some time to make sure everything is initialised
+        rospy.sleep(2.0)
+
 
     def check_touch(self):
 
@@ -43,14 +47,26 @@ class see_touch:
 
             # Check touch data
             if int(p.touch_body.data) > 0:
-                print("Body touched!")
-            if int(p.touch_head.data) > 0:
+                # print("Body touched!")
+                pass
+            if int(p.touch_head.data) > 0 and self.head_touched == False:
                 print("Head touched!")
                 self.time_touch = time.time()
-                self.touched = True
+                self.head_touched = True
+
+            if int(p.touch_head.data) > 0 and self.head_touched == True:
+                print("Head touched")
+                if time.time() > self.time_touch + 5.0:
+                    self.head_touched = False
+                    print("Timeout touch")
+                
+                if time.time() > self.time_touch + 0.5:
+                    self.breath_ex_ON = not self.breath_ex_ON
+                    self.head_touched = False
+                    print("breath_ex_ON set")
 
             # To activate tap the miro's head twice. 
-            # The second tap should come within 
+            # The second tap should come within 5 seconds of the first
                  
 
 
