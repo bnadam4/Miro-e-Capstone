@@ -39,11 +39,19 @@ def error(msg):
 # Generate enum and constants for the breathing exercise states and joints
 intro, breath_in, hold_1, breath_out, hold_2, silent_cycles, outro = range(7)
 droop, wag, left_eye, right_eye, left_ear, right_ear = range(6)
+
 NECK_MAX = miro.constants.LIFT_RAD_MAX
 NECK_MIN = miro.constants.LIFT_RAD_MIN
 neck_upper = 15.0 # deg
 neck_lower = 40.0 # deg
+
+PITCH_MAX = miro.constants.PITCH_RAD_MAX
+PITCH_MIN = miro.constants.PITCH_RAD_MIN
+pitch_upper = -5.0 # deg
+pitch_lower = -20.0 # deg
+
 state_duration = 4.0
+NUM_CYCLES = 3
 
 # Audio file paths for different states
 AUDIO_FILES = {
@@ -52,7 +60,8 @@ AUDIO_FILES = {
     "breathe_out": 'breatheOut.mp3',
     "hold_1": 'hold.mp3',
     "hold_2": 'holdAgain.mp3',
-    "outro": 'one_more_time.mp3'
+    "outro": 'one_more_time.mp3',
+    "nice_job": 'nice_job.mp3'
 }
 
 class breath_ex:
@@ -98,12 +107,14 @@ class breath_ex:
         self.buffer_total = 0
 
     def __init__(self):
+        self.pitch_speed = ((pitch_lower - pitch_upper)/(state_duration/self.TICK))*1.75# Increase neck speed by 25%
         self.neck_speed = ((neck_lower - neck_upper)/(state_duration/self.TICK))*1.75# Increase neck speed by 25%
         self.eyelid_speed = (1.0/(state_duration/self.TICK))*1.75 # Increase eyelid speed by 25%
 
         self.last_time = time.time()
         self.current_time = time.time()
         self.neck_pos = 40.0
+        self.pitch_pos = pitch_upper
         self.eyelid_pos = 0.0
 
         # robot name
@@ -128,7 +139,7 @@ class breath_ex:
         # Set up variables for the kinetic joints
         self.kin_joints = JointState()
         self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
-        self.kin_joints.position = [0.0, math.radians(40.0), 0.0, 0.0]
+        self.kin_joints.position = [0.0, math.radians(40.0), 0.0, math.radians(pitch_upper)]
         self.pub_kin.publish(self.kin_joints) # Set neck to initial position
 
         # Set up variables for the cosmetic joints
@@ -179,7 +190,7 @@ class breath_ex:
             # Detect touch
             self.touch_detect.check_touch()
 
-            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON or True: ## HARDCODED TO START BREATHING EX
+            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
                 # Check if state duration has elapsed
                 if time.time() > (state_start_time + state_duration) and self.audio_finished:
                     self.audio_finished = False
@@ -190,7 +201,7 @@ class breath_ex:
                         breath_in: hold_1,
                         hold_1: breath_out,
                         breath_out: hold_2,
-                        hold_2: breath_in if self.silent_cycle_count < 2 else outro
+                        hold_2: breath_in if self.silent_cycle_count < NUM_CYCLES else outro
                     }
                         
                     # Transition to the next state
@@ -207,27 +218,24 @@ class breath_ex:
                         self.play_audio(AUDIO_FILES["intro"])
                     elif self.state == breath_in:
                         self.play_audio(AUDIO_FILES["breathe_in"])
-                        print("Breathing in")
                         state_start_time = time.time()  # Reset state timer
                     elif self.state == hold_1:
                         self.play_audio(AUDIO_FILES["hold_1"])
-                        print("Holding breath_1")
                     elif self.state == breath_out:
                         self.play_audio(AUDIO_FILES["breathe_out"])
-                        print("Breathing out")
                     elif self.state == hold_2:
                         self.play_audio(AUDIO_FILES["hold_2"])
-                        print("Holding breath_2")
                         self.silent_cycle_count += 1
                     elif self.state == outro:
-                        self.play_audio(AUDIO_FILES["outro"])
+                        self.play_audio(AUDIO_FILES["nice_job"])
                     self.last_state = self.state
 
                 # Perform movements based on the current state
                 if self.state == breath_in:
                     # Make it look like MiRo is breathing in
                     self.neck_pos = self.neck_pos - self.neck_speed
-                    self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, 0.0]
+                    self.pitch_pos = self.pitch_pos + self.pitch_speed  # Swapped
+                    self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     if self.eyelid_pos < 1.0:
                         self.eyelid_pos = self.eyelid_pos + self.eyelid_speed
                     else:
@@ -235,14 +243,16 @@ class breath_ex:
 
                 elif self.state == hold_1:
                     # Hold the fully inhaled position
-                    self.neck_pos = neck_upper
-                    self.eyelid_pos = 1.0
-                    self.kin_joints.position = [0.0, math.radians(neck_upper), 0.0, 0.0]
+                    # self.neck_pos = neck_upper
+                    # self.pitch_pos = pitch_lower
+                    # self.eyelid_pos = 1.0
+                    self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
 
                 elif self.state == breath_out:
                     # Make it look like MiRo is breathing out
                     self.neck_pos = self.neck_pos + self.neck_speed
-                    self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, 0.0]
+                    self.pitch_pos = self.pitch_pos - self.pitch_speed  # Swapped
+                    self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     if self.eyelid_pos > 0.0:
                         self.eyelid_pos = self.eyelid_pos - self.eyelid_speed
                     else:
@@ -250,9 +260,11 @@ class breath_ex:
 
                 elif self.state == hold_2:
                     # Hold the fully exhaled position
-                    self.neck_pos = neck_lower
-                    self.eyelid_pos = 0.0
-                    self.kin_joints.position = [0.0, math.radians(neck_lower), 0.0, 0.0]
+                    # self.neck_pos = neck_lower
+                    # self.pitch_pos = pitch_upper
+                    # self.eyelid_pos = 0.0
+                    # self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
+                    self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
 
                 self.cos_joints.data[left_eye] = self.eyelid_pos
                 self.cos_joints.data[right_eye] = self.eyelid_pos
@@ -309,6 +321,9 @@ class breath_ex:
                 self.touch_detect.breath_ex_reset = False
 
                 self.state = intro
+                self.last_state = None
+                self.audio_finished = False
+                self.silent_cycle_count = 0
 
                 # end audio stream
             
