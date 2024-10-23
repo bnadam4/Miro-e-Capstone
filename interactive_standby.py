@@ -87,7 +87,7 @@ class breath_ex:
         self.buffer_total = msg.data[1]
 
     def play_audio(self, track_file):
-        decoded_file_path = f"../../../share/media/{track_file}.decode"
+        decoded_file_path = f"../../../../../share/media/{track_file}.decode"
         
         if not os.path.isfile(decoded_file_path):
             print(f"Error: No decoded file found at {decoded_file_path}.")
@@ -209,7 +209,7 @@ class breath_ex:
             # Detect touch
             self.touch_detect.check_touch()
 
-            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON or True:
+            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
                 # Check if state duration has elapsed
                 if time.time() > (state_start_time + state_duration) and self.audio_finished:
                     self.audio_finished = False
@@ -306,7 +306,7 @@ class breath_ex:
                 
                 self.pub_illum.publish(self.illum)
 
-                print(self.led_brightness)
+                # print(self.led_brightness)
 
                 # audio stream
 
@@ -350,10 +350,15 @@ class breath_ex:
                     if not self.audio_finished:
                         print("audio playback finished")
                         self.audio_finished = True  # Set flag to true
+                        if self.silent_cycle_count > NUM_CYCLES:
+                            self.touch_detect.breath_ex_reset = True
+                            self.aruco_detect.breath_ex_reset = True
 
             if self.aruco_detect.breath_ex_reset or self.touch_detect.breath_ex_reset:
                 self.aruco_detect.breath_ex_reset = False
                 self.touch_detect.breath_ex_reset = False
+                self.aruco_detect.breath_ex_ON = False
+                self.touch_detect.breath_ex_ON = False
 
                 self.state = intro
                 self.last_state = None

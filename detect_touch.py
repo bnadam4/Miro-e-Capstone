@@ -61,10 +61,15 @@ class see_touch:
                     print("Timeout touch")
                 
                 if time.time() > self.time_touch + 0.5:
-                    self.breath_ex_ON = not self.breath_ex_ON
-                    self.head_touched = False
-                    print("breath_ex_ON set")
+                    if self.breath_ex_ON:
+                        self.breath_ex_ON = False
+                        self.breath_ex_reset = True
+                    else:
+                        self.breath_ex_ON = True
+                        print("breath_ex_ON set")
 
+                    self.head_touched = False
+                    
             # To activate tap the miro's head twice. 
             # The second tap should come within 5 seconds of the first
                  
