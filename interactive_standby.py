@@ -22,6 +22,7 @@ import miro2 as miro
 # Sensor nodes to import
 from node_detect_aruco import *
 from detect_touch import *
+from attend_face import *
 
 # messages larger than this will be dropped by the receiver
 MAX_STREAM_MSG_SIZE = (4096 - 48)
@@ -170,6 +171,7 @@ class breath_ex:
         # Make detector nodes
         self.aruco_detect = NodeDetectAruco()
         self.touch_detect = see_touch()
+        self.face_detect = AttendFace()
 
 
     def loop(self):
@@ -208,6 +210,8 @@ class breath_ex:
             self.aruco_detect.tick_camera()
             # Detect touch
             self.touch_detect.check_touch()
+            # Detect faces
+            self.face_detect.check_face()
 
             if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
                 # Check if state duration has elapsed
