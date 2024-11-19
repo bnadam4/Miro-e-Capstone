@@ -210,8 +210,6 @@ class breath_ex:
             self.aruco_detect.tick_camera()
             # Detect touch
             self.touch_detect.check_touch()
-            # Detect faces
-            self.face_detect.check_face()
 
             if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
                 # Check if state duration has elapsed
@@ -357,6 +355,12 @@ class breath_ex:
                         if self.silent_cycle_count > NUM_CYCLES:
                             self.touch_detect.breath_ex_reset = True
                             self.aruco_detect.breath_ex_reset = True
+            else:
+                # Detect faces. Only do so if the Breathing Exercise is not active
+                self.face_detect.check_face()
+                self.kin_joints.position = [0.0, math.radians(self.neck_pos), self.face_detect.yaw, math.radians(self.pitch_pos)]
+                self.pub_kin.publish(self.kin_joints)
+
 
             if self.aruco_detect.breath_ex_reset or self.touch_detect.breath_ex_reset:
                 self.aruco_detect.breath_ex_reset = False

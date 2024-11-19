@@ -54,8 +54,10 @@ class AttendFace:
         self.t0 = time.time()
         self.cam_names = ['left', 'right', 'stitched']
 
-        # Face detection variables
+        # Face detection and attending variables
         self.face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+        self.yaw = 0
+        self.yaw_speed = 0.02
 
         # Main control loop iteration counter
         self.counter = 0
@@ -96,10 +98,24 @@ class AttendFace:
                 # Convert the image to grayscale for better accuracy
                 gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                 # Detect faces in the image
-                faces = self.face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=5)
+                faces = self.face_cascade.detectMultiScale(gray_image, scaleFactor=1.1, minNeighbors=6)
                 # Draw rectangles around the detected faces
                 for (x, y, w, h) in faces:
                     cv2.rectangle(image, (x, y), (x+w, y+h), (255, 0, 0), 2)
+                    face_center = int(x + w/2)
+                    # Draw a line at the rectangle center
+                    cv2.line(image, (face_center, y), (face_center, y + h), (0, 255, 0), 2)
+                    print("face center for index ", index, " is ", face_center)
+                    if index == 0:
+                        if face_center < 465 and self.yaw < 55.0:
+                            self.yaw += self.yaw_speed
+                        elif face_center > 515 and self.yaw > -55.0:
+                            self.yaw -= self.yaw_speed
+                    elif index == 1:
+                        if face_center < 150 and self.yaw < 55.0:
+                            self.yaw += self.yaw_speed
+                        elif face_center > 200 and self.yaw > -55.0:
+                            self.yaw -= self.yaw_speed
 
                 # show
                 cv2.imshow("Camera Feed: " + self.cam_names[index], image)
