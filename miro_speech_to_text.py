@@ -11,12 +11,15 @@ import rospy
 from std_msgs.msg import UInt16MultiArray, Int16MultiArray
 
 import time
-import sys
 import os
 import numpy as np
 import wave, struct
+import speech_recognition as sr
 
 import miro2 as miro
+
+# initialize the recognizer
+r = sr.Recognizer()
 
 # amount to keep the buffer stuffed - larger numbers mean
 # less prone to dropout, but higher latency when we stop
@@ -37,7 +40,7 @@ BUFFER_MAX = BUFFER_STUFF_SAMPLES + BUFFER_MARGIN
 BUFFER_MIN = BUFFER_STUFF_SAMPLES - BUFFER_MARGIN
 
 # how long to record before playing back in seconds?
-RECORD_TIME = 2
+RECORD_TIME = 5
 
 # microphone sample rate (also available at miro2.constants)
 MIC_SAMPLE_RATE = 20000
@@ -66,32 +69,74 @@ class spch_to_text:
             #print(f"The rms is {rms}")
 
             # Define a threshold for sound intensity (adjust as needed)
-            THRESHOLD = 180  # Experiment with this value to suit your environment
+            THRESHOLD = 190  # Experiment with this value to suit your environment
 
-            if rms > THRESHOLD:
+            if rms > THRESHOLD or self.valid_time:
                 # Append mic data to buffer if above the threshold
+
                 self.micbuf = np.concatenate((self.micbuf, msg.data))
                 self.noise_detected += 1
-                print(f"Sound detected! {self.noise_detected}")
-                print(f"rms = {rms}")
+                #print(f"Sound detected! {self.noise_detected}")
+                #print(f"rms = {rms}")
+
+                # Logic to determine whether or not to record
+                if self.valid_time:
+                    if time.time() > self.record_time + RECORD_TIME:
+                        self.valid_time = False
+                elif not self.valid_time:
+                    self.valid_time = True
+                    self.record_time = time.time()
 
             # Check if recording chunk is complete
             if self.micbuf.shape[0] >= SAMPLE_COUNT:
 
                 # Process the current chunk of audio data
                 self.outbuf = self.micbuf[:SAMPLE_COUNT]  # Extract the first chunk
-                print("Recording complete! Processing the chunk...")
+                # print("Recording complete! Processing the chunk...")
+                self.record = True
 
                 # Reset the buffer for continuous recording
                 self.micbuf = self.micbuf[SAMPLE_COUNT:]  # Retain any extra samples
-                print("Ready to record the next chunk.")
+                # print("Ready to record the next chunk.")
 
     def loop(self):
 
-        # loop
         while not rospy.core.is_shutdown():
-            print("Listening for loud sounds...")
-            rospy.spin()
+            if self.record:
+
+                # write output file
+                outfilename = '/home/bryce_cap/mdk/bin/shared/tmp/client_audio.wav'
+                file = wave.open(outfilename, 'wb')
+                file.setsampwidth(2)
+                file.setframerate(MIC_SAMPLE_RATE)
+
+                # write data
+                print ("writing two channels to file (LEFT and RIGHT)...")
+                file.setnchannels(2)
+                x = np.reshape(self.outbuf[:, [0, 1]], (-1))
+                for s in x:
+                    file.writeframes(struct.pack('<h', s))
+
+                # close file
+                file.close()
+                print ("wrote output file at", outfilename)
+                self.record = False
+
+                # send the audio to the Google Speech recognizer to decode it
+                with sr.AudioFile(outfilename) as source:
+                    # listen for the data (load audio to memory)
+                    audio_data = r.record(source)
+                    # recognize (convert from speech to text)
+                    try:
+                        text = r.recognize_google(audio_data)
+                        print(f"\n{text}\n")
+                    except sr.UnknownValueError:
+                        print("\nAudio could not be understood.\n")
+                    except sr.RequestError as e:
+                        print(f"API error: {e}")
+
+            # Sleep to avoid CPU overuse
+            time.sleep(0.02)
 
 
     def __init__(self):
@@ -106,6 +151,9 @@ class spch_to_text:
         self.playchan = 0
         self.playsamp = 0
         self.noise_detected = 0
+        self.record = False
+        self.valid_time = False
+        self.record_time = 0.0
 
         # robot name
         topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
