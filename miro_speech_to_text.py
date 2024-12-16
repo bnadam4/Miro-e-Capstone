@@ -40,7 +40,7 @@ BUFFER_MAX = BUFFER_STUFF_SAMPLES + BUFFER_MARGIN
 BUFFER_MIN = BUFFER_STUFF_SAMPLES - BUFFER_MARGIN
 
 # how long to record before playing back in seconds?
-RECORD_TIME = 5
+RECORD_TIME = 3
 
 # microphone sample rate (also available at miro2.constants)
 MIC_SAMPLE_RATE = 20000
@@ -69,10 +69,22 @@ class spch_to_text:
             #print(f"The rms is {rms}")
 
             # Define a threshold for sound intensity (adjust as needed)
-            THRESHOLD = 190  # Experiment with this value to suit your environment
+            THRESHOLD = 280  # Experiment with this value to suit your environment
 
             if rms > THRESHOLD or self.valid_time:
                 # Append mic data to buffer if above the threshold
+
+                """
+                if self.valid_time and rms > THRESHOLD:
+                    print("Both tiggers are active")
+                    print(f"rms = {rms}")
+                elif rms > THRESHOLD:
+                    print(f"Caused by rms = {rms}")
+                elif self.valid_time:
+                    print("self.valid_time activation")
+                else:
+                    print("That is weird")
+                """
 
                 self.micbuf = np.concatenate((self.micbuf, msg.data))
                 self.noise_detected += 1
@@ -122,13 +134,15 @@ class spch_to_text:
                 print ("wrote output file at", outfilename)
                 self.record = False
 
+                self.valid_time = False # Try to prevent faulty activation
+
                 # send the audio to the Google Speech recognizer to decode it
                 with sr.AudioFile(outfilename) as source:
                     # listen for the data (load audio to memory)
                     audio_data = r.record(source)
                     # recognize (convert from speech to text)
                     try:
-                        text = r.recognize_google(audio_data)
+                        text = r.recognize_azure(audio_data, key="6y1nBn7YCLMSgoye5uVVxrZm7C15rpCASgyW9Zt5iUjqfjnpJfH2JQQJ99ALACBsN54XJ3w3AAAYACOGwRi8", location="canadacentral")
                         print(f"\n{text}\n")
                     except sr.UnknownValueError:
                         print("\nAudio could not be understood.\n")
