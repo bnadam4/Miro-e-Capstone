@@ -2,9 +2,9 @@
 #
 # Author: Bryce Adam
 # Date created: October 8, 2024
-# Last modifiec: October 8, 2024
+# Last modified: December 16, 2024
 #
-# Will move the miro's neck in accordance to the breathing exercise guidlines
+# Main default program for MiRo when it is not undergoing some pre-programmed activity
 
 # Misc useful python libraries
 import time
@@ -23,6 +23,9 @@ import miro2 as miro
 from node_detect_aruco import *
 from detect_touch import *
 from attend_face import *
+
+# Custom python files with useful funstions
+from pose_interp import *
 
 # messages larger than this will be dropped by the receiver
 MAX_STREAM_MSG_SIZE = (4096 - 48)
@@ -119,7 +122,6 @@ class breath_ex:
 
     def __init__(self):
         self.pitch_speed = ((pitch_lower - pitch_upper)/(state_duration/self.TICK))*1.75# Increase neck speed by 25%
-        self.neck_speed = ((neck_lower - neck_upper)/(state_duration/self.TICK))*1.75# Increase neck speed by 25%
         self.eyelid_speed = (1.0/(state_duration/self.TICK))*1.75 # Increase eyelid speed by 25%
         self.led_speed = ((led_upper - led_lower)/(state_duration/self.TICK))*1.75 # Increase LED speed by 25%
 
@@ -130,7 +132,6 @@ class breath_ex:
         self.pitch_pos = pitch_upper
         self.eyelid_pos = 0.0
         self.led_brightness = led_lower
-        
 
         # robot name
         topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
@@ -172,6 +173,12 @@ class breath_ex:
         self.aruco_detect = NodeDetectAruco()
         self.touch_detect = see_touch()
         self.face_detect = AttendFace()
+
+        # Make all the positions for MiRo's neck to move through
+        step_num = state_duration/self.TICK
+        self.neck_positions = interp_pos(neck_upper, neck_lower, step_num)
+        print(f"neck positions are: {self.neck_positions}")
+        self.step = 0
 
 
     def loop(self):
@@ -254,7 +261,9 @@ class breath_ex:
                 # Perform movements based on the current state
                 if self.state == breath_in:
                     # Make it look like MiRo is breathing in
-                    self.neck_pos = self.neck_pos - self.neck_speed
+                    print(f"self.step = {self.step}")
+                    self.neck_pos = self.neck_positions[len(self.neck_positions) - 1 - self.step]
+                    print(f"self.neck_pos = {self.neck_pos}")
                     self.pitch_pos = self.pitch_pos + self.pitch_speed  # Swapped
                     self.led_brightness = min(max(self.led_brightness + self.led_speed, led_lower), led_upper)                    
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
@@ -263,16 +272,21 @@ class breath_ex:
                     else:
                         self.eyelid_pos = 1.0
 
+                    self.step += 1
+
                 elif self.state == hold_1:
                     # Hold the fully inhaled position
                     # self.neck_pos = neck_upper
                     # self.pitch_pos = pitch_lower
                     # self.eyelid_pos = 1.0
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
+                    self.step = 0
 
                 elif self.state == breath_out:
                     # Make it look like MiRo is breathing out
-                    self.neck_pos = self.neck_pos + self.neck_speed
+                    print(f"self.step = {self.step}")
+                    self.neck_pos = self.neck_positions[self.step]
+                    print(f"self.neck_pos = {self.neck_pos}")
                     self.pitch_pos = self.pitch_pos - self.pitch_speed  # Swapped
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     if self.eyelid_pos > 0.0:
@@ -281,6 +295,8 @@ class breath_ex:
                         self.eyelid_pos = 0.0
                     self.led_brightness = min(max(self.led_brightness - self.led_speed, led_lower), led_upper)
 
+                    self.step += 1
+
                 elif self.state == hold_2:
                     # Hold the fully exhaled position
                     # self.neck_pos = neck_lower
@@ -288,6 +304,7 @@ class breath_ex:
                     # self.eyelid_pos = 0.0
                     # self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
+                    self.step = 0
 
                 self.cos_joints.data[left_eye] = self.eyelid_pos
                 self.cos_joints.data[right_eye] = self.eyelid_pos
@@ -372,10 +389,8 @@ class breath_ex:
                 self.last_state = None
                 self.audio_finished = False
                 self.silent_cycle_count = 0
-
                 # end audio stream
             
-
             # Yield
             rospy.sleep(self.TICK)
 
