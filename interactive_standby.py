@@ -91,11 +91,13 @@ class breath_ex:
         self.buffer_total = msg.data[1]
 
     def play_audio(self, track_file):
-        decoded_file_path = f"../../../../share/media/{track_file}.decode"
+        decoded_file_path = os.path.join(os.path.dirname(__file__), '../Miro-e-Capstone/decoded_audio_files', f"{track_file}.decode")
         
+        print(f"Absolute decoded file path: {os.path.abspath(decoded_file_path)}")
+
         if not os.path.isfile(decoded_file_path):
             print(f"Error: No decoded file found at {decoded_file_path}.")
-            print("Make sure to run ../../../share/media/decode_audio.py before trying again.")
+            print("Make sure to run .../decoded_audio_files/decode_audio.py before trying again.")
             print(f"The current directory is: {os.getcwd()}")
             return
         
