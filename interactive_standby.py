@@ -91,7 +91,7 @@ class breath_ex:
         self.buffer_total = msg.data[1]
 
     def play_audio(self, track_file):
-        decoded_file_path = f"../../../../../share/media/{track_file}.decode"
+        decoded_file_path = f"../../../../share/media/{track_file}.decode"
         
         if not os.path.isfile(decoded_file_path):
             print(f"Error: No decoded file found at {decoded_file_path}.")
