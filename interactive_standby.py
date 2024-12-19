@@ -264,7 +264,13 @@ class breath_ex:
                 if self.state == breath_in:
                     # Make it look like MiRo is breathing in
                     print(f"self.step = {self.step}")
-                    self.neck_pos = self.neck_positions[len(self.neck_positions) - 1 - self.step]
+
+                    x = time.time() - state_start_time
+                    y = np.interp(x, [0, 4], [0, 200])
+                    y = math.floor(y)
+
+                    #self.neck_pos = self.neck_positions[len(self.neck_positions) - 1 - self.step]
+                    self.neck_pos = self.neck_positions[len(self.neck_positions) - 1 - y]
                     print(f"self.neck_pos = {self.neck_pos}")
                     self.pitch_pos = self.pitch_pos + self.pitch_speed  # Swapped
                     self.led_brightness = min(max(self.led_brightness + self.led_speed, led_lower), led_upper)                    
@@ -287,7 +293,14 @@ class breath_ex:
                 elif self.state == breath_out:
                     # Make it look like MiRo is breathing out
                     print(f"self.step = {self.step}")
-                    self.neck_pos = self.neck_positions[self.step]
+
+                    x = time.time() - state_start_time
+                    y = np.interp(x, [0, 4], [0, 200])
+                    y = math.floor(y)
+
+                    #self.neck_pos = self.neck_positions[self.step]
+                    self.neck_pos = self.neck_positions[y]
+                    
                     print(f"self.neck_pos = {self.neck_pos}")
                     self.pitch_pos = self.pitch_pos - self.pitch_speed  # Swapped
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
@@ -300,17 +313,11 @@ class breath_ex:
                     self.step += 1
 
                 elif self.state == hold_2:
-                    # Hold the fully exhaled position
-                    # self.neck_pos = neck_lower
-                    # self.pitch_pos = pitch_upper
-                    # self.eyelid_pos = 0.0
-                    # self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     self.step = 0
 
                 self.cos_joints.data[left_eye] = self.eyelid_pos
                 self.cos_joints.data[right_eye] = self.eyelid_pos
-                # print("eyelid_pos = ", self.eyelid_pos)
                 
                 self.pub_kin.publish(self.kin_joints)
                 self.pub_cos.publish(self.cos_joints)
@@ -327,10 +334,7 @@ class breath_ex:
                 
                 self.pub_illum.publish(self.illum)
 
-                # print(self.led_brightness)
-
                 # audio stream
-
                 # if we've received a report
                 if self.buffer_total > 0:
 
@@ -352,13 +356,12 @@ class breath_ex:
                     # report once per second
                     if count == 0:
                         count = 10
-                        #print ("streaming:", self.data_r, "/", len(self.data), "bytes")
 
                         # check at those moments if we are making progress, also
                         if dropout_data_r == self.data_r:
                             if dropout_count == 0:
                                 print ("dropping out because of no progress...")
-                                break
+                                #break
                             print ("dropping out in", str(dropout_count) + "...")
                             dropout_count -= 1
                         else:
@@ -379,6 +382,12 @@ class breath_ex:
                 self.face_detect.check_face()
                 self.kin_joints.position = [0.0, math.radians(self.neck_pos), self.face_detect.yaw, math.radians(self.pitch_pos)]
                 self.pub_kin.publish(self.kin_joints)
+
+                self.cos_joints.data[left_eye] = 0.0
+                self.cos_joints.data[right_eye] = 0.0
+                
+                self.pub_kin.publish(self.kin_joints)
+                self.pub_cos.publish(self.cos_joints)
 
 
             if self.aruco_detect.breath_ex_reset or self.touch_detect.breath_ex_reset:
