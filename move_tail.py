@@ -110,7 +110,7 @@ class move_tail:
             # print("tail_wag_pos = ", self.tail_droop_pos)
 
             
-            # self.pub_cos.publish(self.cos_joints)
+            self.pub_cos.publish(self.cos_joints)
 
             # Yield
             rospy.sleep(self.TICK)
