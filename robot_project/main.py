@@ -3,45 +3,55 @@
 # ----------------------------------------------
 # Title: main.py
 # Description: A brief overview of what this script does
-# Author: Jasmine
+# Author: Jasmine, Bryce
 # Date created: Dec 24, 2024
-# Date modified: Dec 29, 2024
+# Date modified: Jan 8, 2024
 # ----------------------------------------------
 
-
-from behaviors.dance import DanceBehavior
-from behaviors.audiobooks import AudiobooksBehavior
-from behaviors.test import TestBehavior
-from behaviors.reset import ResetBehavior
+from behaviours.dance import DanceBehaviour
+from behaviours.audiobooks import AudiobooksBehaviour
+from behaviours.test import TestBehaviour
+from behaviours.reset import ResetBehaviour
+from behaviours.breath_ex import breath_ex
+from behaviours.interactive_standby import interactive_standby
 from actuators.node_actuators import NodeActuators  # assuming this import for NodeActuators
+# from actuators import node_actuators
 
 def main():
     node_actuators = NodeActuators()  # Initialize NodeActuators instance
-    reset_behavior = ResetBehavior()
-    reset_behavior.run()
+    reset_behaviour = ResetBehaviour()
+    reset_behaviour.run()
     
     while True:  # Infinite loop that will continue until the user exits
         # Taking input from the user
-        user_input = int(input("Enter a number: \n0= exit \n1= test \n2= dance \n3= audiobook \n"))
+        user_input = int(input("Enter a number: \n0= exit \n1= test \n2= dance \n3= audiobook \n4= breathing exercise \n5= interactive standby\n"))
         
         if user_input == 0:
             print("Exiting program...")
             break  # Exit the loop if user chooses 0
         elif user_input == 1:
             print("1) test")
-            test_behavior = TestBehavior()
-            test_behavior.run()
-            reset_behavior.run()
+            test_behaviour = TestBehaviour()
+            test_behaviour.run()
+            reset_behaviour.run()
         elif user_input == 2:
             print("2) dance")
-            dance_behavior = DanceBehavior()
-            dance_behavior.run()
-            reset_behavior.run()
+            dance_behaviour = DanceBehaviour()
+            dance_behaviour.run()
+            reset_behaviour.run()
         elif user_input == 3:
             print("3) audiobook")
-            audiobooks_behavior = AudiobooksBehavior()
-            audiobooks_behavior.run()
-            reset_behavior.run()
+            audiobooks_behaviour = AudiobooksBehaviour()
+            audiobooks_behaviour.run()
+            reset_behaviour.run()
+        elif user_input == 4:
+            print("4) breathing exercise")
+            breath_ex_behaviour = breath_ex()
+            breath_ex_behaviour.run()
+        elif user_input == 5:
+            print("5) interactice standby")
+            interactive_standby_behaviour = interactive_standby()
+            interactive_standby_behaviour.loop()
         else:
             print("Invalid choice or unrecognized number.")
 
