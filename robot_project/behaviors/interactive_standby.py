@@ -47,6 +47,9 @@ pitch_lower = -20.0 # deg
 led_lower = 20
 led_upper = 250
 
+BREATHING_EXERCISE = 4
+INTERACTIVE_STANDBY = 5
+
 class interactive_standby:
 
     def callback_log(self, msg):
@@ -105,16 +108,14 @@ class interactive_standby:
         self.face_detect = AttendFace()
         self.track_face = True
 
+        # Make behaviour tracking variable
+        self.behaviour = INTERACTIVE_STANDBY
+
 
     def loop(self):
         """
         Main control loop
         """
-
-        # Main control loop iteration counter
-        self.counter = 0
-
-        print("Running Interactive Standby")
 
         while not rospy.core.is_shutdown():
 
@@ -125,9 +126,13 @@ class interactive_standby:
 
             if self.aruco_detect.breath_ex_ON:
                 print("Activated the breathing exercise through aruco codes")
+                self.behaviour = BREATHING_EXERCISE
+                break
             
             if self.touch_detect.breath_ex_ON:
                 print("Activated the breathing exercise through touch")
+                self.behaviour = BREATHING_EXERCISE
+                break
 
             # Detect faces. Only do so if the Breathing Exercise is not active
             if self.track_face:

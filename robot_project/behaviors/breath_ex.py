@@ -14,6 +14,7 @@ import math
 import os
 import sys
 import numpy as np
+import threading
 
 # Robot specific libraries
 import rospy
@@ -25,17 +26,9 @@ import miro2 as miro
 from IS_modules.node_detect_aruco import *
 from IS_modules.detect_touch import *
 
-# Custom python files with useful funstions
+# Custom python files with useful functions
 from IS_modules.pose_interp import *
-
-# messages larger than this will be dropped by the receiver
-MAX_STREAM_MSG_SIZE = (4096 - 48)
-
-# amount to keep the buffer stuffed - larger numbers mean
-# less prone to dropout, but higher latency when we stop
-# streaming. with a read-out rate of 8k, 2000 samples will
-# buffer for quarter of a second, for instance.
-BUFFER_STUFF_BYTES = 4000
+from actuators.play_audio import play_audio  # function
 
 # to generate LED colour and brightness
 def generate_illum(r, g, b, bright):
@@ -68,16 +61,8 @@ led_upper = 250
 state_duration = 4.0
 NUM_CYCLES = 3
 
-# Audio file paths for different states
-AUDIO_FILES = {
-    "intro": 'intro.mp3',
-    "breathe_in": 'breatheIn.mp3',
-    "breathe_out": 'breatheOut.mp3',
-    "hold_1": 'hold.mp3',
-    "hold_2": 'holdAgain.mp3',
-    "outro": 'one_more_time.mp3',
-    "nice_job": 'nice_job.mp3'
-}
+BREATHING_EXERCISE = 4
+INTERACTIVE_STANDBY = 5
 
 class breath_ex:
 
@@ -90,36 +75,6 @@ class breath_ex:
     def callback_stream(self, msg):
         self.buffer_space = msg.data[0]
         self.buffer_total = msg.data[1]
-
-    def play_audio(self, track_file):
-        decoded_file_path = f"decoded_audio_files/{track_file}.decode"
-        
-        if not os.path.isfile(decoded_file_path):
-            print(f"Error: No decoded file found at {decoded_file_path}.")
-            print("Make sure to run decoded_audio_files/decode_audio.py before trying again.")
-            print(f"The current directory is: {os.getcwd()}")
-            return
-        
-        try:
-            with open(decoded_file_path, 'rb') as f:
-                dat = f.read()
-                #print(f"Read {len(dat)} bytes from {decoded_file_path}")
-        except Exception as e:
-            print(f"Error while reading {decoded_file_path}: {e}")
-            return
-        
-        self.data_r = 0
-        dat = np.fromstring(dat, dtype='int16').astype(np.int32)
-        dat = dat.astype(np.float)
-        sc = 32767.0 / np.max(np.abs(dat))
-        dat *= sc
-        dat = dat.astype(np.int16).tolist()
-        self.data = dat
-
-        print(f"Playing {track_file}")
-        # Reset buffer space for streaming
-        self.buffer_space = 0
-        self.buffer_total = 0
 
     def __init__(self):
         self.pitch_speed = ((pitch_lower - pitch_upper)/(state_duration/self.TICK))*1.75# Increase neck speed by 25%
@@ -151,7 +106,6 @@ class breath_ex:
         self.sub_log = rospy.Subscriber(topic_base_name + "/platform/log", String, self.callback_log, queue_size=5, tcp_nodelay=True)
         self.sub_stream = rospy.Subscriber(topic_base_name + "/sensors/stream", UInt16MultiArray, self.callback_stream, queue_size=1, tcp_nodelay=True)
 
-
         # Set up variables for the kinetic joints
         self.kin_joints = JointState()
         self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
@@ -175,6 +129,9 @@ class breath_ex:
         #print(f"neck positions are: {self.neck_positions}")
         self.step = 0
 
+        # Make behaviour tracking variable
+        self.behaviour = BREATHING_EXERCISE
+
 
     def run(self):
         """
@@ -182,14 +139,7 @@ class breath_ex:
         """
 
         global state_duration
-
-        # periodic reports
-        count = 0
-
-        # safety dropout if receiver not present
-        dropout_data_r = -1
-        dropout_count = 3
-
+        
         # Main control loop iteration counter
         self.counter = 0
 
@@ -199,7 +149,17 @@ class breath_ex:
         
         self.silent_cycle_count = 0
 
-        self.play_audio(AUDIO_FILES["intro"])
+        # Place Audio code here
+        threading.Timer(10, lambda: threading.Thread(target=self.joints_controller.move_neck, args=(4, 33)).start()).start()
+        threading.Timer(10, lambda: threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(4,)).start()).start()
+        
+        threading.Timer(18, lambda: threading.Thread(target=self.joints_controller.move_yaw, args=(4, -25)).start()).start()
+        threading.Timer(20, lambda: threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0.6)).start()).start()
+        
+        threading.Timer(23, lambda: threading.Thread(target=self.joints_controller.move_yaw, args=(2, 0)).start()).start()
+        threading.Timer(23, lambda: threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0)).start()).start()
+        
+        threading.Timer(25, lambda: threading.Thread(target=self.joints_movement.shake, args=(1,2)).start()).start()
 
         print("MiRo does some deep breathing")
 
@@ -207,6 +167,8 @@ class breath_ex:
         state_start_time = time.time()
 
         while not rospy.core.is_shutdown():
+
+            self.behaviour = BREATHING_EXERCISE
 
             # Detect aruco markers
             self.aruco_detect.tick_camera()
@@ -236,21 +198,6 @@ class breath_ex:
 
                 # Check if state has changed
                 if self.state != self.last_state:
-                    # Play the audio for the current state
-                    if self.state == intro:
-                        self.play_audio(AUDIO_FILES["intro"])
-                    elif self.state == breath_in:
-                        self.play_audio(AUDIO_FILES["breathe_in"])
-                        state_start_time = time.time()  # Reset state timer
-                    elif self.state == hold_1:
-                        self.play_audio(AUDIO_FILES["hold_1"])
-                    elif self.state == breath_out:
-                        self.play_audio(AUDIO_FILES["breathe_out"])
-                    elif self.state == hold_2:
-                        self.play_audio(AUDIO_FILES["hold_2"])
-                        self.silent_cycle_count += 1
-                    elif self.state == outro:
-                        self.play_audio(AUDIO_FILES["nice_job"])
                     self.last_state = self.state
 
                 # Perform movements based on the current state
@@ -320,54 +267,6 @@ class breath_ex:
                 
                 self.pub_illum.publish(self.illum)
 
-                # print(self.led_brightness)
-
-                # audio stream
-
-                # if we've received a report
-                if self.buffer_total > 0:
-
-                    # compute amount to send
-                    buffer_rem = self.buffer_total - self.buffer_space
-                    n_bytes = BUFFER_STUFF_BYTES - buffer_rem
-                    n_bytes = max(n_bytes, 0)
-                    n_bytes = min(n_bytes, MAX_STREAM_MSG_SIZE)
-
-                    # if amount to send is non-zero
-                    if n_bytes > 0:
-
-                        msg = Int16MultiArray(data = self.data[self.data_r:self.data_r+n_bytes])
-                        self.pub_stream.publish(msg)
-                        self.data_r += n_bytes
-
-                # break
-                if self.data_r <= len(self.data):
-                    # report once per second
-                    if count == 0:
-                        count = 10
-                        #print ("streaming:", self.data_r, "/", len(self.data), "bytes")
-
-                        # check at those moments if we are making progress, also
-                        if dropout_data_r == self.data_r:
-                            if dropout_count == 0:
-                                print ("dropping out because of no progress...")
-                                break
-                            print ("dropping out in", str(dropout_count) + "...")
-                            dropout_count -= 1
-                        else:
-                            dropout_data_r = self.data_r
-
-                    # count tenths
-                    count -= 1
-                else:
-                    # Print only once when audio playback finishes
-                    if not self.audio_finished:
-                        print("audio playback finished")
-                        self.audio_finished = True  # Set flag to true
-                        if self.silent_cycle_count > NUM_CYCLES:
-                            self.touch_detect.breath_ex_reset = True
-                            self.aruco_detect.breath_ex_reset = True
-
 
             if self.aruco_detect.breath_ex_reset or self.touch_detect.breath_ex_reset:
                 self.aruco_detect.breath_ex_reset = False
@@ -384,3 +283,6 @@ class breath_ex:
             # Yield
             rospy.sleep(self.TICK)
 
+            if self.behaviour == INTERACTIVE_STANDBY:
+                print("Hit the break")
+                break
