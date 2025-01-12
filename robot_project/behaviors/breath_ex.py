@@ -139,7 +139,7 @@ class breath_ex:
         """
 
         global state_duration
-        
+
         # Main control loop iteration counter
         self.counter = 0
 
@@ -149,26 +149,22 @@ class breath_ex:
         
         self.silent_cycle_count = 0
 
-        # Place Audio code here
-        threading.Timer(10, lambda: threading.Thread(target=self.joints_controller.move_neck, args=(4, 33)).start()).start()
-        threading.Timer(10, lambda: threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(4,)).start()).start()
-        
-        threading.Timer(18, lambda: threading.Thread(target=self.joints_controller.move_yaw, args=(4, -25)).start()).start()
-        threading.Timer(20, lambda: threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0.6)).start()).start()
-        
-        threading.Timer(23, lambda: threading.Thread(target=self.joints_controller.move_yaw, args=(2, 0)).start()).start()
-        threading.Timer(23, lambda: threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0)).start()).start()
-        
-        threading.Timer(25, lambda: threading.Thread(target=self.joints_movement.shake, args=(1,2)).start()).start()
+        # Play the intro audio
+        intro_thread = threading.Thread(target=play_audio, args=('mp3_files/intro.mp3',))
+        intro_thread.start()
 
         print("MiRo does some deep breathing")
+        self.aruco_detect.breath_ex_ON = True
+        self.touch_detect.breath_ex_ON = True
 
-        # Initialize state timer
+        # Initialize state timers
         state_start_time = time.time()
 
         while not rospy.core.is_shutdown():
 
             self.behaviour = BREATHING_EXERCISE
+
+            print("Loop Completed")
 
             # Detect aruco markers
             self.aruco_detect.tick_camera()
@@ -177,8 +173,7 @@ class breath_ex:
 
             if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
                 # Check if state duration has elapsed
-                if time.time() > (state_start_time + state_duration) and self.audio_finished:
-                    self.audio_finished = False
+                if time.time() > (state_start_time + state_duration):
                     state_start_time = time.time()  # Reset state timer
                     # State transitions dictionary
                     state_transitions = {
@@ -194,11 +189,28 @@ class breath_ex:
 
                     # Add delay between intro and breathe_in
                     if self.state == breath_in and self.last_state == intro:
-                        rospy.sleep(2.0)
+                        rospy.sleep(3.0)
+                        state_start_time = time.time()  # Reset state timer
 
                 # Check if state has changed
                 if self.state != self.last_state:
                     self.last_state = self.state
+                    if self.state == breath_in:
+                        breath_in_thread = threading.Thread(target=play_audio, args=('mp3_files/breatheIn.mp3',))
+                        self.silent_cycle_count += 1
+                        breath_in_thread.start()
+                    elif self.state == hold_1:
+                        hold_1_thread = threading.Thread(target=play_audio, args=('mp3_files/hold.mp3',))
+                        hold_1_thread.start()
+                    elif self.state == breath_out:
+                        breath_out_thread = threading.Thread(target=play_audio, args=('mp3_files/breatheOut.mp3',))
+                        breath_out_thread.start()
+                    elif self.state == hold_2:
+                        hold_2_thread = threading.Thread(target=play_audio, args=('mp3_files/holdAgain.mp3',))
+                        hold_2_thread.start()
+                    elif self.state == outro:
+                        outro_thread = threading.Thread(target=play_audio, args=('mp3_files/nice_job.mp3',))
+                        outro_thread.start()
 
                 # Perform movements based on the current state
                 if self.state == breath_in:
@@ -264,7 +276,6 @@ class breath_ex:
                 self.illum.data[rear_left] = generate_illum(0, 0, 255, int(self.led_brightness))
                 self.illum.data[rear_right] = generate_illum(0, 0, 255, int(self.led_brightness))
 
-                
                 self.pub_illum.publish(self.illum)
 
 

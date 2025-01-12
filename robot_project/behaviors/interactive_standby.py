@@ -142,3 +142,5 @@ class interactive_standby:
             
             # Yield
             rospy.sleep(self.TICK)
+
+        print("Exited the loop")
