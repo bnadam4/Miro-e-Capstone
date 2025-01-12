@@ -27,12 +27,11 @@ def main():
     reset_behaviour.run()
     interactive_standby_behaviour = interactive_standby()
     breath_ex_behaviour = breath_ex()
-
-    user_input = int(input("Enter a number: \n0= exit \n1= test \n2= dance \n3= audiobook \n4= breathing exercise \n5= interactive standby\n"))
     
     while True:  # Infinite loop that will continue until the user exits
-        # Taking input from the user
-        
+        # Taking input from the user. For debugging only
+        user_input = int(input("Enter a number: \n0= exit \n1= test \n2= dance \n3= audiobook \n4= breathing exercise \n5= interactive standby\n"))
+
         if user_input == 0:
             print("Exiting program...")
             break  # Exit the loop if user chooses 0
@@ -61,6 +60,7 @@ def main():
             user_input = interactive_standby_behaviour.behaviour
             if interactive_standby_behaviour.behaviour == BREATHING_EXERCISE:
                 breath_ex_behaviour.behaviour = BREATHING_EXERCISE
+                print("Breathing Exercise Activated")
         else:
             print("Invalid choice or unrecognized number.")
 
