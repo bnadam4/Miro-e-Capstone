@@ -127,11 +127,13 @@ class interactive_standby:
             if self.aruco_detect.breath_ex_ON:
                 print("Activated the breathing exercise through aruco codes")
                 self.behaviour = BREATHING_EXERCISE
+                self.aruco_detect.breath_ex_ON = False
                 break
             
             if self.touch_detect.breath_ex_ON:
                 print("Activated the breathing exercise through touch")
                 self.behaviour = BREATHING_EXERCISE
+                self.touch_detect.breath_ex_ON = False
                 break
 
             # Detect faces. Only do so if the Breathing Exercise is not active
