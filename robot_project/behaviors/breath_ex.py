@@ -5,7 +5,7 @@
 # Description: Do the pre-programmed breathing exercise behaviour
 # Author: Bryce
 # Date created: Jan 8, 2024
-# Date modified: Jan 8, 2024
+# Date modified: Jan 12, 2024
 # ----------------------------------------------
 
 # Misc useful python libraries
@@ -26,6 +26,10 @@ import miro2 as miro
 from IS_modules.node_detect_aruco import *
 from IS_modules.detect_touch import *
 
+# Actuactor controllers
+from actuators.cosmetics_controller import CosmeticsController
+from actuators.cosmetics_movement import CosmeticsMovement
+
 # Custom python files with useful functions
 from IS_modules.pose_interp import *
 from actuators.play_audio import play_audio  # function
@@ -39,7 +43,7 @@ def error(msg):
 	sys.exit(0)
 
 # Generate enum and constants for the breathing exercise states and joints
-intro, breath_in, hold_1, breath_out, hold_2, silent_cycles, outro = range(7)
+intro, ready, breath_in, hold_1, breath_out, hold_2, silent_cycles, outro = range(8)
 droop, wag, left_eye, right_eye, left_ear, right_ear = range(6)
 # Generate enum and constants for the LEDS
 front_left, mid_left, rear_left, front_right, mid_right, rear_right = range(6)
@@ -58,7 +62,7 @@ pitch_lower = -20.0 # deg
 led_lower = 20
 led_upper = 250
 
-state_duration = 4.0
+state_duration = 4.0 # Should be 4.0
 NUM_CYCLES = 3
 
 BREATHING_EXERCISE = 4
@@ -132,6 +136,12 @@ class breath_ex:
         # Make behaviour tracking variable
         self.behaviour = BREATHING_EXERCISE
 
+        # Initialize controllers
+        self.cosmetics_controller = CosmeticsController()
+        self.cosmetics_movement = CosmeticsMovement()
+
+        # rospy.sleep(2.0)
+
 
     def run(self):
         """
@@ -164,12 +174,13 @@ class breath_ex:
 
             self.behaviour = BREATHING_EXERCISE
 
-            print("Loop Completed")
-
             # Detect aruco markers
             self.aruco_detect.tick_camera()
             # Detect touch
             self.touch_detect.check_touch()
+
+            if self.touch_detect.head_touched:
+                print("Head touched!")
 
             if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
                 # Check if state duration has elapsed
@@ -177,7 +188,8 @@ class breath_ex:
                     state_start_time = time.time()  # Reset state timer
                     # State transitions dictionary
                     state_transitions = {
-                        intro: breath_in,
+                        intro: ready,
+                        ready: breath_in,
                         breath_in: hold_1,
                         hold_1: breath_out,
                         breath_out: hold_2,
@@ -187,10 +199,34 @@ class breath_ex:
                     # Transition to the next state
                     self.state = state_transitions.get(self.state, self.state)
 
-                    # Add delay between intro and breathe_in
-                    if self.state == breath_in and self.last_state == intro:
+                    if self.state == breath_in:
+                        print("Switched to breath in")
+                    elif self.state == hold_1:
+                        print("Switch to hold 1")
+                    elif self.state == breath_out:
+                        print("Switch to breath out")
+                    elif self.state == hold_2:
+                        print("Switch to hold 2")
+                    elif self.state == outro:
+                        print("outro")
+
+                    # Add delay between intro and ready prompt
+                    if self.state == ready and self.last_state == intro:
                         rospy.sleep(3.0)
+                        # Play the ready prompt and wait for touch
+                        ready_thread = threading.Thread(target=play_audio, args=('mp3_files/BrEx_Ready_Prompt.mp3',))
+                        ready_thread.start()
+
                         state_start_time = time.time()  # Reset state timer
+
+                        # Wait for touch
+                        while not self.touch_detect.head_touched:
+                            self.touch_detect.check_touch()
+                            rospy.sleep(self.TICK)
+
+                        rospy.sleep(1.0)
+                        self.touch_detect.head_touched = False # Reset head touch
+
 
                 # Check if state has changed
                 if self.state != self.last_state:
@@ -211,13 +247,39 @@ class breath_ex:
                     elif self.state == outro:
                         outro_thread = threading.Thread(target=play_audio, args=('mp3_files/nice_job.mp3',))
                         outro_thread.start()
+                        rospy.sleep(4.0)
+
+                        outro_thread = threading.Thread(target=play_audio, args=('mp3_files/BrEx_Go_again.mp3',))
+                        outro_thread.start()
+
+                        state_start_time = time.time()  # Reset state timer
+
+                        # Wait for touch
+                        self.touch_detect.check_touch()
+                        while not self.touch_detect.head_touched and (time.time() - state_start_time) < 10.0:
+                            self.touch_detect.check_touch()
+                            print("Waiting for touch")
+                            rospy.sleep(self.TICK)
+
+                        if self.touch_detect.head_touched:
+                            self.silent_cycle_count = 0
+                            self.state = breath_in
+                            self.step = 0
+                            self.last_state = breath_in # Make sure the state stays consistent
+                            print("Head touched!")
+                            breath_in_thread = threading.Thread(target=play_audio, args=('mp3_files/breatheIn.mp3',))
+                            breath_in_thread.start()
+                            self.silent_cycle_count += 1
+                        else:
+                            print("Timed out")
+
+                        state_start_time = time.time()  # Reset state timer
+                        self.touch_detect.head_touched = False # Reset head touch
 
                 # Perform movements based on the current state
                 if self.state == breath_in:
                     # Make it look like MiRo is breathing in
-                    print(f"self.step = {self.step}")
                     self.neck_pos = self.neck_positions[len(self.neck_positions) - 1 - self.step]
-                    print(f"self.neck_pos = {self.neck_pos}")
                     self.pitch_pos = self.pitch_pos + self.pitch_speed  # Swapped
                     self.led_brightness = min(max(self.led_brightness + self.led_speed, led_lower), led_upper)                    
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
@@ -238,9 +300,7 @@ class breath_ex:
 
                 elif self.state == breath_out:
                     # Make it look like MiRo is breathing out
-                    print(f"self.step = {self.step}")
                     self.neck_pos = self.neck_positions[self.step]
-                    print(f"self.neck_pos = {self.neck_pos}")
                     self.pitch_pos = self.pitch_pos - self.pitch_speed  # Swapped
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     if self.eyelid_pos > 0.0:
