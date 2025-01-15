@@ -58,6 +58,8 @@ class NodeDetectAruco:
         self.cam_names = ['left', 'right', 'stitched']
         self.breath_ex_ON = False
         self.breath_ex_reset = False
+        self.activation_timer = 0.0
+        self.aruco_seen = False
 
         # Main control loop iteration counter
         self.counter = 0
@@ -67,7 +69,7 @@ class NodeDetectAruco:
         # Initialize a ROS node to communicate with MiRo
         # rospy.init_node("node_aruco_detector")
         # Give it some time to make sure everything is initialised
-        rospy.sleep(2.0)
+        # rospy.sleep(2.0)
 
     def tick_camera(self):
 
@@ -110,14 +112,21 @@ class NodeDetectAruco:
 
                 if ids is not None:
                     cv2.aruco.drawDetectedMarkers(image, corners, ids)
+                    if self.aruco_seen == False:
+                        self.aruco_seen = True
+                        self.activation_timer = time.time()
+
                     for id in ids:
-                        if id == START_ARUCO:
+                        if id == START_ARUCO and time.time() > self.activation_timer + 0.5:
                             self.breath_ex_ON = True
                             # print("START_ARUCO has been seen")
                         elif id == END_ARUCO:
                             self.breath_ex_ON = False
                             self.breath_ex_reset = True
                             # print("END_ARUCO has been seen")
+                else:
+                    self.activation_timer = time.time() + 10.0
+                    self.aruco_seen = False
 
                 # show
                 # cv2.imshow("Camera Feed: " + self.cam_names[index], image)
