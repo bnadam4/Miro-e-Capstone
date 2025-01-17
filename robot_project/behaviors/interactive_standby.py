@@ -6,118 +6,114 @@
 #
 # Main default program for MiRo when it is not undergoing some pre-programmed activity
 
-# Misc useful python libraries
+import threading
 import time
 import math
-import os
-import sys
-import numpy as np
-
-# Robot specific libraries
+import cv2
 import rospy
-from std_msgs.msg import Float32MultiArray, UInt32MultiArray, Int16MultiArray, String, UInt16MultiArray
-from sensor_msgs.msg import JointState
-import miro2 as miro
+import random
+
+from actuators.node_actuators import NodeActuators #class
+from actuators.led_controller import LEDController #class
+
+from actuators.joints_controller import JointsController #class
+from actuators.joints_movement import JointsMovement #class
+
+from actuators.cosmetics_controller import CosmeticsController #class
+from actuators.cosmetics_movement import CosmeticsMovement #class
+
+from actuators.play_audio import play_audio  # function
+
+from actuators.stereovision import Stereovision
+
+from actuators.speech_to_text import SpeechToText
 
 # Sensor nodes to import
 from IS_modules.node_detect_aruco import *
 from IS_modules.detect_touch import *
 from IS_modules.attend_face import *
 
-# Custom python files with useful funstions
-# from pose_interp import *
-
-# Generate enum and constants for the breathing exercise states and joints
-intro, breath_in, hold_1, breath_out, hold_2, silent_cycles, outro = range(7)
-droop, wag, left_eye, right_eye, left_ear, right_ear = range(6)
-# Generate enum and constants for the LEDS
-front_left, mid_left, rear_left, front_right, mid_right, rear_right = range(6)
+ACT_ENGAGE = 1 # attempt to engage with person
+ACT_IDLE = 2 # do some idle animations
 
 
-NECK_MAX = miro.constants.LIFT_RAD_MAX
-NECK_MIN = miro.constants.LIFT_RAD_MIN
-neck_upper = 15.0 # deg
-neck_lower = 40.0 # deg
-
-PITCH_MAX = miro.constants.PITCH_RAD_MAX
-PITCH_MIN = miro.constants.PITCH_RAD_MIN
-pitch_upper = -5.0 # deg
-pitch_lower = -20.0 # deg
-
-led_lower = 20
-led_upper = 250
+BREATHING_EXERCISE = 4
+INTERACTIVE_STANDBY = 5
 
 class interactive_standby:
-
-    def callback_log(self, msg):
-        sys.stdout.write(msg.data)
-        sys.stdout.flush()
-
-    def callback_stream(self, msg):
-        self.buffer_space = msg.data[0]
-        self.buffer_total = msg.data[1]
-
-    TICK = 0.02 # Update interval for the main controller loop in seconds
-
     def __init__(self):
-
-        self.last_time = time.time()
-        self.current_time = time.time()
-        self.neck_pos = 40.0
-        self.pitch_pos = pitch_upper
-        self.eyelid_pos = 0.0
-        self.led_brightness = led_lower
-
-        # robot name
-        topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
-        print("subscribing to topics under", topic_base_name)
-
-        # Publishers
-        self.pub_kin = rospy.Publisher(topic_base_name + "/control/kinematic_joints", JointState, queue_size=0)
-        self.pub_cos = rospy.Publisher(topic_base_name + "/control/cosmetic_joints", Float32MultiArray, queue_size=0)
-        self.pub_stream = rospy.Publisher(topic_base_name + "/control/stream", Int16MultiArray, queue_size=0)
-
-        # Publishers
-        self.pub_illum = rospy.Publisher(topic_base_name + "/control/illum", UInt32MultiArray, queue_size=0)
-        self.illum = UInt32MultiArray()
-        self.illum.data = [0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF]
-
-        #subscribe
-        self.sub_log = rospy.Subscriber(topic_base_name + "/platform/log", String, self.callback_log, queue_size=5, tcp_nodelay=True)
-        self.sub_stream = rospy.Subscriber(topic_base_name + "/sensors/stream", UInt16MultiArray, self.callback_stream, queue_size=1, tcp_nodelay=True)
+        # Initialize all actuators
+        self.led_controller = LEDController()
+        self.joints_controller = JointsController()
+        self.joints_movement = JointsMovement()
+        self.cosmetics_controller = CosmeticsController()
+        self.cosmetics_movement = CosmeticsMovement()
 
 
-        # Set up variables for the kinetic joints
-        self.kin_joints = JointState()
-        self.kin_joints.name = ["tilt", "lift", "yaw", "pitch"]
-        self.kin_joints.position = [0.0, math.radians(40.0), 0.0, math.radians(pitch_upper)]
-        self.pub_kin.publish(self.kin_joints) # Set neck to initial position
-
-        # Set up variables for the cosmetic joints
-        self.cos_joints = Float32MultiArray()
-        self.cos_joints.data = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-        self.cos_joints.data[left_eye] = 0.0
-        self.cos_joints.data[right_eye] = 0.0
+        self.stereovision = Stereovision()
+        self.speech_to_text = SpeechToText()
 
         # Make detector nodes
         self.aruco_detect = NodeDetectAruco()
         self.touch_detect = see_touch()
-        self.face_detect = AttendFace()
         self.track_face = True
+        # Make behaviour tracking variable
+        self.behaviour = INTERACTIVE_STANDBY
 
+        self.delay = 5 # random delay, in seconds. keep it between 3-10 seconds
+        self.current_color = (255,255,255)
 
-    def loop(self):
-        """
-        Main control loop
-        """
+        self.wait = False
+
+    def random_delay(self, low, high):
+        return random.randint(low, high)
+
+    def move_randomly(self):
+        self.joints_controller.position_neck(random.randint(15,40))
+        self.joints_controller.position_pitch(random.randint(-22,8))
+        self.joints_controller.position_yaw(random.randint(-55,55))
+
+        # move_neck_thread = threading.Thread(target=self.joints_controller.move_neck, args=(2, random.randint(15,40)))
+        # move_pitch_thread = threading.Thread(target=self.joints_controller.move_neck, args=(2, random.randint(-22,8)))
+        # move_yaw_thread = threading.Thread(target=self.joints_controller.move_neck, args=(2, random.randint(-55,55)))
+
+        # move_neck_thread.start()
+        # move_pitch_thread.start()
+        # move_yaw_thread.start()
+
+    def move_idle(self):
+        rand = random.random()
+        if rand < 0.5:
+            self.joints_movement.nod(2, 2)
+        else:
+            self.joints_movement.shake(2, 2)        
+
+    def get_activity_level(self, distance):
+        if distance < 1.5:
+            return ACT_ENGAGE
+        else:
+            return ACT_IDLE
+
+    def run(self):
+        # Start the stereovision in a separate thread
+        stereovision_thread = threading.Thread(target=self.stereovision.run)
+        stereovision_thread.start()
+
+        # speech_to_text_thread = threading.Thread(target=self.speech_to_text.run)
+        # speech_to_text_thread.daemon = True
+        # speech_to_text_thread.start()
 
         # Main control loop iteration counter
         self.counter = 0
 
+        activity_level = ACT_IDLE
+
         print("Running Interactive Standby")
 
-        while not rospy.core.is_shutdown():
+        # Timer for non-blocking behavior
+        last_time = time.time()
 
+        while not rospy.core.is_shutdown():
             # Detect aruco markers
             self.aruco_detect.tick_camera()
             # Detect touch
@@ -125,15 +121,62 @@ class interactive_standby:
 
             if self.aruco_detect.breath_ex_ON:
                 print("Activated the breathing exercise through aruco codes")
+                self.behaviour = BREATHING_EXERCISE
+                break
             
             if self.touch_detect.breath_ex_ON:
                 print("Activated the breathing exercise through touch")
+                self.behaviour = BREATHING_EXERCISE
+                break
 
-            # Detect faces. Only do so if the Breathing Exercise is not active
-            if self.track_face:
-                self.face_detect.check_face()
-                self.kin_joints.position = [0.0, math.radians(self.neck_pos), self.face_detect.yaw, math.radians(self.pitch_pos)]
-                self.pub_kin.publish(self.kin_joints)
-            
+            # words_to_check = ['breathe', 'breathing', 'exercise']
+            # if any(word in self.speech_to_text.get_last_text().lower() for word in words_to_check):                
+            #     print("Activated the breathing exercise through speech")
+            #     self.behaviour = BREATHING_EXERCISE
+            #     break
+
+            ##### Interactive Standby #####
+
+            current_time = time.time()
+            if current_time - last_time >= self.delay: # every # seconds
+                #print number of threads running
+                print(f"Thread count: {threading.active_count()}")
+                audio_file = None
+                if self.stereovision.face_detected:
+                    #print(f"Face detected at distance: {self.stereovision.face_distance}")
+                    activity_level = self.get_activity_level(self.stereovision.face_distance)
+                else:
+                    self.wait = False
+                    activity_level = ACT_IDLE
+                    # Move randomly
+                    self.move_randomly()
+
+                if activity_level == ACT_IDLE:
+                    self.delay = self.random_delay(7,10)
+                    self.current_color = (0, 0, 255)  # Blue
+                    audio_file = None
+
+                elif activity_level == ACT_ENGAGE and not self.wait:
+                    self.delay = self.random_delay(2,4)
+                    self.current_color = (255, 0, 0)  # Red
+                    audio_file = 'hi_there.mp3'
+                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                    play_thread.start()
+                    self.wait = True
+
+                self.led_controller.turn_on_led(self.current_color, 250)
+
+                last_time = current_time
+
+            #### End of 5 second loop ####
+
             # Yield
-            rospy.sleep(self.TICK)
+            #self.stereovision.draw_frames()
+
+        # Ensure the stereovision thread is properly joined before exiting
+        stereovision_thread.join()
+
+if __name__ == "__main__":
+    standby = interactive_standby()
+    standby.run()
+

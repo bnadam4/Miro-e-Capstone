@@ -97,7 +97,7 @@ def play_audio(mp3_file_path):
                 # report once per second
                 if count == 0:
                     count = 10
-                    print("streaming:", self.data_r, "/", len(self.data), "bytes")
+                    #print("streaming:", self.data_r, "/", len(self.data), "bytes")
 
                     # check at those moments if we are making progress, also
                     if dropout_data_r == self.data_r:
@@ -117,7 +117,7 @@ def play_audio(mp3_file_path):
             # decode mp3
             file = "/tmp/" + os.path.basename(TRACK_PATH) + ".decode"
             if not os.path.isfile(file):
-                cmd = f"ffmpeg -y -i \"{TRACK_PATH}\" -f s16le -acodec pcm_s16le -ar 8000 -ac 1 \"{file}\""
+                cmd = f"ffmpeg -y -i \"{TRACK_PATH}\" -f s16le -acodec pcm_s16le -ar 8000 -ac 1 \"{file}\" > /dev/null 2>&1"
                 os.system(cmd)
                 if not os.path.isfile(file):
                     error('failed decode mp3')

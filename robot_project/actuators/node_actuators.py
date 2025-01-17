@@ -12,9 +12,12 @@
 import rospy
 import os
 
+import miro2 as miro
+
 class NodeActuators:
     def __init__(self):
         rospy.init_node("node_actuators")
+
 
 
 

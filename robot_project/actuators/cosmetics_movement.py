@@ -35,11 +35,11 @@ class CosmeticsMovement:
         """Moves both ears to face the same direction using smooth movement."""
         rospy.loginfo("Moving ears to face the same direction.")
         if side=="right":
-        	self.controller.move_one_ear(duration, 0, "left") 
-        	self.controller.move_one_ear(duration, 1, "right")
+            self.controller.move_one_ear(duration, 0, "left") 
+            self.controller.move_one_ear(duration, 1, "right")
         else:
-        	self.controller.move_one_ear(duration, 1, "left") 
-        	self.controller.move_one_ear(duration, 0, "right")
+            self.controller.move_one_ear(duration, 1, "left") 
+            self.controller.move_one_ear(duration, 0, "right")
 
     def eye_wink(self, duration, repetitions, side):
         """Performs a wink on either the left or right eye, with optional repetition."""
