@@ -40,6 +40,22 @@ ACT_IDLE = 2 # do some idle animations
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
 
+NECK_MAX = miro.constants.LIFT_RAD_MAX
+NECK_MIN = miro.constants.LIFT_RAD_MIN
+neck_upper = 15.0 # deg
+neck_lower = 40.0 # deg
+
+PITCH_MAX = miro.constants.PITCH_RAD_MAX
+PITCH_MIN = miro.constants.PITCH_RAD_MIN
+pitch_upper = -5.0 # deg
+pitch_lower = -20.0 # deg
+
+led_lower = 20
+led_upper = 250
+
+BREATHING_EXERCISE = 4
+INTERACTIVE_STANDBY = 5
+
 class interactive_standby:
     def __init__(self):
         # Initialize all actuators
@@ -103,15 +119,14 @@ class interactive_standby:
         # speech_to_text_thread.daemon = True
         # speech_to_text_thread.start()
 
-        # Main control loop iteration counter
-        self.counter = 0
+        # Make behaviour tracking variable
+        self.behaviour = INTERACTIVE_STANDBY
 
-        activity_level = ACT_IDLE
 
-        print("Running Interactive Standby")
-
-        # Timer for non-blocking behavior
-        last_time = time.time()
+    def loop(self):
+        """
+        Main control loop
+        """
 
         while not rospy.core.is_shutdown():
             # Detect aruco markers
@@ -122,11 +137,13 @@ class interactive_standby:
             if self.aruco_detect.breath_ex_ON:
                 print("Activated the breathing exercise through aruco codes")
                 self.behaviour = BREATHING_EXERCISE
+                self.aruco_detect.breath_ex_ON = False
                 break
             
             if self.touch_detect.breath_ex_ON:
                 print("Activated the breathing exercise through touch")
                 self.behaviour = BREATHING_EXERCISE
+                self.touch_detect.breath_ex_ON = False
                 break
 
             # words_to_check = ['breathe', 'breathing', 'exercise']
@@ -173,10 +190,4 @@ class interactive_standby:
             # Yield
             #self.stereovision.draw_frames()
 
-        # Ensure the stereovision thread is properly joined before exiting
-        stereovision_thread.join()
-
-if __name__ == "__main__":
-    standby = interactive_standby()
-    standby.run()
-
+        print("Exited the loop")

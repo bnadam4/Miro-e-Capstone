@@ -39,6 +39,7 @@ class Stereovision:
         self.shift_y_left = 0
         self.shift_x_right = 85
         self.shift_y_right = 0 
+        self.stop = False
 
         # Remove mutex
         # self.mutex = threading.Lock()
@@ -102,7 +103,7 @@ class Stereovision:
 
         fs.release()  # Close the file
 
-    def run(self):
+    def loop(self):
         # state
         channels_to_process = [0, 1]
 
@@ -127,6 +128,8 @@ class Stereovision:
 
 
         while not rospy.core.is_shutdown():
+            if self.stop:
+                break
             # for each channel to process
             for index in channels_to_process:
                 # get image
@@ -172,7 +175,7 @@ class Stereovision:
                 
                 self.face_detected = True
                 self.face_distance = self.calculate_distance(face_left_center_x, face_right_center_x)
-                print(f"FACE - Distance: {self.face_distance} meters")
+                #print(f"FACE - Distance: {self.face_distance} meters")
                 # if self.face_distance:
                 #     # # Calculate 3D position
                 #     # X, Y, Z = self.calculate_3d_position(face_left_center_x, face_left_center_y, face_right_center_x, face_right_center_y)
@@ -291,4 +294,4 @@ class Stereovision:
 
 if __name__ == "__main__":
     main = Stereovision()
-    main.run()
+    main.loop()

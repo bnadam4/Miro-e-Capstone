@@ -21,12 +21,15 @@ from actuators.node_actuators import NodeActuators  # assuming this import for N
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
 
+# State constants
+BREATHING_EXERCISE = 4
+INTERACTIVE_STANDBY = 5
+
 def main():
     node_actuators = NodeActuators()  # Initialize NodeActuators instance
     reset_behaviour = ResetBehavior()
     reset_behaviour.run()
     interactive_standby_behaviour = interactive_standby()
-    breath_ex_behaviour = breath_ex()
 
     user_input = int(input("Enter a number: \n0= exit \n1= test \n2= dance \n3= audiobook \n4= breathing exercise \n5= interactive standby\n"))
     
@@ -41,27 +44,30 @@ def main():
             test_behaviour = TestBehavior()
             test_behaviour.run()
             reset_behaviour.run()
+            user_input = INTERACTIVE_STANDBY
         elif user_input == 2:
             print("2) dance")
             dance_behaviour = DanceBehavior()
             dance_behaviour.run()
             reset_behaviour.run()
+            user_input = INTERACTIVE_STANDBY
         elif user_input == 3:
             print("3) audiobook")
             audiobooks_behaviour = AudiobooksBehavior()
             audiobooks_behaviour.run()
             reset_behaviour.run()
+            user_input = INTERACTIVE_STANDBY
         elif user_input == 4:
             print("4) breathing exercise")
+            breath_ex_behaviour = breath_ex()
             breath_ex_behaviour.run()
-            user_input = breath_ex_behaviour.behaviour
+            user_input = INTERACTIVE_STANDBY
         elif user_input == 5:
             print("5) interactice standby")
-            interactive_standby_behaviour.run()
+            interactive_standby_behaviour = interactive_standby()
+            interactive_standby_behaviour.loop()
             user_input = interactive_standby_behaviour.behaviour
-            if interactive_standby_behaviour.behaviour == BREATHING_EXERCISE:
-                breath_ex_behaviour.behaviour = BREATHING_EXERCISE
-                print("Breathing Exercise Activated")
+            print("Interactive standby ended.")
         else:
             print("Invalid choice or unrecognized number.")
 

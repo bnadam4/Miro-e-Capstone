@@ -28,3 +28,5 @@ robot_project/out/
 actuators & modules/
 
 robot_project/actuators/speech_to_text.py
+
+robot_project/mp3_files/
