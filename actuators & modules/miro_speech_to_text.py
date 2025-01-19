@@ -9,6 +9,7 @@
 
 import rospy
 from std_msgs.msg import UInt16MultiArray, Int16MultiArray
+import threading
 
 import time
 import os
@@ -59,14 +60,20 @@ class spch_to_text:
     def callback_mics(self, msg):
 
         if not self.micbuf is None:
+            data = np.asarray(msg.data)
+            new_data = np.transpose(data.reshape(4, 500))
+
             # Convert the incoming microphone data to NumPy array for processing
-            mic_data = np.array(msg.data, dtype=np.int16).reshape(-1,4)
+            mic_data = np.array(new_data, dtype=np.int16).reshape(-1,4)
             channel_to_process = 0 # Select the channel to monitor
             # Calculate RMS value for sound intensity
             single_channel_data = mic_data[:, channel_to_process]
             rms = int(np.sqrt(np.mean(single_channel_data.astype(np.float32) ** 2)))
 
             #print(f"The rms is {rms}")
+
+            #print("len(mic_data) = ", len(mic_data))
+            #print("len(msg.data) = ", len(msg.data))
 
             # Define a threshold for sound intensity (adjust as needed)
             THRESHOLD = 280  # Experiment with this value to suit your environment
@@ -86,7 +93,7 @@ class spch_to_text:
                     print("That is weird")
                 """
 
-                self.micbuf = np.concatenate((self.micbuf, msg.data))
+                self.micbuf = np.concatenate((self.micbuf, mic_data))
                 self.noise_detected += 1
                 #print(f"Sound detected! {self.noise_detected}")
                 #print(f"rms = {rms}")
@@ -142,8 +149,16 @@ class spch_to_text:
                     audio_data = r.record(source)
                     # recognize (convert from speech to text)
                     try:
-                        text = r.recognize_azure(audio_data, key="6y1nBn7YCLMSgoye5uVVxrZm7C15rpCASgyW9Zt5iUjqfjnpJfH2JQQJ99ALACBsN54XJ3w3AAAYACOGwRi8", location="canadacentral")
+                        text = r.recognize_azure(audio_data, key="Ft27qAeJW6CJup9n2XJfsWdrnsz6mtTZygdG8SZx6BuJzktUEVM9JQQJ99ALACBsN54XJ3w3AAAYACOGhZ9C", location="canadacentral")
                         print(f"\n{text}\n")
+
+                        with self.lock:
+                            print("last_text = ", self.last_text)
+                            print("last_confidence = ", self.last_confidence)
+                            if text[0] != '':
+                                print("API data recorded")
+                                self.last_text = text[0]
+                                self.last_confidence = text[1]
                     except sr.UnknownValueError:
                         print("\nAudio could not be understood.\n")
                     except sr.RequestError as e:
@@ -154,9 +169,6 @@ class spch_to_text:
 
 
     def __init__(self):
-
-        # Create robot interface
-        self.interface = miro.lib.RobotInterface()
 
         # state
         self.micbuf = np.zeros((0, 4), 'uint16')
@@ -169,6 +181,13 @@ class spch_to_text:
         self.valid_time = False
         self.record_time = 0.0
 
+        # Make last_text and last_confidence members that contain the info given by the speech-to-text API
+        self.last_text = "None"
+        self.last_confidence = 0.0
+
+        # Create a lock for thread safety
+        self.lock = threading.Lock()
+
         # robot name
         topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
 
@@ -177,11 +196,16 @@ class spch_to_text:
         print ("subscribe", topic)
         self.sub_stream = rospy.Subscriber(topic, UInt16MultiArray, self.callback_stream, queue_size=1, tcp_nodelay=True)
 
-        #subscribe to mics using robot Interface
-        self.interface.register_callback("microphones", self.callback_mics)
-
+        #subscribe to mics. Previously used robot interface. Removed queue_size=1, 
+        self.sub_mics = rospy.Subscriber(topic_base_name + "/sensors/mics", Int16MultiArray, self.callback_mics, tcp_nodelay=True)
+    
         # report
         print ("recording from 4 microphones for", RECORD_TIME, "seconds...")
+
+        # Initialize a ROS node to communicate with MiRo
+        rospy.init_node("speech_to_text")
+        # Give it some time to make sure everything is initialised
+        rospy.sleep(2.0)
 
 if __name__ == "__main__":
 
