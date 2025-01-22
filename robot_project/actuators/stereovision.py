@@ -284,8 +284,6 @@ class Stereovision:
         self.callback_cam(ros_image, 1)
 
     def draw_frames(self):
-        # Remove mutex usage
-        # with self.mutex:
         if self.frame_left is not None and self.frame_right is not None:
             cv2.imshow("Left Camera", self.frame_left)
             cv2.imshow("Right Camera", self.frame_right)

@@ -272,6 +272,8 @@ class breath_ex:
                             self.silent_cycle_count += 1
                         else:
                             print("Timed out")
+                            self.behaviour = INTERACTIVE_STANDBY
+                            break
 
                         state_start_time = time.time()  # Reset state timer
                         self.touch_detect.head_touched = False # Reset head touch

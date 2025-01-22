@@ -85,24 +85,24 @@ class interactive_standby:
         return random.randint(low, high)
 
     def move_randomly(self):
-        self.joints_controller.position_neck(random.randint(15,40))
-        self.joints_controller.position_pitch(random.randint(-22,8))
-        self.joints_controller.position_yaw(random.randint(-55,55))
+        # self.joints_controller.position_neck(random.randint(15,40))
+        # self.joints_controller.position_pitch(random.randint(-22,8))
+        # self.joints_controller.position_yaw(random.randint(-55,55))
 
-        # move_neck_thread = threading.Thread(target=self.joints_controller.move_neck, args=(2, random.randint(15,40)))
-        # move_pitch_thread = threading.Thread(target=self.joints_controller.move_neck, args=(2, random.randint(-22,8)))
-        # move_yaw_thread = threading.Thread(target=self.joints_controller.move_neck, args=(2, random.randint(-55,55)))
+        rand_neck = random.randint(15,40)
+        rand_pitch = random.randint(-22,8)
+        rand_yaw = random.randint(-55,55)
 
-        # move_neck_thread.start()
-        # move_pitch_thread.start()
-        # move_yaw_thread.start()
+        move_thread = threading.Thread(target=self.joints_controller.move_all, args=(2,rand_yaw,rand_pitch,rand_neck))
+        move_thread.daemon = True
+        move_thread.start()
 
-    def move_idle(self):
-        rand = random.random()
-        if rand < 0.5:
-            self.joints_movement.nod(2, 2)
-        else:
-            self.joints_movement.shake(2, 2)        
+    # def move_idle(self):
+    #     rand = random.random()
+    #     if rand < 0.5:
+    #         self.joints_movement.nod(2, 2)
+    #     else:
+    #         self.joints_movement.shake(2, 2)        
 
     def get_activity_level(self, distance):
         if distance < 1.5:
@@ -110,23 +110,23 @@ class interactive_standby:
         else:
             return ACT_IDLE
 
-    def run(self):
-        # Start the stereovision in a separate thread
-        stereovision_thread = threading.Thread(target=self.stereovision.run)
-        stereovision_thread.start()
-
-        # speech_to_text_thread = threading.Thread(target=self.speech_to_text.run)
-        # speech_to_text_thread.daemon = True
-        # speech_to_text_thread.start()
-
-        # Make behaviour tracking variable
-        self.behaviour = INTERACTIVE_STANDBY
-
-
     def loop(self):
         """
         Main control loop
         """
+        # Start the stereovision in a separate thread
+        stereovision_thread = threading.Thread(target=self.stereovision.loop)
+        stereovision_thread.daemon = True
+        stereovision_thread.start()
+
+        speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
+        speech_to_text_thread.daemon = True
+        speech_to_text_thread.start()
+
+        # Make behaviour tracking variable
+        self.behaviour = INTERACTIVE_STANDBY
+
+        last_time = time.time()
 
         while not rospy.core.is_shutdown():
             # Detect aruco markers
@@ -134,27 +134,19 @@ class interactive_standby:
             # Detect touch
             self.touch_detect.check_touch()
 
-            if self.aruco_detect.breath_ex_ON:
+            words_to_check = ['breathe', 'breathing', 'exercise']
+            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in words_to_check):
                 print("Activated the breathing exercise through aruco codes")
                 self.behaviour = BREATHING_EXERCISE
                 self.aruco_detect.breath_ex_ON = False
+                self.stereovision.stop = True
+                self.speech_to_text.stop = True
                 break
-            
-            if self.touch_detect.breath_ex_ON:
-                print("Activated the breathing exercise through touch")
-                self.behaviour = BREATHING_EXERCISE
-                self.touch_detect.breath_ex_ON = False
-                break
-
-            # words_to_check = ['breathe', 'breathing', 'exercise']
-            # if any(word in self.speech_to_text.get_last_text().lower() for word in words_to_check):                
-            #     print("Activated the breathing exercise through speech")
-            #     self.behaviour = BREATHING_EXERCISE
-            #     break
 
             ##### Interactive Standby #####
 
             current_time = time.time()
+
             if current_time - last_time >= self.delay: # every # seconds
                 #print number of threads running
                 print(f"Thread count: {threading.active_count()}")
@@ -169,16 +161,17 @@ class interactive_standby:
                     self.move_randomly()
 
                 if activity_level == ACT_IDLE:
-                    self.delay = self.random_delay(7,10)
+                    self.delay = self.random_delay(3,5)
                     self.current_color = (0, 0, 255)  # Blue
                     audio_file = None
 
                 elif activity_level == ACT_ENGAGE and not self.wait:
-                    self.delay = self.random_delay(2,4)
+                    self.delay = self.random_delay(2,3)
                     self.current_color = (255, 0, 0)  # Red
                     audio_file = 'hi_there.mp3'
                     play_thread = threading.Thread(target=play_audio, args=(audio_file,))
                     play_thread.start()
+
                     self.wait = True
 
                 self.led_controller.turn_on_led(self.current_color, 250)
@@ -188,6 +181,6 @@ class interactive_standby:
             #### End of 5 second loop ####
 
             # Yield
-            #self.stereovision.draw_frames()
+            # self.stereovision.draw_frames()
 
         print("Exited the loop")

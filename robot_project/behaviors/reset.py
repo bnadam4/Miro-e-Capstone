@@ -36,6 +36,7 @@ class ResetBehavior:
     def run(self):
         print("Resetting actuators to default positions")
         print(f"Thread count: {threading.active_count()}")
+
         led_thread = threading.Thread(target=self.led_controller.turn_off_led)
         led_thread.start()
         led_thread.join()

@@ -120,7 +120,7 @@ class SpeechToText:
                 # print("Ready to record the next chunk.")
 
     def loop(self):
-        while not rospy.core.is_shutdown():
+        while not rospy.core.is_shutdown() and self.listen:
             if self.stop:
                 break
             

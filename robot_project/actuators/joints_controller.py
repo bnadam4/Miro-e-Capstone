@@ -212,3 +212,44 @@ class JointsController:
             self.position_neck(target_position)
         print(f"Neck fully moved to {target_position}.")
         self.current_neck_position = target_position  # Update the current position to target
+
+    # ----------------------------------------------
+    def move_all(self, duration, target_yaw, target_pitch, target_neck):
+        """Move yaw, pitch, and neck together to their target positions over the specified duration."""
+        print(f"Moving head yaw to {target_yaw}, pitch to {target_pitch}, and neck to {target_neck} over {duration} seconds...")
+        
+        start_time = time.time()
+        initial_yaw = self.current_yaw_position
+        initial_pitch = self.current_pitch_position
+        initial_neck = self.current_neck_position
+        
+        while time.time() - start_time < duration:
+            elapsed_time = time.time() - start_time
+            t = elapsed_time / duration
+            
+            # Apply easing for smooth transition (ease-in-out)
+            ease_t = t * t * (3 - 2 * t)
+            
+            # Calculate intermediate positions
+            step_yaw = initial_yaw + ease_t * (target_yaw - initial_yaw)
+            step_pitch = initial_pitch + ease_t * (target_pitch - initial_pitch)
+            step_neck = initial_neck + ease_t * (target_neck - initial_neck)
+            
+            # Clamp positions to their allowed ranges
+            step_yaw = max(min(step_yaw, HEAD_YAW_RIGHT), HEAD_YAW_LEFT)
+            step_pitch = max(min(step_pitch, HEAD_PITCH_DOWN), HEAD_PITCH_UP)
+            step_neck = max(min(step_neck, NECK_MAX), NECK_MIN)
+            
+            # Update positions
+            self.position_yaw(step_yaw)
+            self.position_pitch(step_pitch)
+            self.position_neck(step_neck)
+            
+            rospy.sleep(0.02)
+        
+        # Ensure final positions are exactly the target positions
+        self.position_yaw(target_yaw)
+        self.position_pitch(target_pitch)
+        self.position_neck(target_neck)
+        
+        print(f"Head yaw moved to {target_yaw}, pitch to {target_pitch}, and neck to {target_neck}.")

@@ -21,10 +21,6 @@ from actuators.node_actuators import NodeActuators  # assuming this import for N
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
 
-# State constants
-BREATHING_EXERCISE = 4
-INTERACTIVE_STANDBY = 5
-
 def main():
     node_actuators = NodeActuators()  # Initialize NodeActuators instance
     reset_behaviour = ResetBehavior()

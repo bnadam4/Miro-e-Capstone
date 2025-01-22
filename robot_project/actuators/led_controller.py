@@ -112,7 +112,7 @@ class LEDController:
 # ---------------------------------------------- 
 
     #turn on leds for certain duration then turns them off
-    def turn_on_led_sections(self, duration, color_front, color_mid, color_rear, brightness):
+    def toggle_led_sections(self, duration, color_front, color_mid, color_rear, brightness):
         print(f"LED on ({color_front[0]}, {color_front[1]}, {color_front[2]})")
         print(f"LED on ({color_mid[0]}, {color_mid[1]}, {color_mid[2]})")
         print(f"LED on ({color_rear[0]}, {color_rear[1]}, {color_rear[2]}) with brightness {brightness}...")
@@ -138,54 +138,5 @@ class LEDController:
             self.pub_illum.publish(self.illum)
             rospy.sleep(0.02)
         print("LED off.")
-        self.illum.data = [generate_illum(0, 0, 0, 0)] * 6  # LED off
-        self.pub_illum.publish(self.illum)
-
-    #turn on leds for certain duration then turns them off
-    def toggle_led_sections(self, color_front, color_mid, color_rear, brightness):
-        self.current_color=color_front
-        # Ensure brightness is within the 0-255 range
-        brightness = max(0, min(255, brightness))
-        self.current_brightness=brightness
-        r_f, g_f, b_f = color_front
-        r_m, g_m, b_m = color_mid
-        r_r, g_r, b_r = color_rear
-        
-        self.illum.data[front_left] = generate_illum(int(r_f), int(g_f),int(b_f), int(brightness))
-        self.illum.data[front_right] = generate_illum(int(r_f), int(g_f),int(b_f), int(brightness))
-
-        self.illum.data[mid_left] = generate_illum(int(r_m), int(g_m),int(b_m), int(brightness))
-        self.illum.data[mid_right] = generate_illum(int(r_m), int(g_m),int(b_m), int(brightness))
-
-        self.illum.data[rear_left] = generate_illum(int(r_r), int(g_r),int(b_r), int(brightness))
-        self.illum.data[rear_right] = generate_illum(int(r_r), int(g_r),int(b_r), int(brightness))
-        
-        self.pub_illum.publish(self.illum)
-        self.illum.data = [generate_illum(0, 0, 0, 0)] * 6  # LED off
-        self.pub_illum.publish(self.illum)
-
-    def wave_led(self, duration, iterations, color, brightness):
-        print(f"LED wave ({color[0]}, {color[1]}, {color[2]}) with brightness {brightness} for {iterations} iterations over {duration} seconds...")
-        self.current_color = color
-        # Ensure brightness is within the 0-255 range
-        brightness = max(0, min(255, brightness))
-        self.current_brightness = brightness
-        r, g, b = color
-        
-        total_steps = iterations * 3  # Each iteration has 3 steps (front, mid, rear)
-        step_duration = duration / total_steps  # Duration per step
-        
-        for i in range(total_steps):
-            # Determine which section to light up
-            section = i % 3
-            if section == 0:
-                self.toggle_led_sections((r, g, b), (0, 0, 0), (0, 0, 0), brightness)
-            elif section == 1:
-                self.toggle_led_sections((0, 0, 0), (r, g, b), (0, 0, 0), brightness)
-            else:
-                self.toggle_led_sections((0, 0, 0), (0, 0, 0), (r, g, b), brightness)
-            rospy.sleep(step_duration)  # Wait for the duration of each step
-        
-        print("LED wave complete.")
         self.illum.data = [generate_illum(0, 0, 0, 0)] * 6  # LED off
         self.pub_illum.publish(self.illum)
