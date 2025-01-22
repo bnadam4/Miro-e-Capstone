@@ -224,6 +224,10 @@ class breath_ex:
                             self.touch_detect.check_touch()
                             rospy.sleep(self.TICK)
 
+                        rospy.sleep(0.5)
+                        init_intro_thread = threading.Thread(target=play_audio, args=('mp3_files/init_intro.mp3',))
+                        init_intro_thread.start()
+                        init_intro_thread.join() # Wait for init_intro to finish
                         rospy.sleep(1.0)
                         self.touch_detect.head_touched = False # Reset head touch
 
@@ -272,6 +276,9 @@ class breath_ex:
                             self.silent_cycle_count += 1
                         else:
                             print("Timed out")
+                            breath_out_thread= threading.Thread(target=play_audio, args=('mp3_files/BrEx_timeout.mp3',))
+                            breath_out_thread.start()
+                            breath_out_thread.join()
 
                         state_start_time = time.time()  # Reset state timer
                         self.touch_detect.head_touched = False # Reset head touch
