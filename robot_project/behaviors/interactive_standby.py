@@ -168,7 +168,7 @@ class interactive_standby:
                 elif activity_level == ACT_ENGAGE and not self.wait:
                     self.delay = self.random_delay(2,3)
                     self.current_color = (255, 0, 0)  # Red
-                    audio_file = 'hi_there.mp3'
+                    audio_file = 'mp3_files/hi_there.mp3'
                     play_thread = threading.Thread(target=play_audio, args=(audio_file,))
                     play_thread.start()
 

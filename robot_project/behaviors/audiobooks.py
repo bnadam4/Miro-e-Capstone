@@ -32,7 +32,7 @@ class AudiobooksBehavior:
 
     def run(self):
         # Start playing the audiobook in the background
-        audiobook_file = 'alices_adventures_ch1_v2.mp3'
+        audiobook_file = 'mp3_files/alices_adventures_ch1_v2.mp3'
         play_thread = threading.Thread(target=play_audio, args=(audiobook_file,))
         play_thread.start()
 
