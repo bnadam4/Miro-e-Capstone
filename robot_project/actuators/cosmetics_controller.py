@@ -45,7 +45,7 @@ class CosmeticsController:
     
     def position_ears(self, left_position, right_position):
         """Updates both ears to a specific position."""
-        print(f"Moving ears to position {left_position} and {right_position}...")
+        #print(f"Moving ears to position {left_position} and {right_position}...")
         
         # Ensure the position is within a valid range (0.0 to 1.0)
         left_position = min(max(left_position, 0.0), 1.0)
@@ -65,12 +65,12 @@ class CosmeticsController:
         # Publish the updated positions
         self.pub_cos.publish(self.cos_joints)
         rospy.sleep(0.02)  # Sleep briefly to ensure the command is processed
-        print("Ears moved.")
+        #print("Ears moved.")
 
     
     def position_eyes(self, left_position, right_position):
         """Updates both eyes to a specific position."""
-        print(f"Moving ears to position {left_position} and {right_position}...")
+        #print(f"Moving ears to position {left_position} and {right_position}...")
         
         # Ensure the position is within a valid range (0.0 to 1.0)
         left_position = min(max(left_position, 0.0), 1.0)
@@ -90,12 +90,12 @@ class CosmeticsController:
         # Publish the updated positions
         self.pub_cos.publish(self.cos_joints)
         rospy.sleep(0.02)  # Sleep briefly to ensure the command is processed
-        print("Eyes moved.")       
+        #print("Eyes moved.")       
 
     
     def position_tail(self, wag_position, droop_position):
         """Updates tail to a specific position."""
-        print(f"Moving tail to position {wag_position} and {droop_position}...")
+        #print(f"Moving tail to position {wag_position} and {droop_position}...")
         
         # Ensure the position is within a valid range (0.0 to 1.0)
         wag_position = min(max(wag_position, 0.0), 1.0)
@@ -115,7 +115,7 @@ class CosmeticsController:
         # Publish the updated positions
         self.pub_cos.publish(self.cos_joints)
         rospy.sleep(0.02)  # Sleep briefly to ensure the command is processed
-        print("Tail moved.")        
+        #print("Tail moved.")        
 
         
 # ----------------------------------------------
@@ -124,7 +124,7 @@ class CosmeticsController:
 ###Ears###
     def move_ears(self, duration, target_position):
         """Move BOTH ears from current_position to target_position over the specified duration."""
-        print(f"Moving ears from {self.current_left_ear} to {target_position} over {duration} seconds...")
+        #print(f"Moving ears from {self.current_left_ear} to {target_position} over {duration} seconds...")
         
         start_time = time.time()
         initial_left_position = self.current_left_ear  # Save the starting position
@@ -151,13 +151,13 @@ class CosmeticsController:
         
         # Ensure final position is exactly the target position
         self.position_ears(target_position, target_position)
-        print(f"Ears fully moved to {target_position}.")
+        #print(f"Ears fully moved to {target_position}.")
         self.current_left_ear = target_position  # Update the current position to target
         self.current_right_ear = target_position  # Update the current position to target
 
     def move_one_ear(self, duration, target_position, select):
         """Move ONE ear from current_position to target_position over the specified duration."""
-        print(f"Moving {select} ear from {self.current_left_ear if select == 'left' else self.current_right_ear} to {target_position} over {duration} seconds...")
+        #print(f"Moving {select} ear from {self.current_left_ear if select == 'left' else self.current_right_ear} to {target_position} over {duration} seconds...")
         
         start_time = time.time()
         initial_left_position = self.current_left_ear  # Save the starting position
@@ -186,11 +186,11 @@ class CosmeticsController:
             rospy.sleep(0.02)  # Sleep briefly for smooth transition
         
         # Ensure final position is exactly the target position
-        print(f"{select.capitalize()} ear fully moved to {target_position}.")
+        #print(f"{select.capitalize()} ear fully moved to {target_position}.")
 ###EYES###
     def move_eyes(self, duration, target_position):
         """Move BOTH eyes from current_position to target_position over the specified duration."""
-        print(f"Moving eyes from {self.current_left_eye} to {target_position} over {duration} seconds...")
+        #print(f"Moving eyes from {self.current_left_eye} to {target_position} over {duration} seconds...")
         
         start_time = time.time()
         initial_left_position = self.current_left_eye  # Save the starting position
@@ -217,13 +217,13 @@ class CosmeticsController:
         
         # Ensure final position is exactly the target position
         self.position_eyes(target_position, target_position)
-        print(f"Eyes fully moved to {target_position}.")
+        #print(f"Eyes fully moved to {target_position}.")
         self.current_left_eye = target_position  # Update the current position to target
         self.current_right_eye = target_position  # Update the current position to target
 
     def move_one_eye(self, duration, target_position, select):
         """Move ONE eye from current_position to target_position over the specified duration."""
-        print(f"Moving {select} eye from {self.current_left_eye if select == 'left' else self.current_right_eye} to {target_position} over {duration} seconds...")
+        #print(f"Moving {select} eye from {self.current_left_eye if select == 'left' else self.current_right_eye} to {target_position} over {duration} seconds...")
         
         start_time = time.time()
         initial_left_position = self.current_left_eye  # Save the starting position
@@ -252,11 +252,11 @@ class CosmeticsController:
             rospy.sleep(0.02)  # Sleep briefly for smooth transition
         
         # Ensure final position is exactly the target position
-        print(f"{select.capitalize()} eye fully moved to {target_position}.")
+        #print(f"{select.capitalize()} eye fully moved to {target_position}.")
 ###TAIL###
     def move_wag_tail(self, duration, target_position):
         """Move wag tail from current_position to target_position over the specified duration."""
-        print(f"Moving wag tail from {self.current_wag} to {target_position} over {duration} seconds...")
+        #print(f"Moving wag tail from {self.current_wag} to {target_position} over {duration} seconds...")
         
         start_time = time.time()
         initial_position = self.current_wag  # Save the starting position
@@ -279,12 +279,12 @@ class CosmeticsController:
         
         # Ensure final position is exactly the target position
         self.position_tail(target_position, self.current_droop)
-        print(f"Tail moved to {target_position}.")
+        #print(f"Tail moved to {target_position}.")
         self.current_wag = target_position  # Update the current position to target
 
     def move_droop_tail(self, duration, target_position):
         """Move droop tail from current_position to target_position over the specified duration."""
-        print(f"Moving droop tail from {self.current_droop} to {target_position} over {duration} seconds...")
+        #print(f"Moving droop tail from {self.current_droop} to {target_position} over {duration} seconds...")
         
         start_time = time.time()
         initial_position = self.current_droop  # Save the starting position
@@ -307,6 +307,6 @@ class CosmeticsController:
         
         # Ensure final position is exactly the target position
         self.position_tail(self.current_wag, target_position)
-        print(f"Droop tail moved to {target_position}.")
+        #print(f"Droop tail moved to {target_position}.")
         self.current_droop = target_position  # Update the current position to target
 

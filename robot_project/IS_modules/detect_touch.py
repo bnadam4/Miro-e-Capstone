@@ -2,7 +2,7 @@
 #
 # Author: Bryce Adam
 # Date created: October 14th, 2024
-# Last modifiec: October 14th, 2024
+# Last modifiec: January 28th, 2025
 #
 # Extracts touch data from MiRo and adjusts MiRo behaviour accordingly
 
@@ -26,8 +26,6 @@ class see_touch:
         self.sub_package = rospy.Subscriber(topic_base_name + "/sensors/package",
 					miro.msg.sensors_package, self.callback_package, queue_size=1, tcp_nodelay=True)
         
-        self.breath_ex_ON = False
-        self.breath_ex_reset = False
         self.head_touched = False
         self.time_touch = time.time() # Used to determine time between touches
         print("MiRo detects whether it has been touched")
@@ -47,7 +45,7 @@ class see_touch:
 
             # Check touch data
             if int(p.touch_body.data) > 0:
-                # print("Body touched!")
+                print("Body touched!")
                 pass
             if int(p.touch_head.data) > 0 and self.head_touched == False:
                 print("Head touched!")
@@ -61,17 +59,7 @@ class see_touch:
                     print("Timeout touch")
                 
                 if time.time() > self.time_touch + 0.5:
-                    if self.breath_ex_ON:
-                        self.breath_ex_ON = False
-                        self.breath_ex_reset = True
-                    else:
-                        self.breath_ex_ON = True
-                        print("breath_ex_ON set")
-
                     self.head_touched = False
-                    
-            # To activate tap the miro's head twice. 
-            # The second tap should come within 5 seconds of the first
                  
 
 

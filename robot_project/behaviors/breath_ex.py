@@ -5,7 +5,7 @@
 # Description: Do the pre-programmed breathing exercise behaviour
 # Author: Bryce
 # Date created: Jan 8, 2024
-# Date modified: Jan 12, 2024
+# Date modified: Jan 28, 2024
 # ----------------------------------------------
 
 # Misc useful python libraries
@@ -155,7 +155,6 @@ class breath_ex:
 
         self.state = intro
         self.last_state = None
-        self.audio_finished = False  # Reset flag on loop start
         
         self.silent_cycle_count = 0
 
@@ -165,7 +164,6 @@ class breath_ex:
 
         print("MiRo does some deep breathing")
         self.aruco_detect.breath_ex_ON = True
-        self.touch_detect.breath_ex_ON = True
 
         # Initialize state timers
         state_start_time = time.time()
@@ -182,7 +180,7 @@ class breath_ex:
             if self.touch_detect.head_touched:
                 print("Head touched!")
 
-            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON:
+            if self.aruco_detect.breath_ex_ON:
                 # Check if state duration has elapsed
                 if time.time() > (state_start_time + state_duration):
                     state_start_time = time.time()  # Reset state timer
@@ -348,15 +346,12 @@ class breath_ex:
                 self.pub_illum.publish(self.illum)
 
 
-            if self.aruco_detect.breath_ex_reset or self.touch_detect.breath_ex_reset:
+            if self.aruco_detect.breath_ex_reset:
                 self.aruco_detect.breath_ex_reset = False
-                self.touch_detect.breath_ex_reset = False
                 self.aruco_detect.breath_ex_ON = False
-                self.touch_detect.breath_ex_ON = False
 
                 self.state = intro
                 self.last_state = None
-                self.audio_finished = False
                 self.silent_cycle_count = 0
                 # end audio stream
             

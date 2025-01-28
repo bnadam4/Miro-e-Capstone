@@ -2,7 +2,7 @@
 #
 # Author: Bryce Adam
 # Date created: October 8, 2024
-# Last modified: December 16, 2024
+# Last modified: January 28, 2025
 #
 # Main default program for MiRo when it is not undergoing some pre-programmed activity
 
@@ -80,6 +80,7 @@ class interactive_standby:
         self.current_color = (255,255,255)
 
         self.wait = False
+        self.petted = False
 
     def random_delay(self, low, high):
         return random.randint(low, high)
@@ -134,14 +135,16 @@ class interactive_standby:
             # Detect touch
             self.touch_detect.check_touch()
 
+            """
             words_to_check = ['breathe', 'breathing', 'exercise']
-            if self.aruco_detect.breath_ex_ON or self.touch_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in words_to_check):
+            if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in words_to_check):
                 print("Activated the breathing exercise through aruco codes")
                 self.behaviour = BREATHING_EXERCISE
                 self.aruco_detect.breath_ex_ON = False
                 self.stereovision.stop = True
                 self.speech_to_text.stop = True
                 break
+            """
 
             ##### Interactive Standby #####
 
@@ -173,6 +176,20 @@ class interactive_standby:
                     play_thread.start()
 
                     self.wait = True
+
+                activity_level = ACT_ENGAGE
+
+                # Check if being pet and act accordingly
+                if activity_level == ACT_ENGAGE and not self.petted:
+                    self.touch_detect.check_touch()
+                    if self.touch_detect.head_touched:
+                        self.petted = True
+                        audio_file = 'mp3_files/that_tickles.mp3'
+                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread.start()
+                        ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
+                        ear_thread.start()
+                        threading.Timer(1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
 
                 self.led_controller.turn_on_led(self.current_color, 250)
 
