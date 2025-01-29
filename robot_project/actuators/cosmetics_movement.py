@@ -62,12 +62,12 @@ class CosmeticsMovement:
     def open_eyes(self, duration):
         """Opens both eyes to their full position using smooth movement."""
         rospy.loginfo("Opening both eyes.")
-        self.controller.move_eyes(duration, 1.0)  # Open both eyes fully
+        self.controller.move_eyes(duration, 0.0)  # Open both eyes fully
 
     def close_eyes(self, duration=1.0):
         """Closes both eyes using smooth movement."""
         rospy.loginfo("Closing both eyes.")
-        self.controller.move_eyes(duration, 0.0)  # Close both eyes
+        self.controller.move_eyes(duration, 1.0)  # Close both eyes
 
     def wagging_tail(self, duration, repetitions):
         """Performs a wagging motion for the tail with optional repetition."""

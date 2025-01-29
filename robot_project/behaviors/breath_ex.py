@@ -275,7 +275,7 @@ class breath_ex:
                         else:
                             print("Timed out")
                             self.behaviour = INTERACTIVE_STANDBY
-                            breath_out_thread= threading.Thread(target=play_audio, args=('mp3_files/BrEx_timeout.mp3',))
+                            breath_out_thread= threading.Thread(target=play_audio, args=('mp3_files/BrEx_Timeout.mp3',))
                             breath_out_thread.start()
                             breath_out_thread.join()
                             break
@@ -349,10 +349,20 @@ class breath_ex:
             if self.aruco_detect.breath_ex_reset:
                 self.aruco_detect.breath_ex_reset = False
                 self.aruco_detect.breath_ex_ON = False
+                self.behaviour = INTERACTIVE_STANDBY
 
                 self.state = intro
                 self.last_state = None
                 self.silent_cycle_count = 0
+
+                self.eyelid_pos = 0.0
+                self.cos_joints.data[left_eye] = self.eyelid_pos
+                self.cos_joints.data[right_eye] = self.eyelid_pos
+                self.pub_cos.publish(self.cos_joints)
+
+                exit_thread= threading.Thread(target=play_audio, args=('mp3_files/BrEx_Timeout.mp3',))
+                exit_thread.start()
+                exit_thread.join()
                 # end audio stream
             
             # Yield

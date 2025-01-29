@@ -119,11 +119,11 @@ class NodeDetectAruco:
                     for id in ids:
                         if id == START_ARUCO and time.time() > self.activation_timer + 0.5:
                             self.breath_ex_ON = True
-                            # print("START_ARUCO has been seen")
+                            print("START_ARUCO has been seen")
                         elif id == END_ARUCO:
                             self.breath_ex_ON = False
                             self.breath_ex_reset = True
-                            # print("END_ARUCO has been seen")
+                            print("END_ARUCO has been seen")
                 else:
                     self.activation_timer = time.time() + 10.0
                     self.aruco_seen = False

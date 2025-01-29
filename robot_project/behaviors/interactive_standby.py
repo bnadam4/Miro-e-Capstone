@@ -131,6 +131,7 @@ class interactive_standby:
         self.behaviour = INTERACTIVE_STANDBY
 
         last_time = time.time()
+        last_pet = time.time()
 
         while not rospy.core.is_shutdown():
             # Detect aruco markers
@@ -138,8 +139,8 @@ class interactive_standby:
             # Detect touch
             self.touch_detect.check_touch()
 
-            """
-            words_to_check = ['breathe', 'breathing', 'exercise']
+            # words_to_check = ['breathe', 'breathing', 'exercise']
+            words_to_check = ['ectomorph']
             if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in words_to_check):
                 print("Activated the breathing exercise through aruco codes")
                 self.behaviour = BREATHING_EXERCISE
@@ -147,7 +148,6 @@ class interactive_standby:
                 self.stereovision.stop = True
                 self.speech_to_text.stop = True
                 break
-            """
 
             ##### Interactive Standby #####
 
@@ -164,7 +164,6 @@ class interactive_standby:
                 else:
                     self.wait = False
                     self.activity_level = ACT_IDLE
-                    self.petted = False
                     # Move randomly
                     self.move_randomly()
 
@@ -192,21 +191,54 @@ class interactive_standby:
                     print(f"\nTime added to engaged state\n")
                     print(f"New delay: {self.delay}")
 
+
+            rand_pet = random.randint(0, 2)
             # Check if being pet and act accordingly
-            if self.activity_level == ACT_ENGAGE and not self.petted:
+            if not self.petted:
                 self.touch_detect.check_touch()
                 if self.touch_detect.head_touched:
                     self.petted = True
-                    audio_file = 'mp3_files/that_tickles.mp3'
-                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
-                    play_thread.start()
-                    ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
-                    ear_thread.start()
-                    threading.Timer(1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
+
+                    if rand_pet == 0:
+                        audio_file = 'mp3_files/Petting_1.mp3'
+                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread.start()
+                        ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
+                        ear_thread.start()
+                        threading.Timer(1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
+                        # Wag MiRo's tail
+                        tail_thread = threading.Thread(target=self.cosmetics_movement.wagging_tail, args=(2, 3, ))
+                        tail_thread.start()
+                    elif rand_pet == 1:
+                        audio_file = 'mp3_files/Petting_2.mp3'
+                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread.start()
+                        # Wag MiRo's tail
+                        tail_thread = threading.Thread(target=self.cosmetics_movement.wagging_tail, args=(2, 3, ))
+                        tail_thread.start()
+                        # Narrow MiRo's eyes in contentment
+                        eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(2, ))
+                        eye_thread.start()
+                    elif rand_pet == 2:
+                        audio_file = 'mp3_files/Petting_3.mp3'
+                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread.start()
+                        # Nod MiRo's head
+                        head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
+                        head_thread.start()
+
+                    last_pet = time.time()
+
+            # Reset petted variable if not petted for a certain time
+            if current_time - last_pet >= 3 and self.petted:
+                self.petted = False
+                eye_thread = threading.Thread(target=self.cosmetics_movement.open_eyes, args=(2, ))
+                eye_thread.start()
 
             #### End of 5 second loop ####
 
             # Yield
-            self.stereovision.draw_frames()
+            rospy.sleep(0.02)
+            # self.stereovision.draw_frames()
 
         print("Exited the loop")
