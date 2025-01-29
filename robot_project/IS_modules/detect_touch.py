@@ -43,25 +43,31 @@ class see_touch:
             p = self.input_package
             self.input_package = None
 
+            # Mask to ignore the second digit (bit 1 in 0-based indexing)
+            masked_data = p.touch_body.data & 0b11111101  # Binary mask to clear the second digit
+
             # Check touch data
-            if int(p.touch_body.data) > 0:
+            if int(masked_data) > 0:
                 print("Body touched!")
-                pass
+                print(f"Touch data: {bin(p.touch_body.data)}")
+                
             if int(p.touch_head.data) > 0 and self.head_touched == False:
                 print("Head touched!")
                 self.time_touch = time.time()
                 self.head_touched = True
+            elif self.head_touched == True:
+                print("Deactivated head touch")
+                self.head_touched = False
 
+            # Timeout code currently irrelevant
             if int(p.touch_head.data) > 0 and self.head_touched == True:
-                print("Head touched")
                 if time.time() > self.time_touch + 5.0:
                     self.head_touched = False
                     print("Timeout touch")
                 
                 if time.time() > self.time_touch + 0.5:
                     self.head_touched = False
-                 
-
+                    print("Short touch timeout")
 
     # Callback for touch sensor data
     def callback_package(self, msg):

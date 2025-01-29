@@ -81,6 +81,7 @@ class interactive_standby:
 
         self.wait = False
         self.petted = False
+        self.activity_level = ACT_IDLE
 
     def random_delay(self, low, high):
         return random.randint(low, high)
@@ -107,8 +108,10 @@ class interactive_standby:
 
     def get_activity_level(self, distance):
         if distance < 1.5:
+            print("Engage")
             return ACT_ENGAGE
         else:
+            print("Idle")
             return ACT_IDLE
 
     def loop(self):
@@ -155,20 +158,21 @@ class interactive_standby:
                 print(f"Thread count: {threading.active_count()}")
                 audio_file = None
                 if self.stereovision.face_detected:
-                    #print(f"Face detected at distance: {self.stereovision.face_distance}")
-                    activity_level = self.get_activity_level(self.stereovision.face_distance)
+                    print(f"Face detected at distance: {self.stereovision.face_distance}")
+                    self.activity_level = self.get_activity_level(self.stereovision.face_distance)
+                    self.delay = 30 # Set high delay so that the robot continues to engage
                 else:
                     self.wait = False
-                    activity_level = ACT_IDLE
+                    self.activity_level = ACT_IDLE
+                    self.petted = False
                     # Move randomly
                     self.move_randomly()
 
-                if activity_level == ACT_IDLE:
+                if self.activity_level == ACT_IDLE:
                     self.delay = self.random_delay(3,5)
                     self.current_color = (0, 0, 255)  # Blue
                     audio_file = None
-
-                elif activity_level == ACT_ENGAGE and not self.wait:
+                elif self.activity_level == ACT_ENGAGE and not self.wait:
                     self.delay = self.random_delay(2,3)
                     self.current_color = (255, 0, 0)  # Red
                     audio_file = 'mp3_files/hi_there.mp3'
@@ -177,27 +181,32 @@ class interactive_standby:
 
                     self.wait = True
 
-                activity_level = ACT_ENGAGE
-
-                # Check if being pet and act accordingly
-                if activity_level == ACT_ENGAGE and not self.petted:
-                    self.touch_detect.check_touch()
-                    if self.touch_detect.head_touched:
-                        self.petted = True
-                        audio_file = 'mp3_files/that_tickles.mp3'
-                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
-                        play_thread.start()
-                        ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
-                        ear_thread.start()
-                        threading.Timer(1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
-
                 self.led_controller.turn_on_led(self.current_color, 250)
 
                 last_time = current_time
 
+            # Add time to ACT_ENGAGE state if face detected
+            if self.stereovision.face_detected and self.activity_level == ACT_ENGAGE:
+                if current_time - last_time + 5 >= self.delay:
+                    self.delay += 10 # Add time to ACT_ENGAGE state
+                    print(f"\nTime added to engaged state\n")
+                    print(f"New delay: {self.delay}")
+
+            # Check if being pet and act accordingly
+            if self.activity_level == ACT_ENGAGE and not self.petted:
+                self.touch_detect.check_touch()
+                if self.touch_detect.head_touched:
+                    self.petted = True
+                    audio_file = 'mp3_files/that_tickles.mp3'
+                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                    play_thread.start()
+                    ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
+                    ear_thread.start()
+                    threading.Timer(1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
+
             #### End of 5 second loop ####
 
             # Yield
-            # self.stereovision.draw_frames()
+            self.stereovision.draw_frames()
 
         print("Exited the loop")
