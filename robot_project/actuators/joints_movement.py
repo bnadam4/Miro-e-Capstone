@@ -5,7 +5,7 @@
 # Description: Controls the head movements for nodding (yes) and shaking (no)
 # Author: Jasmine
 # Date created: Dec 24, 2024
-# Date modified: Dec 29, 2024
+# Date modified: Feb 5, 2024
 # ----------------------------------------------
 
 import rospy
@@ -27,11 +27,11 @@ class JointsMovement:
         
         for _ in range(repetitions):
             # Move the head pitch up (nodding 'yes')
-            self.controller.move_pitch(duration/2, -4.0)  # Move to -15 degrees pitch (looking up)
+            self.controller.move_pitch(duration/2/repetitions, -4.0)  # Move to -15 degrees pitch (looking up)
             rospy.sleep(0.05)
             
             # Move the head pitch down (nodding 'yes')
-            self.controller.move_pitch(duration/2, 4.0)  # Move to the neutral position (looking straight)
+            self.controller.move_pitch(duration/2/repetitions, 4.0)  # Move to the neutral position (looking straight)
             
 
         rospy.loginfo(f"Nod (yes) gesture completed with {repetitions} repetitions.")
@@ -47,11 +47,13 @@ class JointsMovement:
         
         for _ in range(repetitions):
             # Move the head yaw left (shaking 'no')
-            self.controller.move_yaw(duration/2, -10.0)  # Move yaw to the left (-30 degrees)
+            self.controller.move_yaw(duration/2/repetitions, -10.0)  # Move yaw to the left (-10 degrees)
             rospy.sleep(0.05)
 
             # Move the head yaw right (shaking 'no')
-            self.controller.move_yaw(duration/2, 1.0)  # Move yaw to the right (30 degrees)
+            self.controller.move_yaw(duration/2/repetitions, 10.0)  # Move yaw to the right (10 degrees)
+        
+        self.controller.move_yaw(duration/2/repetitions/10, 0.0)  # Move yaw to the right (10 degrees)
             
 
         rospy.loginfo(f"Shake (no) gesture completed with {repetitions} repetitions.")
