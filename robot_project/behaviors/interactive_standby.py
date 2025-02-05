@@ -2,7 +2,7 @@
 #
 # Author: Bryce Adam
 # Date created: October 8, 2024
-# Last modified: January 28, 2025
+# Last modified: February 5, 2025
 #
 # Main default program for MiRo when it is not undergoing some pre-programmed activity
 
@@ -31,11 +31,9 @@ from actuators.speech_to_text import SpeechToText
 # Sensor nodes to import
 from IS_modules.node_detect_aruco import *
 from IS_modules.detect_touch import *
-from IS_modules.attend_face import *
 
 ACT_ENGAGE = 1 # attempt to engage with person
 ACT_IDLE = 2 # do some idle animations
-
 
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
@@ -113,6 +111,11 @@ class interactive_standby:
         else:
             print("Idle")
             return ACT_IDLE
+        
+    def blink(self):
+        blink_thread = threading.Thread(target=self.cosmetics_movement.close_eyes, args=(0.2, ))
+        blink_thread.start()
+        threading.Timer(0.2, lambda: threading.Thread(target=self.cosmetics_movement.open_eyes, args=(0.2, )).start()).start()
 
     def loop(self):
         """
@@ -132,6 +135,8 @@ class interactive_standby:
 
         last_time = time.time()
         last_pet = time.time()
+        last_blink = time.time()
+        blink_delay = self.random_delay(10, 30)
 
         while not rospy.core.is_shutdown():
             # Detect aruco markers
@@ -139,8 +144,7 @@ class interactive_standby:
             # Detect touch
             self.touch_detect.check_touch()
 
-            # words_to_check = ['breathe', 'breathing', 'exercise']
-            words_to_check = ['ectomorph']
+            words_to_check = ['breathe', 'breathing', 'exercise']
             if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in words_to_check):
                 print("Activated the breathing exercise through aruco codes")
                 self.behaviour = BREATHING_EXERCISE
@@ -192,7 +196,7 @@ class interactive_standby:
                     print(f"New delay: {self.delay}")
 
 
-            rand_pet = random.randint(0, 2)
+            rand_pet = random.randint(0, 3)
             # Check if being pet and act accordingly
             if not self.petted:
                 self.touch_detect.check_touch()
@@ -226,6 +230,9 @@ class interactive_standby:
                         # Nod MiRo's head
                         head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
                         head_thread.start()
+                    elif rand_pet == 3:
+                        # Occasionally do no respond to petting
+                        pass
 
                     last_pet = time.time()
 
@@ -236,6 +243,13 @@ class interactive_standby:
                 eye_thread.start()
 
             #### End of 5 second loop ####
+
+            # Blink every 10-30 seconds
+            if current_time - last_blink >= blink_delay:
+                print("Blinking")
+                self.blink()
+                last_blink = current_time
+                blink_delay = self.random_delay(10, 30)
 
             # Yield
             rospy.sleep(0.02)
