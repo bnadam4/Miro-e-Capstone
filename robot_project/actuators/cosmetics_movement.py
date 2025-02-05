@@ -46,14 +46,31 @@ class CosmeticsMovement:
         rospy.loginfo(f"Winking the {side} eye {repetitions} times.")
         for _ in range(repetitions):
             if side == "left":
-                self.controller.move_one_eye(duration/2, 1.0, "left")  # Close left eye
+                self.controller.move_one_eye(duration/2/repetitions, 1.0, "left")  # Close left eye
                 rospy.sleep(0.05)  # Pause before repeating
-                self.controller.move_one_eye(duration/2, 0.0, "left")  # Open left eye
+                self.controller.move_one_eye(duration/2/repetitions, 0.0, "left")  # Open left eye
             elif side == "right":
-                self.controller.move_one_eye(duration/2, 1.0, "right")  # Close right eye
+                self.controller.move_one_eye(duration/2/repetitions, 1.0, "right")  # Close right eye
                 rospy.sleep(0.05)  # Pause before repeating
-                self.controller.move_one_eye(duration/2, 0.0, "right")  # Open right eye
-            
+                self.controller.move_one_eye(duration/2/repetitions, 0.0, "right")  # Open right eye
+                
+    def blink_eyes(self, duration, repetition):
+        """Makes both eyes blink a specified number of times with a given duration."""
+    
+        for _ in range(repetition):
+        	# Close both eyes
+        	rospy.loginfo("Closing both eyes.")
+        	self.controller.move_eyes(duration/2/repetition, 1.0)  # Close eyes
+        
+        	# Wait for the duration of the blink
+        	rospy.sleep(0.05)
+        
+        	# Open both eyes
+        	rospy.loginfo("Opening both eyes.")
+        	self.controller.move_eyes(duration/2/repetition, 0.0)  # Open eyes fully
+        
+        	# Wait for the duration before the next blink
+        	#rospy.sleep(duration)    
 
     def eyes_squint(self, duration):
         """Moves both eyes to a squinting position using smooth movement."""
