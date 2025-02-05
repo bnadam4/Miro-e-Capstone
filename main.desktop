@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name = MiRo Capstone Launcher
+Version = 1.0
+Exec=bash -c "cd /home/bryce_cap/mdk/catkin_ws/src/test_pkg/src/Winter_2025/Miro-e-Capstone/robot_project && source /opt/ros/noetic/setup.bash && source ~/mdk/setup.bash && python3 main.py"
+Terminal=true
+Icon = /home/bryce_cap/mdk/catkin_ws/src/test_pkg/src/Winter_2025/Miro-e-Capstone/lightbulbmiro.png
+Terminal = true
+Type = Application
