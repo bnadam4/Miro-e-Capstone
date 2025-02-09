@@ -27,6 +27,7 @@ class see_touch:
 					miro.msg.sensors_package, self.callback_package, queue_size=1, tcp_nodelay=True)
         
         self.head_touched = False
+        self.body_touched = False
         self.time_touch = time.time() # Used to determine time between touches
         print("MiRo detects whether it has been touched")
 
@@ -43,13 +44,16 @@ class see_touch:
             p = self.input_package
             self.input_package = None
 
-            # Mask to ignore the second digit (bit 1 in 0-based indexing)
-            masked_data = p.touch_body.data & 0b11111101  # Binary mask to clear the second digit
-
             # Check touch data
-            if int(masked_data) > 0:
+            touch_data = int(p.touch_body.data)
+            if bin(touch_data).count('1') >= 3 and self.body_touched == False:
                 print("Body touched!")
                 print(f"Touch data: {bin(p.touch_body.data)}")
+                self.time_touch = time.time()
+                self.body_touched = True
+            elif self.body_touched == True:
+                print("Deactivated body touch")
+                self.body_touched = False
                 
             if int(p.touch_head.data) > 0 and self.head_touched == False:
                 print("Head touched!")

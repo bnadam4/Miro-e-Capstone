@@ -58,19 +58,19 @@ class CosmeticsMovement:
         """Makes both eyes blink a specified number of times with a given duration."""
     
         for _ in range(repetition):
-        	# Close both eyes
-        	rospy.loginfo("Closing both eyes.")
-        	self.controller.move_eyes(duration/2/repetition, 1.0)  # Close eyes
+            # Close both eyes
+            rospy.loginfo("Closing both eyes.")
+            self.controller.move_eyes(duration/2/repetition, 1.0)  # Close eyes
         
-        	# Wait for the duration of the blink
-        	rospy.sleep(0.05)
+            # Wait for the duration of the blink
+            rospy.sleep(0.05)
         
-        	# Open both eyes
-        	rospy.loginfo("Opening both eyes.")
-        	self.controller.move_eyes(duration/2/repetition, 0.0)  # Open eyes fully
+            # Open both eyes
+            rospy.loginfo("Opening both eyes.")
+            self.controller.move_eyes(duration/2/repetition, 0.0)  # Open eyes fully
         
-        	# Wait for the duration before the next blink
-        	#rospy.sleep(duration)    
+            # Wait for the duration before the next blink
+            #rospy.sleep(duration)    
 
     def eyes_squint(self, duration):
         """Moves both eyes to a squinting position using smooth movement."""

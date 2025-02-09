@@ -11,11 +11,12 @@
 # ----------------------------------------------
 
 import rospy
+import miro2 as miro
 from std_msgs.msg import Float32MultiArray
 import math
 import time
 import os
-
+import numpy as np
 
 # Generate enum and constants
 droop, wag, left_eye, right_eye, left_ear, right_ear = range(6)
@@ -36,8 +37,7 @@ class CosmeticsController:
         self.current_right_eye = 0.0
         
         self.current_left_ear = 0.0
-        self.current_right_ear = 0.0
-        
+        self.current_right_ear = 0.0    
 
 # ----------------------------------------------
 #  Updates Positions
@@ -310,3 +310,21 @@ class CosmeticsController:
         #print(f"Droop tail moved to {target_position}.")
         self.current_droop = target_position  # Update the current position to target
 
+    # Input a wag rate between 30.0 and 7.0. Lower rates give faster wagging
+    def wagging(self, duration, wag_rate):
+
+        start_time = time.time()
+        wag_phase = 0.0
+
+        while time.time() - start_time < duration:
+            wag_phase += np.pi / wag_rate
+
+            if wag_phase >= 2 * np.pi:
+                wag_phase -= 2 * np.pi
+
+            self.position_tail(np.sin(wag_phase)*0.5 + 0.5, 0.0)
+
+            rospy.sleep(0.02)  # Sleep briefly for smooth transition
+
+        # Set the tail to the correct ending position
+        self.position_tail(0.5, 0.0)
