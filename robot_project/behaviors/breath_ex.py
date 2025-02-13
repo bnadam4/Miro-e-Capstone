@@ -29,6 +29,8 @@ from IS_modules.detect_touch import *
 # Actuactor controllers
 from actuators.cosmetics_controller import CosmeticsController
 from actuators.cosmetics_movement import CosmeticsMovement
+from actuators.joints_controller import JointsController #class
+from actuators.joints_movement import JointsMovement #class
 
 # Custom python files with useful functions
 from IS_modules.pose_interp import *
@@ -139,6 +141,8 @@ class breath_ex:
         # Initialize controllers
         self.cosmetics_controller = CosmeticsController()
         self.cosmetics_movement = CosmeticsMovement()
+        self.joints_controller = JointsController()
+        self.joints_movement = JointsMovement()
 
         # rospy.sleep(2.0)
 
@@ -159,6 +163,12 @@ class breath_ex:
         self.silent_cycle_count = 0
 
         # Play the intro audio
+        BE_intro_thread = threading.Thread(target=play_audio, args=('mp3_files/Breath_ex.mp3',))
+        BE_intro_thread.start()
+        head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
+        head_thread.start()
+        BE_intro_thread.join() # Wait for intro to finish
+        rospy.sleep(1.0)
         intro_thread = threading.Thread(target=play_audio, args=('mp3_files/intro.mp3',))
         intro_thread.start()
 

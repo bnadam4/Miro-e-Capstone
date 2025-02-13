@@ -60,6 +60,8 @@ class NodeDetectAruco:
         self.breath_ex_reset = False
         self.activation_timer = 0.0
         self.aruco_seen = False
+        self.muscle_relax_ON = False
+        self.audiobook_ON = False
 
         # Main control loop iteration counter
         self.counter = 0
