@@ -51,6 +51,8 @@ pitch_lower = -20.0 # deg
 led_lower = 20
 led_upper = 250
 
+MUSCLE_RELAXATION = 1
+AUDIOBOOK = 2
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
 
@@ -62,7 +64,6 @@ class interactive_standby:
         self.joints_movement = JointsMovement()
         self.cosmetics_controller = CosmeticsController()
         self.cosmetics_movement = CosmeticsMovement()
-
 
         self.stereovision = Stereovision()
         self.speech_to_text = SpeechToText()
@@ -85,10 +86,6 @@ class interactive_standby:
         return random.randint(low, high)
 
     def move_randomly(self):
-        # self.joints_controller.position_neck(random.randint(15,40))
-        # self.joints_controller.position_pitch(random.randint(-22,8))
-        # self.joints_controller.position_yaw(random.randint(-55,55))
-
         rand_neck = random.randint(15,40)
         rand_pitch = random.randint(-22,8)
         rand_yaw = random.randint(-55,55)
@@ -96,13 +93,6 @@ class interactive_standby:
         move_thread = threading.Thread(target=self.joints_controller.move_all, args=(2,rand_yaw,rand_pitch,rand_neck))
         move_thread.daemon = True
         move_thread.start()
-
-    # def move_idle(self):
-    #     rand = random.random()
-    #     if rand < 0.5:
-    #         self.joints_movement.nod(2, 2)
-    #     else:
-    #         self.joints_movement.shake(2, 2)        
 
     def get_activity_level(self, distance):
         if distance < 1.5:
@@ -144,11 +134,30 @@ class interactive_standby:
             # Detect touch
             self.touch_detect.check_touch()
 
-            words_to_check = ['breathe', 'breathing', 'exercise']
-            if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in words_to_check):
-                print("Activated the breathing exercise through aruco codes")
+            breath_words_to_check = ['breathe', 'breathing']
+            audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
+            muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
+
+            if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check):
+                print("Activated the breathing exercise")
                 self.behaviour = BREATHING_EXERCISE
                 self.aruco_detect.breath_ex_ON = False
+                self.stereovision.stop = True
+                self.speech_to_text.stop = True
+                break
+
+            elif self.aruco_detect.muscle_relax_ON or any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check):
+                print("Activated the muscle relaxation exercise")
+                self.behaviour = MUSCLE_RELAXATION
+                self.aruco_detect.muscle_relax_ON = False
+                self.stereovision.stop = True
+                self.speech_to_text.stop = True
+                break
+
+            elif self.aruco_detect.audiobook_ON or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check):
+                print("Activated the audio book")
+                self.behaviour = AUDIOBOOK
+                self.aruco_detect.audiobook_ON = False
                 self.stereovision.stop = True
                 self.speech_to_text.stop = True
                 break
