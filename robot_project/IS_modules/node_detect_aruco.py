@@ -21,7 +21,9 @@ import cv2
 from cv_bridge import CvBridge, CvBridgeError
 
 # Global variables
-START_ARUCO = 22
+START_BREATH_ARUCO = 22
+START_MUSCLE_RELAX_ARUCO = 23
+START_AUDIOBOOK_ARUCO = 24
 END_ARUCO = 27
 
 class NodeDetectAruco:
@@ -66,7 +68,7 @@ class NodeDetectAruco:
         # Main control loop iteration counter
         self.counter = 0
 
-        print("MiRo camera feed")
+        print("MiRo aruco dector camera feed")
 
         # Initialize a ROS node to communicate with MiRo
         # rospy.init_node("node_aruco_detector")
@@ -119,9 +121,15 @@ class NodeDetectAruco:
                         self.activation_timer = time.time()
 
                     for id in ids:
-                        if id == START_ARUCO and time.time() > self.activation_timer + 0.5:
+                        if id == START_BREATH_ARUCO and time.time() > self.activation_timer + 0.5:
                             self.breath_ex_ON = True
-                            print("START_ARUCO has been seen")
+                            print("START_BREATH_ARUCO has been seen")
+                        elif id == START_MUSCLE_RELAX_ARUCO:
+                            self.muscle_relax_ON = True
+                            print("START_MUSCLE_RELAX_ARUCO has been seen")
+                        elif id == START_AUDIOBOOK_ARUCO:
+                            self.audiobook_ON = True
+                            print("START_AUDIOBOOK_ARUCO has been seen")
                         elif id == END_ARUCO:
                             self.breath_ex_ON = False
                             self.breath_ex_reset = True
