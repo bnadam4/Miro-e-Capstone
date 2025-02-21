@@ -190,6 +190,10 @@ class breath_ex:
             if self.touch_detect.head_touched:
                 print("Head touched!")
 
+            if self.aruco_detect.exit_behaviour == True:
+                print("Exiting breathing exercise")
+                break
+
             if self.aruco_detect.breath_ex_ON:
                 # Check if state duration has elapsed
                 if time.time() > (state_start_time + state_duration):

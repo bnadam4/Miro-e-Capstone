@@ -146,15 +146,18 @@ class interactive_standby:
             audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
             muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
 
-            if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower():
+            if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower() and not self.speaking:
                 print("Activated capability response")
                 audio_file = 'mp3_files/what_can_i_do.mp3'
                 play_thread = threading.Thread(target=play_audio, args=(audio_file,))
                 play_thread.start()
+                self.speaking = True
                 play_thread.join()
+                self.speech_to_text.last_text= ''
+                self.speaking = False
                 
 
-            if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check):
+            if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking:
                 print("Activated the breathing exercise")
                 self.behaviour = BREATHING_EXERCISE
                 self.aruco_detect.breath_ex_ON = False
@@ -162,7 +165,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
 
-            elif self.aruco_detect.muscle_relax_ON or any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check):
+            elif self.aruco_detect.muscle_relax_ON or any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check) and not self.speaking:
                 print("Activated the muscle relaxation exercise")
                 self.behaviour = MUSCLE_RELAXATION
                 self.aruco_detect.muscle_relax_ON = False
@@ -170,7 +173,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
 
-            elif self.aruco_detect.audiobook_ON or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check):
+            elif self.aruco_detect.audiobook_ON or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and not self.speaking:
                 print("Activated the audio book")
                 self.behaviour = AUDIOBOOK
                 self.aruco_detect.audiobook_ON = False

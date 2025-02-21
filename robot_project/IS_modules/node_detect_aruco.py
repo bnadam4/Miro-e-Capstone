@@ -132,8 +132,7 @@ class NodeDetectAruco:
                             self.audiobook_ON = True
                             print("START_AUDIOBOOK_ARUCO has been seen")
                         elif id == END_ARUCO:
-                            self.breath_ex_ON = False
-                            self.breath_ex_reset = True
+                            self.exit_behaviour = True
                             print("END_ARUCO has been seen")
                 else:
                     self.activation_timer = time.time() + 10.0

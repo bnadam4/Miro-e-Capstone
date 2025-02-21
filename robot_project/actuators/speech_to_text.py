@@ -156,7 +156,7 @@ class SpeechToText:
                             file.writeframes(struct.pack('<h', s))
 
                     buffer.seek(0)
-                    """
+                    
                     with sr.AudioFile(buffer) as source:
                         audio_data = r.record(source)
                         try:
@@ -169,7 +169,7 @@ class SpeechToText:
                             print("\nAudio could not be understood.\n")
                         except sr.RequestError as e:
                             print(f"API error: {e}")
-                    """
+
 
                 self.record = False
                 self.valid_time = False
