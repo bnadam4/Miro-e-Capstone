@@ -80,6 +80,8 @@ class interactive_standby:
 
         self.wait = False
         self.petted = False
+        self.crinkled = False
+        self.speaking = False
         self.activity_level = ACT_IDLE
 
     def random_delay(self, low, high):
@@ -101,6 +103,9 @@ class interactive_standby:
         else:
             print("Idle")
             return ACT_IDLE
+        
+    def engage(self, delay):
+        return  ACT_ENGAGE, delay + 5
         
     def blink(self):
         blink_thread = threading.Thread(target=self.cosmetics_movement.close_eyes, args=(0.2, ))
@@ -126,7 +131,10 @@ class interactive_standby:
         last_time = time.time()
         last_pet = time.time()
         last_blink = time.time()
-        blink_delay = self.random_delay(10, 30)
+        last_crinkle = time.time()
+        last_spoke = time.time()
+        blink_delay = self.random_delay(5, 20)
+        speak_delay = 5.0
 
         while not rospy.core.is_shutdown():
             # Detect aruco markers
@@ -179,6 +187,9 @@ class interactive_standby:
                     self.activity_level = ACT_IDLE
                     # Move randomly
                     self.move_randomly()
+                    self.speaking = True
+                    peak_delay = 0.5
+                    last_spoke = time.time()
 
                 if self.activity_level == ACT_IDLE:
                     self.delay = self.random_delay(3,5)
@@ -192,6 +203,9 @@ class interactive_standby:
                     play_thread.start()
 
                     self.wait = True
+                    self.speaking = True
+                    last_spoke = time.time()
+                    speak_delay = 5.0
 
                 self.led_controller.turn_on_led(self.current_color, 250)
 
@@ -201,16 +215,22 @@ class interactive_standby:
             if self.stereovision.face_detected and self.activity_level == ACT_ENGAGE:
                 if current_time - last_time + 5 >= self.delay:
                     self.delay += 10 # Add time to ACT_ENGAGE state
+                    self.current_color = (0, 255, 0)  # Green
                     print(f"\nTime added to engaged state\n")
                     print(f"New delay: {self.delay}")
 
 
             rand_pet = random.randint(0, 3)
             # Check if being pet and act accordingly
-            if not self.petted:
+            if not self.petted and not self.speaking:
                 self.touch_detect.check_touch()
                 if self.touch_detect.head_touched:
                     self.petted = True
+                    self.wait = True
+                    #self.activity_level, self.delay = self.engage(self.delay)
+                    last_spoke = time.time()
+                    speak_delay = 3.0
+                    self.speaking = True
 
                     if rand_pet == 0:
                         print("Petting 1: Ears")
@@ -245,8 +265,13 @@ class interactive_standby:
 
                     last_pet = time.time()
 
-                elif self.touch_detect.body_touched:
+                elif self.touch_detect.body_touched and not self.speaking:
                     self.petted = True
+                    self.wait = True
+
+                    last_spoke = time.time()
+                    speak_delay = 3.0
+                    self.speaking = True
 
                     if rand_pet == 0:
                         print("Petting 5: Thanks")
@@ -278,22 +303,66 @@ class interactive_standby:
                         print("Petting 8: Tail wag")
                         tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
                         tail_thread.start()
-                        
 
                     last_pet = time.time()
+
+            # Check if being crinkled and act accordingly
+            if not self.crinkled and not self.speaking and not self.wait:
+                if self.speech_to_text.tail_crinkle:
+                    self.crinkled = True
+                    print("Crinkling tail")
+                    audio_file = 'mp3_files/Tail_touch_1.mp3'
+                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                    play_thread.start()
+                    head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
+                    head_thread.start()
+                    last_crinkle = time.time()
+                elif self.speech_to_text.right_crinkle:
+                    self.crinkled = True
+                    print("Crinkling Right Ear")
+                    audio_file = 'mp3_files/Ear_touch_1.mp3'
+                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                    play_thread.start()
+                    eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(2, ))
+                    eye_thread.start()
+                    last_crinkle = time.time()
+                elif self.speech_to_text.left_crinkle:
+                    self.crinkled = True
+                    print("Crinkling Left Ear")
+                    audio_file = 'mp3_files/Ear_touch_1.mp3'
+                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                    play_thread.start()
+                    eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(1, ))
+                    eye_thread.start()
+                    last_crinkle = time.time()
 
             # Reset petted variable if not petted for a certain time
             if current_time - last_pet >= 3 and self.petted:
                 self.petted = False
                 eye_thread = threading.Thread(target=self.cosmetics_movement.open_eyes, args=(2, ))
                 eye_thread.start()
+                self.wait = False
+
+            # Reset crinkle variable if not petted for a certain time
+            if current_time - last_crinkle >= 5 and self.crinkled:
+                self.crinkled = False
+                eye_thread = threading.Thread(target=self.cosmetics_movement.open_eyes, args=(2, ))
+                eye_thread.start()
+                self.wait = False
+
+            # Reset speak variable if not spoken for a certain time
+            if current_time - last_spoke >= speak_delay and self.speaking:
+                print("Set speaking to False")
+                self.speaking = False
 
             #### End of 5 second loop ####
 
             # Blink every 10-30 seconds
             if current_time - last_blink >= blink_delay:
                 print("Blinking")
-                if not self.petted:
+                self.speaking = True
+                speak_delay = 0.5
+                if not self.petted and not self.crinkled:
                     self.blink()
                 last_blink = current_time
                 blink_delay = self.random_delay(10, 30)

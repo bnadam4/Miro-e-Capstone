@@ -17,8 +17,6 @@ import numpy as np
 import wave, struct, io
 import speech_recognition as sr
 
-
-
 import miro2 as miro
 
 # initialize the recognizer
@@ -69,9 +67,32 @@ class SpeechToText:
             channel_to_process = 0 # Select the channel to monitor
             # Calculate RMS value for sound intensity
             single_channel_data = mic_data[:, channel_to_process]
+            right_ear_data = mic_data[:, 1]
+            tail_data = mic_data[:, 3]
             rms = int(np.sqrt(np.mean(single_channel_data.astype(np.float32) ** 2)))
+            rms_right = int(np.sqrt(np.mean(right_ear_data.astype(np.float32) ** 2)))
+            rms_tail = int(np.sqrt(np.mean(tail_data.astype(np.float32) ** 2)))
 
-            #print(f"The rms is {rms}")
+            THRESHOLD_CRINKLE_TAIL = 18000 
+            THRESHOLD_CRINKLE_EARS = 9000
+
+            if rms > THRESHOLD_CRINKLE_EARS:
+                print(f"The rms for the left ear is {rms}")
+                self.left_crinkle = True
+            else:
+                self.left_crinkle = False
+
+            if rms_right > THRESHOLD_CRINKLE_EARS:
+                print(f"The rms for the right ear is {rms_right}")
+                self.right_crinkle = True
+            else:
+                self.right_crinkle = False
+
+            if rms_tail > THRESHOLD_CRINKLE_TAIL:
+                print(f"The rms for the tail is {rms_tail}")
+                self.tail_crinkle = True
+            else:
+                self.tail_crinkle = False
 
             #print("len(mic_data) = ", len(mic_data))
             #print("len(msg.data) = ", len(msg.data))
@@ -135,6 +156,7 @@ class SpeechToText:
                             file.writeframes(struct.pack('<h', s))
 
                     buffer.seek(0)
+                    """
                     with sr.AudioFile(buffer) as source:
                         audio_data = r.record(source)
                         try:
@@ -147,6 +169,7 @@ class SpeechToText:
                             print("\nAudio could not be understood.\n")
                         except sr.RequestError as e:
                             print(f"API error: {e}")
+                    """
 
                 self.record = False
                 self.valid_time = False
@@ -170,6 +193,10 @@ class SpeechToText:
         # Make last_text and last_confidence members that contain the info given by the speech-to-text API
         self.last_text = "None"
         self.last_confidence = 0.0
+        # Other variables to pass to interactive standby
+        self.left_crinkle = False
+        self.right_crinkle = False
+        self.tail_crinkle = False
 
         # Create a lock for thread safety
         self.lock = threading.Lock()

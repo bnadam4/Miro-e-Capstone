@@ -139,8 +139,8 @@ class NodeDetectAruco:
                     self.aruco_seen = False
 
                 # show
-                # cv2.imshow("Camera Feed: " + self.cam_names[index], image)
-                # cv2.waitKey(1)
+                #cv2.imshow("Camera Feed: " + self.cam_names[index], image)
+                #cv2.waitKey(1)
 
     def callback_cam(self, ros_image, index):
         
