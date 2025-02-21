@@ -24,6 +24,7 @@ from cv_bridge import CvBridge, CvBridgeError
 START_BREATH_ARUCO = 22
 START_MUSCLE_RELAX_ARUCO = 23
 START_AUDIOBOOK_ARUCO = 24
+START_CHECKLIST_ARUCO = 25
 END_ARUCO = 27
 
 class NodeDetectAruco:

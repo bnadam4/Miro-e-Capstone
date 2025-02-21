@@ -138,6 +138,14 @@ class interactive_standby:
             audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
             muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
 
+            if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower():
+                print("Activated capability response")
+                audio_file = 'mp3_files/what_can_i_do.mp3'
+                play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                play_thread.start()
+                play_thread.join()
+                
+
             if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check):
                 print("Activated the breathing exercise")
                 self.behaviour = BREATHING_EXERCISE
