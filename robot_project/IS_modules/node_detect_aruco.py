@@ -25,6 +25,7 @@ START_BREATH_ARUCO = 22
 START_MUSCLE_RELAX_ARUCO = 23
 START_AUDIOBOOK_ARUCO = 24
 START_CHECKLIST_ARUCO = 25
+START_RELAX_PROMPT_ARUCO = 28
 END_ARUCO = 27
 
 class NodeDetectAruco:
@@ -66,6 +67,7 @@ class NodeDetectAruco:
         self.muscle_relax_ON = False
         self.audiobook_ON = False
         self.exit_behaviour = False
+        self.relax_prompt = False
 
         # Main control loop iteration counter
         self.counter = 0
@@ -132,6 +134,9 @@ class NodeDetectAruco:
                         elif id == START_AUDIOBOOK_ARUCO:
                             self.audiobook_ON = True
                             print("START_AUDIOBOOK_ARUCO has been seen")
+                        elif id == START_RELAX_PROMPT_ARUCO:
+                            self.relax_prompt = True
+                            print("START_RELAX_PROMPT has been seen")
                         elif id == END_ARUCO:
                             self.exit_behaviour = True
                             print("END_ARUCO has been seen")
