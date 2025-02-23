@@ -22,7 +22,7 @@ from actuators.joints_movement import JointsMovement #class
 from actuators.cosmetics_controller import CosmeticsController #class
 from actuators.cosmetics_movement import CosmeticsMovement #class
 
-from actuators.play_audio import play_audio  # function
+from actuators.play_audio import AudioPlayer  # class
 
 from actuators.stereovision import Stereovision
 
@@ -67,6 +67,7 @@ class interactive_standby:
 
         self.stereovision = Stereovision()
         self.speech_to_text = SpeechToText()
+        self.audio_player = AudioPlayer()
 
         # Make detector nodes
         self.aruco_detect = NodeDetectAruco()
@@ -147,17 +148,24 @@ class interactive_standby:
             muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
 
             if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower() and not self.speaking:
+                self.speaking = True
                 print("Activated capability response")
                 audio_file = 'mp3_files/what_can_i_do.mp3'
-                play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                 play_thread.start()
-                self.speaking = True
                 play_thread.join()
                 self.speech_to_text.last_text= ''
                 self.speaking = False
                 
 
             if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking:
+                # audio_file = 'mp3_files/want_to_do_breath_ex.mp3'
+                # play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                # play_thread.start()
+                # play_thread.join()
+                # self.speech_to_text.last_text= ''
+                # self.speaking = False
+
                 print("Activated the breathing exercise")
                 self.behaviour = BREATHING_EXERCISE
                 self.aruco_detect.breath_ex_ON = False
@@ -166,6 +174,13 @@ class interactive_standby:
                 break
 
             elif self.aruco_detect.muscle_relax_ON or any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check) and not self.speaking:
+                # audio_file = 'mp3_files/want_to_do_muscle_relax.mp3'
+                # play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                # play_thread.start()
+                # play_thread.join()
+                # self.speech_to_text.last_text= ''
+                # self.speaking = False
+
                 print("Activated the muscle relaxation exercise")
                 self.behaviour = MUSCLE_RELAXATION
                 self.aruco_detect.muscle_relax_ON = False
@@ -174,6 +189,13 @@ class interactive_standby:
                 break
 
             elif self.aruco_detect.audiobook_ON or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and not self.speaking:
+                # audio_file = 'mp3_files/want_to_do_audiobook.mp3'
+                # play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                # play_thread.start()
+                # play_thread.join()
+                # self.speech_to_text.last_text= ''
+                # self.speaking = False
+
                 print("Activated the audio book")
                 self.behaviour = AUDIOBOOK
                 self.aruco_detect.audiobook_ON = False
@@ -210,7 +232,7 @@ class interactive_standby:
                     self.delay = self.random_delay(2,3)
                     self.current_color = (0, 255, 0)  # Green
                     audio_file = 'mp3_files/hi_there.mp3'
-                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
 
                     self.wait = True
@@ -246,7 +268,7 @@ class interactive_standby:
                     if rand_pet == 0:
                         print("Petting 1: Ears")
                         audio_file = 'mp3_files/Petting_1.mp3'
-                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
                         ear_thread.start()
@@ -254,7 +276,7 @@ class interactive_standby:
                     elif rand_pet == 1:
                         print("Petting 2: Eyes")
                         audio_file = 'mp3_files/Petting_2.mp3'
-                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         # Narrow MiRo's eyes in contentment
                         eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(2, ))
@@ -262,7 +284,7 @@ class interactive_standby:
                     elif rand_pet == 2:
                         print("Petting 3: Head nod")
                         audio_file = 'mp3_files/Petting_3.mp3'
-                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         # Nod MiRo's head
                         head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
@@ -287,7 +309,7 @@ class interactive_standby:
                     if rand_pet == 0:
                         print("Petting 5: Thanks")
                         audio_file = 'mp3_files/Pet_back1.mp3'
-                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
                         tail_thread.start()
@@ -296,14 +318,14 @@ class interactive_standby:
                     elif rand_pet == 1:
                         print("Petting 6: Ticklish")
                         audio_file = 'mp3_files/Pet_back2.mp3'
-                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
                         head_thread.start()
                     elif rand_pet == 2:
                         print("Petting 7: Hehe")
                         audio_file = 'mp3_files/Pet_back3.mp3'
-                        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
                         tail_thread.start()
@@ -323,7 +345,7 @@ class interactive_standby:
                     self.crinkled = True
                     print("Crinkling tail")
                     audio_file = 'mp3_files/Tail_touch_1.mp3'
-                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
                     head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
                     head_thread.start()
@@ -332,7 +354,7 @@ class interactive_standby:
                     self.crinkled = True
                     print("Crinkling Right Ear")
                     audio_file = 'mp3_files/Ear_touch_1.mp3'
-                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
                     eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(2, ))
                     eye_thread.start()
@@ -341,7 +363,7 @@ class interactive_standby:
                     self.crinkled = True
                     print("Crinkling Left Ear")
                     audio_file = 'mp3_files/Ear_touch_1.mp3'
-                    play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
                     eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(1, ))
                     eye_thread.start()

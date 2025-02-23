@@ -34,7 +34,7 @@ from actuators.joints_movement import JointsMovement #class
 
 # Custom python files with useful functions
 from IS_modules.pose_interp import *
-from actuators.play_audio import play_audio  # function
+from actuators.play_audio import AudioPlayer  # class
 
 # to generate LED colour and brightness
 def generate_illum(r, g, b, bright):
@@ -129,6 +129,8 @@ class breath_ex:
         self.touch_detect = see_touch()
         self.track_face = False
 
+        self.stop_flag = False
+
         # Make all the positions for MiRo's neck to move through
         step_num = state_duration/self.TICK
         self.neck_positions = interp_pos(neck_upper, neck_lower, step_num)
@@ -144,14 +146,26 @@ class breath_ex:
         self.joints_controller = JointsController()
         self.joints_movement = JointsMovement()
 
+        self.audio_player = AudioPlayer()
+
         # rospy.sleep(2.0)
 
+    def check_exit_flag(self):
+        while not self.stop_flag:
+            # Detect aruco markers
+            self.aruco_detect.tick_camera()
+            if self.aruco_detect.exit_behaviour:
+                self.stop_flag = True
+                
+                print("[BREATHE EX] Exit behaviour detected, stopping breathing exercise.")
+            time.sleep(0.1)
 
     def run(self):
         """
         Main control loop
         """
-
+        exit_thread = threading.Thread(target=self.check_exit_flag)
+        exit_thread.start()
         global state_duration
 
         # Main control loop iteration counter
@@ -163,13 +177,13 @@ class breath_ex:
         self.silent_cycle_count = 0
 
         # Play the intro audio
-        BE_intro_thread = threading.Thread(target=play_audio, args=('mp3_files/Breath_ex.mp3',))
+        BE_intro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/Breath_ex.mp3',))
         BE_intro_thread.start()
         head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
         head_thread.start()
         BE_intro_thread.join() # Wait for intro to finish
         rospy.sleep(1.0)
-        intro_thread = threading.Thread(target=play_audio, args=('mp3_files/intro.mp3',))
+        intro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/intro.mp3',))
         intro_thread.start()
 
         print("MiRo does some deep breathing")
@@ -178,19 +192,17 @@ class breath_ex:
         # Initialize state timers
         state_start_time = time.time()
 
-        while not rospy.core.is_shutdown():
+        while not rospy.core.is_shutdown() and not self.stop_flag:
 
             self.behaviour = BREATHING_EXERCISE
 
-            # Detect aruco markers
-            self.aruco_detect.tick_camera()
             # Detect touch
             self.touch_detect.check_touch()
 
             if self.touch_detect.head_touched:
                 print("Head touched!")
 
-            if self.aruco_detect.exit_behaviour == True:
+            if self.aruco_detect.exit_behaviour:
                 print("Exiting breathing exercise")
                 break
 
@@ -226,46 +238,51 @@ class breath_ex:
                     if self.state == ready and self.last_state == intro:
                         rospy.sleep(3.0)
                         # Play the ready prompt and wait for touch
-                        ready_thread = threading.Thread(target=play_audio, args=('mp3_files/BrEx_Ready_Prompt.mp3',))
+                        ready_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Ready_Prompt.mp3',))
                         ready_thread.start()
 
                         state_start_time = time.time()  # Reset state timer
 
-                        # Wait for touch
-                        while not self.touch_detect.head_touched:
+                        # Wait for touch, timeout, or stop_flag
+                        while not self.touch_detect.head_touched and (time.time() - state_start_time) < 10.0 and not self.stop_flag:
                             self.touch_detect.check_touch()
                             rospy.sleep(self.TICK)
 
-                        rospy.sleep(0.5)
-                        init_intro_thread = threading.Thread(target=play_audio, args=('mp3_files/init_intro.mp3',))
-                        init_intro_thread.start()
-                        init_intro_thread.join() # Wait for init_intro to finish
-                        rospy.sleep(1.0)
-                        self.touch_detect.head_touched = False # Reset head touch
-
+                        if self.touch_detect.head_touched:
+                            print("Head touched!")
+                        elif self.stop_flag:
+                            print("Stop flag set, exiting")
+                            self.audio_player.stop()
+                            exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+                            exit_behaviour_thread.start()
+                            exit_behaviour_thread.join()
+                            break
+                        else:
+                            print("Timed out")
+                            break
 
                 # Check if state has changed
                 if self.state != self.last_state:
                     self.last_state = self.state
                     if self.state == breath_in:
-                        breath_in_thread = threading.Thread(target=play_audio, args=('mp3_files/breatheIn.mp3',))
+                        breath_in_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/breatheIn.mp3',))
                         self.silent_cycle_count += 1
                         breath_in_thread.start()
                     elif self.state == hold_1:
-                        hold_1_thread = threading.Thread(target=play_audio, args=('mp3_files/hold.mp3',))
+                        hold_1_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/hold.mp3',))
                         hold_1_thread.start()
                     elif self.state == breath_out:
-                        breath_out_thread = threading.Thread(target=play_audio, args=('mp3_files/breatheOut.mp3',))
+                        breath_out_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/breatheOut.mp3',))
                         breath_out_thread.start()
                     elif self.state == hold_2:
-                        hold_2_thread = threading.Thread(target=play_audio, args=('mp3_files/holdAgain.mp3',))
+                        hold_2_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/holdAgain.mp3',))
                         hold_2_thread.start()
                     elif self.state == outro:
-                        outro_thread = threading.Thread(target=play_audio, args=('mp3_files/nice_job.mp3',))
+                        outro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/nice_job.mp3',))
                         outro_thread.start()
                         rospy.sleep(4.0)
 
-                        outro_thread = threading.Thread(target=play_audio, args=('mp3_files/BrEx_Go_again.mp3',))
+                        outro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Go_again.mp3',))
                         outro_thread.start()
 
                         state_start_time = time.time()  # Reset state timer
@@ -274,6 +291,7 @@ class breath_ex:
                         self.touch_detect.check_touch()
                         while not self.touch_detect.head_touched and (time.time() - state_start_time) < 10.0:
                             self.touch_detect.check_touch()
+
                             print("Waiting for touch")
                             rospy.sleep(self.TICK)
 
@@ -283,13 +301,13 @@ class breath_ex:
                             self.step = 0
                             self.last_state = breath_in # Make sure the state stays consistent
                             print("Head touched!")
-                            breath_in_thread = threading.Thread(target=play_audio, args=('mp3_files/breatheIn.mp3',))
+                            breath_in_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/breatheIn.mp3',))
                             breath_in_thread.start()
                             self.silent_cycle_count += 1
                         else:
                             print("Timed out")
                             self.behaviour = INTERACTIVE_STANDBY
-                            breath_out_thread= threading.Thread(target=play_audio, args=('mp3_files/BrEx_Timeout.mp3',))
+                            breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Timeout.mp3',))
                             breath_out_thread.start()
                             breath_out_thread.join()
                             break
@@ -374,7 +392,7 @@ class breath_ex:
                 self.cos_joints.data[right_eye] = self.eyelid_pos
                 self.pub_cos.publish(self.cos_joints)
 
-                exit_thread= threading.Thread(target=play_audio, args=('mp3_files/BrEx_Timeout.mp3',))
+                exit_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Timeout.mp3',))
                 exit_thread.start()
                 exit_thread.join()
                 # end audio stream

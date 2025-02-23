@@ -65,6 +65,7 @@ class NodeDetectAruco:
         self.aruco_seen = False
         self.muscle_relax_ON = False
         self.audiobook_ON = False
+        self.exit_behaviour = False
 
         # Main control loop iteration counter
         self.counter = 0

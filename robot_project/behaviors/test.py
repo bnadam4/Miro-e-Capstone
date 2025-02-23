@@ -21,7 +21,7 @@ from actuators.joints_movement import JointsMovement #class
 from actuators.cosmetics_controller import CosmeticsController #class
 from actuators.cosmetics_movement import CosmeticsMovement #class
 
-from actuators.play_audio import play_audio  # function
+from actuators.play_audio import AudioPlayer  # function
 
 
 class TestBehavior:

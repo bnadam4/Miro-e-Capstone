@@ -19,7 +19,10 @@ from actuators.joints_movement import JointsMovement #class
 from actuators.cosmetics_controller import CosmeticsController #class
 from actuators.cosmetics_movement import CosmeticsMovement #class
 
-from actuators.play_audio import play_audio  # function
+from actuators.play_audio import AudioPlayer  # class
+
+from IS_modules.node_detect_aruco import *
+
 
 class AudiobooksBehavior:
     def __init__(self):
@@ -29,13 +32,26 @@ class AudiobooksBehavior:
         self.joints_movement = JointsMovement()
         self.cosmetics_controller = CosmeticsController()
         self.cosmetics_movement = CosmeticsMovement()
+        self.aruco_detect = NodeDetectAruco()
+        self.audio_player = AudioPlayer()
 
-    def run(self):        
+        self.stop_flag = False
+
+        self.parent_thread = None  # Store parent thread reference
+        self.timers = []  # List to track timers
+
+    def run(self):
+        print("[AUDIOBOOK] Running audiobooks behavior")
+        # Start the check_exit_flag thread
+        self.parent_thread = threading.current_thread()
+        exit_thread = threading.Thread(target=self.check_exit_flag)
+        exit_thread.start()
+        
         # Taking input from the user
         user_input = int(input("Enter a number: \n0= exit \n1= Rumpelstiltskin \n2= The Emperor's New Clothes \n"))
         
         if user_input == 0:
-            print("Exiting program...")
+            print("[AUDIOBOOK] Exiting program...")
         elif user_input == 1:
             print("1) Rumpelstiltskin")
             self.book1()
@@ -43,98 +59,145 @@ class AudiobooksBehavior:
             print("2) The Emperor's New Clothes")
             self.book2()
         else:
-            print("Invalid choice or unrecognized number.")
+            print("[AUDIOBOOK] Invalid choice or unrecognized number.")
+        
+        self.book1()
 
+    def check_exit_flag(self):
+        while not self.stop_flag:
+            # Detect aruco markers
+            self.aruco_detect.tick_camera()
+            if self.aruco_detect.exit_behaviour:
+                self.stop_flag = True
+                self.audio_player.stop()
+                print("[AUDIOBOOK] Exit behaviour detected, stopping audiobook.")
+            time.sleep(0.1)
+
+    def safe_execute(self, func, args):
+        """Execute function only if stop flag is not set and parent thread is still alive."""
+        if not self.stop_flag and (self.parent_thread and self.parent_thread.is_alive()):
+            func(*args)
+        else:
+            print(f"[AUDIOBOOK] Skipping {func.__name__} because parent thread has exited.")
+
+    # Function to safely start actions
+    def add_timer(self, delay, func, args=()):
+        timer = threading.Timer(delay, lambda: self.safe_execute(func, args))
+        self.timers.append(timer)
+        timer.start()
 
     def book1(self): # Rumpelstiltskin
         # Start playing the audiobook in the background
+        print("[AUDIOBOOK] Playing Rumpelstiltskin")
         audiobook_file = 'mp3_files/rumpelstiltskin.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audiobook_file,))
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_file,))
         play_thread.start()
-	
-        threading.Timer(4, lambda: threading.Thread(target=self.joints_controller.move_neck, args=(4, 34)).start()).start()
-        threading.Timer(4, lambda: threading.Thread(target=self.cosmetics_controller.move_eyes, args=(4, 0.2)).start()).start()
         
-        threading.Timer(8, lambda: threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0.6)).start()).start()
+        # Schedule all movements
+        self.add_timer(4, self.joints_controller.move_neck, (4, 34))
+        self.add_timer(4, self.cosmetics_controller.move_eyes, (4, 0.2))
         
-        threading.Timer(13, lambda: threading.Thread(target=self.led_controller.fade_in_led, args=(5, (255,255,0), 250)).start()).start()
+        self.add_timer(8, self.cosmetics_controller.move_ears, (2, 0.6))
         
-        threading.Timer(20, lambda: threading.Thread(target=self.joints_movement.nod, args=(4,3)).start()).start()
+        self.add_timer(13, self.led_controller.fade_in_led, (5, (255,255,0), 250))
         
-        threading.Timer(24, lambda: threading.Thread(target=self.led_controller.turn_off_led).start()).start()
-        threading.Timer(24, lambda: threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0)).start()).start()
+        self.add_timer(20, self.joints_movement.nod, (4,3))
         
-        threading.Timer(26, lambda: threading.Thread(target=self.joints_controller.move_yaw, args=(3, -25)).start()).start()
-        threading.Timer(26, lambda: threading.Thread(target=self.joints_controller.move_neck, args=(3, 20)).start()).start()
+        self.add_timer(24, self.led_controller.turn_off_led)
+        self.add_timer(24, self.cosmetics_controller.move_ears, (2, 0))
         
-        threading.Timer(30, lambda: threading.Thread(target=self.joints_controller.move_pitch, args=(2, -15)).start()).start()
+        self.add_timer(26, self.joints_controller.move_yaw, (3, -25))
+        self.add_timer(26, self.joints_controller.move_neck, (3, 20))
         
-        threading.Timer(32, lambda: threading.Thread(target=self.joints_controller.move_yaw, args=(4, 25)).start()).start()
+        self.add_timer(30, self.joints_controller.move_pitch, (2, -15))
         
-        threading.Timer(33, lambda: threading.Thread(target=self.led_controller.turn_on_led, args=((255, 165, 0), 250)).start()).start()
+        self.add_timer(32, self.joints_controller.move_yaw, (4, 25))
         
-        threading.Timer(38, lambda: threading.Thread(target=self.joints_movement.shake, args=(3,3)).start()).start()
+        self.add_timer(33, self.led_controller.turn_on_led, ((255, 165, 0), 250))
         
-        threading.Timer(42, lambda: threading.Thread(target=self.cosmetics_movement.close_eyes, args=(1,)).start()).start()
+        self.add_timer(38, self.joints_movement.shake, (3,3))
         
-        threading.Timer(43, lambda: threading.Thread(target=self.led_controller.turn_off_led).start()).start()
+        self.add_timer(42, self.cosmetics_movement.close_eyes, (1,))
         
-        threading.Timer(48, lambda: threading.Thread(target=self.joints_controller.move_neck, args=(4, 34)).start()).start()
-        threading.Timer(48, lambda: threading.Thread(target=self.cosmetics_movement.open_eyes, args=(3,)) .start()).start()
+        self.add_timer(43, self.led_controller.turn_off_led)
         
-        threading.Timer(52, lambda: threading.Thread(target=self.joints_controller.move_pitch, args=(2, 7)).start()).start()
+        self.add_timer(48, self.joints_controller.move_neck, (4, 34))
+        self.add_timer(48, self.cosmetics_movement.open_eyes, (3,))
+        
+        self.add_timer(52, self.joints_controller.move_pitch, (2, 7))
 
-        threading.Timer(54, lambda: threading.Thread(target=self.joints_movement.shake, args=(4,3)).start()).start()
+        self.add_timer(54, self.joints_movement.shake, (4,3))
         
-        threading.Timer(55, lambda: threading.Thread(target=self.led_controller.fade_in_led, args=(2, (0, 0, 255), 250)).start()).start()
-        threading.Timer(57, lambda: threading.Thread(target=self.led_controller.fade_out_led, args=(2,)).start()).start()
-        threading.Timer(59, lambda: threading.Thread(target=self.led_controller.fade_in_led, args=(2, (0, 0, 255), 250)).start()).start()
-        threading.Timer(61, lambda: threading.Thread(target=self.led_controller.fade_out_led, args=(2,)).start()).start()
+        self.add_timer(55, self.led_controller.fade_in_led, (2, (0, 0, 255), 250))
+        self.add_timer(57, self.led_controller.fade_out_led, (2,))
+        self.add_timer(59, self.led_controller.fade_in_led, (2, (0, 0, 255), 250))
+        self.add_timer(61, self.led_controller.fade_out_led, (2,))
         
-        threading.Timer(63, lambda: threading.Thread(target=self.cosmetics_movement.blink_eyes, args=(2,3)).start()).start()
+        self.add_timer(63, self.cosmetics_movement.blink_eyes, (2,3))
         
-        threading.Timer(65, lambda: threading.Thread(target=self.joints_controller.move_pitch, args=(4, -15)).start()).start()
+        self.add_timer(65, self.joints_controller.move_pitch, (4, -15))
         
-        threading.Timer(69, lambda: threading.Thread(target=self.joints_controller.move_neck, args=(4, 34)).start()).start()
+        self.add_timer(69, self.joints_controller.move_neck, (4, 34))
         
-        threading.Timer(75, lambda: threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0.6)).start()).start()
+        self.add_timer(75, self.cosmetics_controller.move_ears, (2, 0.6))
         
-        threading.Timer(80, lambda: threading.Thread(target=self.joints_controller.move_neck, args=(4, 28)).start()).start()
+        self.add_timer(80, self.joints_controller.move_neck, (4, 28))
         
-        threading.Timer(84, lambda: threading.Thread(target=self.led_controller.fade_in_led, args=(2, (255,65,0), 250)).start()).start()
+        self.add_timer(84, self.led_controller.fade_in_led, (2, (255,65,0), 250))
         
-        threading.Timer(88, lambda: threading.Thread(target=self.joints_movement.nod, args=(1.5,3)).start()).start()
+        self.add_timer(88, self.joints_movement.nod, (1.5,3))
         
-        threading.Timer(93, lambda: threading.Thread(target=self.joints_movement.nod, args=(1.5,3)).start()).start()
-        
-        
-        
+        self.add_timer(93, self.joints_movement.nod, (1.5,3))
 
-        
+        # Monitor play_audio thread
+        while play_thread.is_alive():
+            if self.stop_flag:
+                print("[AUDIOBOOK] Stopping book1...")
+                for timer in self.timers:
+                    timer.cancel()  # Cancel scheduled movements
+                break
+            time.sleep(0.5)
+
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+
+        exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+        exit_behaviour_thread.start()
+        exit_behaviour_thread.join()
         
         
 
     def book2(self): #The Emperor's New Clothes
         # Start playing the audiobook in the background
+        print("[AUDIOBOOK] Playing The Emperor's New Clothes")
         audiobook_file = 'mp3_files/emperorsNewClothes.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audiobook_file,))
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_file,))
         play_thread.start()
 
-        # Trigger ear movement at 0s
+        # Schedule all movements
+        self.add_timer(10, self.joints_controller.move_neck, (4, 34))
+        self.add_timer(10, self.cosmetics_movement.eyes_squint, (4,))
         
-        threading.Timer(10, lambda: threading.Thread(target=self.joints_controller.move_neck, args=(4, 34)).start()).start()
-        threading.Timer(10, lambda: threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(4,)).start()).start()
+        self.add_timer(18, self.joints_controller.move_yaw, (4, -25))
+        self.add_timer(20, self.cosmetics_controller.move_ears, (2, 0.6))
         
-        threading.Timer(18, lambda: threading.Thread(target=self.joints_controller.move_yaw, args=(4, -25)).start()).start()
-        threading.Timer(20, lambda: threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0.6)).start()).start()
+        self.add_timer(23, self.joints_controller.move_yaw, (2, 0))
+        self.add_timer(23, self.cosmetics_controller.move_ears, (2, 0))
         
-        threading.Timer(23, lambda: threading.Thread(target=self.joints_controller.move_yaw, args=(2, 0)).start()).start()
-        threading.Timer(23, lambda: threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0)).start()).start()
-        
-        threading.Timer(25, lambda: threading.Thread(target=self.joints_movement.shake, args=(1,2)).start()).start()
+        self.add_timer(25, self.joints_movement.shake, (1, 2))
 
-        
+        # Monitor play_audio thread
+        while play_thread.is_alive():
+            if self.stop_flag:
+                print("[AUDIOBOOK] Stopping book2...")
+                for timer in self.timers:
+                    timer.cancel()  # Cancel scheduled movements
+                break
+            time.sleep(0.5)
+
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+
+        exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+        exit_behaviour_thread.start()
+        exit_behaviour_thread.join()
