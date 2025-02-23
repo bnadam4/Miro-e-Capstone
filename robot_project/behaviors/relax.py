@@ -67,16 +67,19 @@ class RelaxBehavior:
         self.timers.append(timer)
         timer.start()
 
-    def run(self, flag=None):
-        if flag == "relax_back":
+    def run(self):
+        self.relax_begin()
+        self.wait_for_prompt()
+        self.relax_prompt()
+        if self.flag == "relax_back":
             self.relax_back()
-        elif flag == "relax_arms":
+        elif self.flag == "relax_arms":
             self.relax_arms()
-        elif flag == "relax_tummy":
+        elif self.flag == "relax_tummy":
             self.relax_tummy()
-        elif flag == "relax_legs":
+        elif self.flag == "relax_legs":
             self.relax_legs()
-        elif flag == "relax_full":
+        elif self.flag == "relax_full":
             self.relax_back()
             self.relax_arms()
             self.relax_tummy()
@@ -90,7 +93,7 @@ class RelaxBehavior:
         timer.start()
 
     def relax_begin(self):
-        audio_file = 'relax_begin.mp3'
+        audio_file = 'mp3_files/relax_begin.mp3'
         play_thread = threading.Thread(target=play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -110,10 +113,23 @@ class RelaxBehavior:
             timer.join()
         time.sleep(5)
 
-        self.state = "relax_back"
+    def wait_for_prompt(self):
+        print("[RELAXATION] Waiting for head touch or aruco code...")
+        while True:
+            self.aruco_detect.tick_camera()
+            self.touch_detect.check_touch()
+
+            if self.aruco_detect.relax_prompt:
+                print("[RELAXATION] Aruco code detected, proceeding to relax_prompt.")
+                self.aruco_detect.relax_prompt = False
+                break
+            if self.touch_detect.head_touched:
+                print("[RELAXATION] Head touch detected, proceeding to relax_prompt.")
+                break
+            time.sleep(0.1)
     
     def relax_prompt(self):
-        audio_file = 'relax_prompt.mp3'
+        audio_file = 'mp3_files/relax_prompt.mp3'
         play_thread = threading.Thread(target=play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -153,7 +169,7 @@ class RelaxBehavior:
             self.flag = None
 
     def relax_back(self):
-        audio_file = 'relax_back.mp3'
+        audio_file = 'mp3_files/relax_back.mp3'
         play_thread = threading.Thread(target=play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -173,10 +189,10 @@ class RelaxBehavior:
             timer.join()
         time.sleep(5)
 
-        self.state = "relax_arms"
+        #self.state = "relax_arms"
 
     def relax_arms(self):
-        audio_file = 'relax_arms.mp3'
+        audio_file = 'mp3_files/relax_arms.mp3'
         play_thread = threading.Thread(target=play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -196,10 +212,10 @@ class RelaxBehavior:
             timer.join()
         time.sleep(5)
 
-        self.state = "relax_tummy"
+        #self.state = "relax_tummy"
 
     def relax_tummy(self):
-        audio_file = 'relax_tummy.mp3'
+        audio_file = 'mp3_files/relax_tummy.mp3'
         play_thread = threading.Thread(target=play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -219,10 +235,10 @@ class RelaxBehavior:
             timer.join()
         time.sleep(5)
 
-        self.state = "relax_legs"
+        #self.state = "relax_legs"
 
     def relax_legs(self):
-        audio_file = 'relax_legs.mp3'
+        audio_file = 'mp3_files/relax_legs.mp3'
         play_thread = threading.Thread(target=play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -242,10 +258,10 @@ class RelaxBehavior:
             timer.join()
         time.sleep(5)
 
-        self.state = "relax_complete"
+        #self.state = "relax_complete"
 
     def relax_complete(self):
-        audio_file = 'relax_complete.mp3'
+        audio_file = 'mp3_files/relax_complete.mp3'
         play_thread = threading.Thread(target=play_audio, args=(audio_file,))
         play_thread.start()
 
