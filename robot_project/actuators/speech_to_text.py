@@ -77,19 +77,19 @@ class SpeechToText:
             THRESHOLD_CRINKLE_EARS = 9000
 
             if rms > THRESHOLD_CRINKLE_EARS:
-                print(f"The rms for the left ear is {rms}")
+                #print(f"The rms for the left ear is {rms}")
                 self.left_crinkle = True
             else:
                 self.left_crinkle = False
 
             if rms_right > THRESHOLD_CRINKLE_EARS:
-                print(f"The rms for the right ear is {rms_right}")
+                #print(f"The rms for the right ear is {rms_right}")
                 self.right_crinkle = True
             else:
                 self.right_crinkle = False
 
             if rms_tail > THRESHOLD_CRINKLE_TAIL:
-                print(f"The rms for the tail is {rms_tail}")
+                #print(f"The rms for the tail is {rms_tail}")
                 self.tail_crinkle = True
             else:
                 self.tail_crinkle = False

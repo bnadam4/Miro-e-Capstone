@@ -61,7 +61,6 @@ class AudiobooksBehavior:
         else:
             print("[AUDIOBOOK] Invalid choice or unrecognized number.")
         
-        self.book1()
 
     def check_exit_flag(self):
         while not self.stop_flag:
