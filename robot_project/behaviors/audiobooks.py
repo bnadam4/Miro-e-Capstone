@@ -69,7 +69,11 @@ class AudiobooksBehavior:
             if self.aruco_detect.exit_behaviour:
                 self.stop_flag = True
                 self.audio_player.stop()
+                exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+                exit_behaviour_thread.start()
+                exit_behaviour_thread.join()
                 print("[AUDIOBOOK] Exit behaviour detected, stopping audiobook.")
+
             time.sleep(0.1)
 
     def safe_execute(self, func, args):
@@ -158,12 +162,7 @@ class AudiobooksBehavior:
             time.sleep(0.5)
 
         # Wait for all threads to finish (including the audio playback)
-        play_thread.join()
-
-        exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
-        exit_behaviour_thread.start()
-        exit_behaviour_thread.join()
-        
+        play_thread.join()        
         
 
     def book2(self): #The Emperor's New Clothes
@@ -197,6 +196,3 @@ class AudiobooksBehavior:
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
 
-        exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
-        exit_behaviour_thread.start()
-        exit_behaviour_thread.join()
