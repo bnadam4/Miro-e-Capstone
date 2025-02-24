@@ -13,6 +13,7 @@ from behaviors.audiobooks import AudiobooksBehavior
 from behaviors.test import TestBehavior
 from behaviors.reset import ResetBehavior
 from behaviors.breath_ex import breath_ex
+from behaviors.relax import RelaxBehavior
 from behaviors.interactive_standby import interactive_standby
 from actuators.node_actuators import NodeActuators  # assuming this import for NodeActuators
 # from actuators import node_actuators
@@ -20,6 +21,8 @@ from actuators.node_actuators import NodeActuators  # assuming this import for N
 # State constants
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
+MUSCLE_RELAXATION = 1
+AUDIOBOOK = 2
 
 def main():
     node_actuators = NodeActuators()  # Initialize NodeActuators instance
@@ -36,21 +39,21 @@ def main():
             print("Exiting program...")
             break  # Exit the loop if user chooses 0
         elif user_input == 1:
-            print("1) test")
-            test_behaviour = TestBehavior()
+            print("1) Muscle relaxation")
+            test_behaviour = RelaxBehavior()
             test_behaviour.run()
             reset_behaviour.run()
             user_input = INTERACTIVE_STANDBY
         elif user_input == 2:
-            print("2) dance")
-            dance_behaviour = DanceBehavior()
-            dance_behaviour.run()
+            print("2) audiobook")
+            audiobooks_behaviour = AudiobooksBehavior()
+            audiobooks_behaviour.run()
             reset_behaviour.run()
             user_input = INTERACTIVE_STANDBY
         elif user_input == 3:
-            print("3) audiobook")
-            audiobooks_behaviour = AudiobooksBehavior()
-            audiobooks_behaviour.run()
+            print("3) dance")
+            dance_behaviour = DanceBehavior()
+            dance_behaviour.run()
             reset_behaviour.run()
             user_input = INTERACTIVE_STANDBY
         elif user_input == 4:

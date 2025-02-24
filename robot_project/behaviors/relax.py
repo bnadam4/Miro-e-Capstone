@@ -19,7 +19,7 @@ from actuators.joints_movement import JointsMovement #class
 from actuators.cosmetics_controller import CosmeticsController #class
 from actuators.cosmetics_movement import CosmeticsMovement #class
 
-from actuators.play_audio import play_audio  # function
+from actuators.play_audio import AudioPlayer  # function
 #from robot_interface import RobotInterface  # class
 
 from IS_modules.node_detect_aruco import *
@@ -39,6 +39,8 @@ class RelaxBehavior:
         self.state = "relax_prep"
         self.timers = []  # List to track timers
         self.flag = None  # Initialize flag variable
+        self.speech_to_text = SpeechToText()
+        self.audio_player = AudioPlayer() 
         
         speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
         speech_to_text_thread.daemon = True
@@ -94,7 +96,7 @@ class RelaxBehavior:
 
     def relax_begin(self):
         audio_file = 'mp3_files/relax_begin.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
         # Schedule all movements
@@ -130,7 +132,7 @@ class RelaxBehavior:
     
     def relax_prompt(self):
         audio_file = 'mp3_files/relax_prompt.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
         # Schedule all movements
@@ -170,7 +172,7 @@ class RelaxBehavior:
 
     def relax_back(self):
         audio_file = 'mp3_files/relax_back.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
         # Schedule all movements
@@ -193,7 +195,7 @@ class RelaxBehavior:
 
     def relax_arms(self):
         audio_file = 'mp3_files/relax_arms.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
         # Schedule all movements
@@ -216,7 +218,7 @@ class RelaxBehavior:
 
     def relax_tummy(self):
         audio_file = 'mp3_files/relax_tummy.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
         # Schedule all movements
@@ -239,7 +241,7 @@ class RelaxBehavior:
 
     def relax_legs(self):
         audio_file = 'mp3_files/relax_legs.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
         # Schedule all movements
@@ -262,7 +264,7 @@ class RelaxBehavior:
 
     def relax_complete(self):
         audio_file = 'mp3_files/relax_complete.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
         # Schedule all movements
@@ -282,7 +284,7 @@ class RelaxBehavior:
     def exit(self):
         #play_thread.join()
 
-        exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+        exit_behaviour_thread = threading.Thread(target=self.audio_player.self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
         exit_behaviour_thread.start()
         exit_behaviour_thread.join()
 

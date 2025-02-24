@@ -13,6 +13,8 @@ import cv2
 import rospy
 import random
 
+import miro2 as miro
+
 from actuators.node_actuators import NodeActuators #class
 from actuators.led_controller import LEDController #class
 
