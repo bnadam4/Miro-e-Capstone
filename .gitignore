@@ -27,3 +27,7 @@ robot_project/out/
 
 actuators & modules/
 
+
+robot_project/behaviors/actuators/
+
+robot_project/behaviors/IS_modules/

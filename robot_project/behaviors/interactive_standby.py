@@ -137,6 +137,8 @@ class interactive_standby:
         blink_delay = self.random_delay(5, 20)
         speak_delay = 5.0
 
+        last_react = 9
+
         while not rospy.core.is_shutdown():
             # Detect aruco markers
             self.aruco_detect.tick_camera()
@@ -147,7 +149,7 @@ class interactive_standby:
             audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
             muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
 
-            if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower() and not self.speaking:
+            if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower() and 'can' in self.speech_to_text.last_text.lower() and not self.speaking:
                 self.speaking = True
                 print("Activated capability response")
                 audio_file = 'mp3_files/what_can_i_do.mp3'
@@ -265,7 +267,8 @@ class interactive_standby:
                     speak_delay = 3.0
                     self.speaking = True
 
-                    if rand_pet == 0:
+                    if rand_pet == 0 and last_react != 0:
+                        last_react = 0
                         print("Petting 1: Ears")
                         audio_file = 'mp3_files/Petting_1.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
@@ -273,7 +276,8 @@ class interactive_standby:
                         ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
                         ear_thread.start()
                         threading.Timer(1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
-                    elif rand_pet == 1:
+                    elif rand_pet == 1 and last_react != 1:
+                        last_react = 1
                         print("Petting 2: Eyes")
                         audio_file = 'mp3_files/Petting_2.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
@@ -281,7 +285,8 @@ class interactive_standby:
                         # Narrow MiRo's eyes in contentment
                         eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(2, ))
                         eye_thread.start()
-                    elif rand_pet == 2:
+                    elif rand_pet == 2 and last_react != 2:
+                        last_react = 2
                         print("Petting 3: Head nod")
                         audio_file = 'mp3_files/Petting_3.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
@@ -290,6 +295,7 @@ class interactive_standby:
                         head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
                         head_thread.start()
                     elif rand_pet == 3:
+                        last_react = 3
                         # Occasionally do no respond to petting
                         # Wag MiRo's tail
                         print("Petting 4: Tail wag")
@@ -306,7 +312,8 @@ class interactive_standby:
                     speak_delay = 3.0
                     self.speaking = True
 
-                    if rand_pet == 0:
+                    if rand_pet == 0 and last_react != 0:
+                        last_react = 0
                         print("Petting 5: Thanks")
                         audio_file = 'mp3_files/Pet_back1.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
@@ -315,14 +322,16 @@ class interactive_standby:
                         tail_thread.start()
                         head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
                         head_thread.start()
-                    elif rand_pet == 1:
+                    elif rand_pet == 1 and last_react != 1:
+                        last_react = 1
                         print("Petting 6: Ticklish")
                         audio_file = 'mp3_files/Pet_back2.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
                         head_thread.start()
-                    elif rand_pet == 2:
+                    elif rand_pet == 2 and last_react != 2:
+                        last_react = 2
                         print("Petting 7: Hehe")
                         audio_file = 'mp3_files/Pet_back3.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
@@ -331,6 +340,7 @@ class interactive_standby:
                         tail_thread.start()
                         self.move_randomly()
                     elif rand_pet == 3:
+                        last_react = 3
                         # Occasionally do no respond to petting
                         # Wag MiRo's tail
                         print("Petting 8: Tail wag")
@@ -350,24 +360,36 @@ class interactive_standby:
                     head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
                     head_thread.start()
                     last_crinkle = time.time()
-                elif self.speech_to_text.right_crinkle:
-                    self.crinkled = True
+                elif self.speech_to_text.right_crinkle or self.speech_to_text.left_crinkle:
                     print("Crinkling Right Ear")
-                    audio_file = 'mp3_files/Ear_touch_1.mp3'
-                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
-                    play_thread.start()
-                    eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(2, ))
-                    eye_thread.start()
-                    last_crinkle = time.time()
-                elif self.speech_to_text.left_crinkle:
                     self.crinkled = True
-                    print("Crinkling Left Ear")
-                    audio_file = 'mp3_files/Ear_touch_1.mp3'
-                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
-                    play_thread.start()
-                    eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(1, ))
-                    eye_thread.start()
                     last_crinkle = time.time()
+                    if rand_pet == 0 and last_react != 0:
+                        last_react = 0
+                        audio_file = 'mp3_files/Ear_touch_1.mp3'
+                        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                        play_thread.start()
+                        eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(1, ))
+                        eye_thread.start()
+                    elif rand_pet == 1 and last_react != 1:
+                        last_react = 1
+                        audio_file = 'mp3_files/Petting_1.mp3'
+                        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                        play_thread.start()
+                        tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
+                        tail_thread.start()
+                    elif rand_pet == 2 and last_react != 2:
+                        last_react = 2
+                        audio_file = 'mp3_files/Ear_touch_2.mp3'
+                        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                        play_thread.start()
+                        self.move_randomly()
+                    elif rand_pet == 3:
+                        last_react = 3
+                        # Occasionally do not respond to petting with a voice line
+                        # Wag MiRo's tail
+                        tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
+                        tail_thread.start()
 
             # Reset petted variable if not petted for a certain time
             if current_time - last_pet >= 3 and self.petted:
