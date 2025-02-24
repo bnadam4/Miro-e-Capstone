@@ -61,7 +61,6 @@ class NodeDetectAruco:
         self.t0 = time.time()
         self.cam_names = ['left', 'right', 'stitched']
         self.breath_ex_ON = False
-        self.breath_ex_reset = False
         self.activation_timer = 0.0
         self.aruco_seen = False
         self.muscle_relax_ON = False

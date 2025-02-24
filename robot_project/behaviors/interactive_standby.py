@@ -24,6 +24,8 @@ from actuators.joints_movement import JointsMovement #class
 from actuators.cosmetics_controller import CosmeticsController #class
 from actuators.cosmetics_movement import CosmeticsMovement #class
 
+from actuators.wheels_controller import WheelsController #class
+
 from actuators.play_audio import AudioPlayer  # class
 
 from actuators.stereovision import Stereovision
@@ -67,6 +69,8 @@ class interactive_standby:
         self.cosmetics_controller = CosmeticsController()
         self.cosmetics_movement = CosmeticsMovement()
 
+        self.wheels_controller = WheelsController()
+
         self.stereovision = Stereovision()
         self.speech_to_text = SpeechToText()
         self.audio_player = AudioPlayer()
@@ -98,6 +102,14 @@ class interactive_standby:
         move_thread = threading.Thread(target=self.joints_controller.move_all, args=(2,rand_yaw,rand_pitch,rand_neck))
         move_thread.daemon = True
         move_thread.start()
+
+    def rotate_randomly(self):
+        rand_speed = random.choice([-3, -2, -1, 1, 2, 3])
+        rand_duration = 1
+
+        rotate_thread = threading.Thread(target=self.wheels_controller.rotate, args=(rand_speed, rand_duration))
+        rotate_thread.daemon = True
+        rotate_thread.start()
 
     def get_activity_level(self, distance):
         if distance < 1.5:
@@ -224,6 +236,7 @@ class interactive_standby:
                     self.activity_level = ACT_IDLE
                     # Move randomly
                     self.move_randomly()
+                    #self.rotate_randomly()
                     self.speaking = True
                     peak_delay = 0.5
                     last_spoke = time.time()

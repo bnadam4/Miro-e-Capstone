@@ -2,7 +2,7 @@
 
 # ----------------------------------------------
 # Title: audiobooks.py
-# Description: Play ch1 of alice in wonderland with body movement
+# Description: Play audiobooks with body movement
 # Author: Jasmine 
 # Date created: Dec 24, 2024
 # Date modified: Feb 24, 2024
@@ -291,7 +291,7 @@ class AudiobooksBehavior:
                 for timer in self.timers:
                     timer.cancel()  # Cancel scheduled movements
                 break
-            time.sleep(0.5)
+            time.sleep(0.1)
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
@@ -335,7 +335,7 @@ class AudiobooksBehavior:
                 for timer in self.timers:
                     timer.cancel()  # Cancel scheduled movements
                 break
-            time.sleep(0.5)
+            time.sleep(0.1)
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()

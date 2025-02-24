@@ -156,7 +156,10 @@ class breath_ex:
             self.aruco_detect.tick_camera()
             if self.aruco_detect.exit_behaviour:
                 self.stop_flag = True
-                
+                self.audio_player.stop()
+                exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+                exit_behaviour_thread.start()
+                exit_behaviour_thread.join()
                 print("[BREATHE EX] Exit behaviour detected, stopping breathing exercise.")
             time.sleep(0.1)
 
@@ -202,7 +205,7 @@ class breath_ex:
             if self.touch_detect.head_touched:
                 print("Head touched!")
 
-            if self.aruco_detect.exit_behaviour:
+            if self.stop_flag:
                 print("Exiting breathing exercise")
                 break
 
@@ -250,13 +253,6 @@ class breath_ex:
 
                         if self.touch_detect.head_touched:
                             print("Head touched!")
-                        elif self.stop_flag:
-                            print("Stop flag set, exiting")
-                            self.audio_player.stop()
-                            exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
-                            exit_behaviour_thread.start()
-                            exit_behaviour_thread.join()
-                            break
                         else:
                             print("Timed out")
                             break
@@ -289,7 +285,7 @@ class breath_ex:
 
                         # Wait for touch
                         self.touch_detect.check_touch()
-                        while not self.touch_detect.head_touched and (time.time() - state_start_time) < 10.0:
+                        while not self.touch_detect.head_touched and (time.time() - state_start_time) < 10.0 and not self.stop_flag:
                             self.touch_detect.check_touch()
 
                             print("Waiting for touch")
@@ -331,9 +327,6 @@ class breath_ex:
 
                 elif self.state == hold_1:
                     # Hold the fully inhaled position
-                    # self.neck_pos = neck_upper
-                    # self.pitch_pos = pitch_lower
-                    # self.eyelid_pos = 1.0
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     self.step = 0
 
@@ -352,16 +345,11 @@ class breath_ex:
 
                 elif self.state == hold_2:
                     # Hold the fully exhaled position
-                    # self.neck_pos = neck_lower
-                    # self.pitch_pos = pitch_upper
-                    # self.eyelid_pos = 0.0
-                    # self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     self.kin_joints.position = [0.0, math.radians(self.neck_pos), 0.0, math.radians(self.pitch_pos)]
                     self.step = 0
 
                 self.cos_joints.data[left_eye] = self.eyelid_pos
                 self.cos_joints.data[right_eye] = self.eyelid_pos
-                # print("eyelid_pos = ", self.eyelid_pos)
                 
                 self.pub_kin.publish(self.kin_joints)
                 self.pub_cos.publish(self.cos_joints)
@@ -377,25 +365,25 @@ class breath_ex:
 
                 self.pub_illum.publish(self.illum)
 
+            # obsolete, handled in check_exit_flag now
+            # if self.aruco_detect.breath_ex_reset:
+            #     self.aruco_detect.breath_ex_reset = False
+            #     self.aruco_detect.breath_ex_ON = False
+            #     self.behaviour = INTERACTIVE_STANDBY
 
-            if self.aruco_detect.breath_ex_reset:
-                self.aruco_detect.breath_ex_reset = False
-                self.aruco_detect.breath_ex_ON = False
-                self.behaviour = INTERACTIVE_STANDBY
+            #     self.state = intro
+            #     self.last_state = None
+            #     self.silent_cycle_count = 0
 
-                self.state = intro
-                self.last_state = None
-                self.silent_cycle_count = 0
+            #     self.eyelid_pos = 0.0
+            #     self.cos_joints.data[left_eye] = self.eyelid_pos
+            #     self.cos_joints.data[right_eye] = self.eyelid_pos
+            #     self.pub_cos.publish(self.cos_joints)
 
-                self.eyelid_pos = 0.0
-                self.cos_joints.data[left_eye] = self.eyelid_pos
-                self.cos_joints.data[right_eye] = self.eyelid_pos
-                self.pub_cos.publish(self.cos_joints)
-
-                exit_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Timeout.mp3',))
-                exit_thread.start()
-                exit_thread.join()
-                # end audio stream
+            #     exit_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Timeout.mp3',))
+            #     exit_thread.start()
+            #     exit_thread.join()
+            #     # end audio stream
             
             # Yield
             rospy.sleep(self.TICK)
