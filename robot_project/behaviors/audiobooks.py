@@ -5,7 +5,7 @@
 # Description: Play ch1 of alice in wonderland with body movement
 # Author: Jasmine 
 # Date created: Dec 24, 2024
-# Date modified: Feb 5, 2024
+# Date modified: Feb 24, 2024
 # ----------------------------------------------
 
 import threading
@@ -44,8 +44,8 @@ class AudiobooksBehavior:
         print("[AUDIOBOOK] Running audiobooks behavior")
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
-        exit_thread = threading.Thread(target=self.check_exit_flag)
-        exit_thread.start()
+        #exit_thread = threading.Thread(target=self.check_exit_flag)
+        #exit_thread.start()
         
         # Taking input from the user
         user_input = int(input("Enter a number: \n0= exit \n1= Rumpelstiltskin \n2= The Emperor's New Clothes \n"))
@@ -90,11 +90,22 @@ class AudiobooksBehavior:
         timer.start()
 
     def book1(self): # Rumpelstiltskin
+        
+        print("[AUDIOBOOK] Playing opening line Rumpelstiltskin")
+        audiobook_open_file = 'mp3_files/rumpelstiltskin_open.mp3'
+        play_open_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_open_file,))
+        play_open_thread.start()
+        self.add_timer(6, self.joints_movement.nod, (2,1))
+        play_open_thread.join()
+               
+
         # Start playing the audiobook in the background
+        
         print("[AUDIOBOOK] Playing Rumpelstiltskin")
         audiobook_file = 'mp3_files/rumpelstiltskin.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_file,))
         play_thread.start()
+        
         
         # Schedule all movements
         self.add_timer(4, self.joints_controller.move_neck, (4, 34))
@@ -151,6 +162,127 @@ class AudiobooksBehavior:
         self.add_timer(88, self.joints_movement.nod, (1.5,3))
         
         self.add_timer(93, self.joints_movement.nod, (1.5,3))
+        
+        self.add_timer(99, self.joints_controller.move_pitch, (4, -10))
+        self.add_timer(99, self.joints_controller.move_yaw, (4, 25))
+        
+        self.add_timer(103, self.led_controller.turn_on_led, ((255, 255, 0), 250))
+        
+        self.add_timer(105, self.joints_controller.move_yaw, (4, 0))
+        
+
+        self.add_timer(110, self.cosmetics_movement.ear_outwards, (2,))
+        self.add_timer(113, self.cosmetics_movement.ears_inwards, (2,))
+        
+        self.add_timer(116, self.joints_controller.move_yaw, (3, -25))
+        self.add_timer(116, self.joints_controller.move_neck, (3, 20))
+        
+        self.add_timer(117, self.led_controller.fade_in_led, (2, (255, 165, 0), 250))
+	
+        self.add_timer(121, self.cosmetics_movement.close_eyes, (1,))
+	
+        self.add_timer(123, self.joints_controller.move_neck, (4, 34))
+        self.add_timer(123, self.cosmetics_movement.open_eyes, (3,))
+        
+        self.add_timer(130, self.joints_controller.move_yaw, (3, 0))
+        
+        self.add_timer(132, self.cosmetics_controller.move_ears, (2, 0.6))
+        self.add_timer(135, self.joints_controller.move_neck, (4, 28))
+	
+        self.add_timer(137, self.joints_movement.nod, (3, 3))
+	
+        self.add_timer(141, self.led_controller.fade_in_led, (2, (255, 255, 0), 250))
+	
+        self.add_timer(145, self.cosmetics_movement.ear_outwards, (2,))
+        self.add_timer(149, self.cosmetics_movement.ears_inwards, (2,))
+        self.add_timer(151, self.joints_controller.move_yaw, (3, -25))
+        self.add_timer(151, self.joints_controller.move_neck, (3, 20))
+        
+        self.add_timer(159, self.cosmetics_movement.blink_eyes, (1, 2))
+        self.add_timer(162, self.cosmetics_movement.ear_outwards, (2,))
+        self.add_timer(164, self.joints_movement.nod, (3, 2))
+        self.add_timer(169, self.cosmetics_movement.ears_inwards, (2,))
+        
+        self.add_timer(172, self.joints_controller.move_pitch, (4, 0))
+        self.add_timer(178, self.joints_movement.shake, (1, 2))
+	
+        self.add_timer(181, self.joints_controller.move_yaw, (3, -25))
+        self.add_timer(187, self.joints_controller.move_pitch, (3, 7))
+        self.add_timer(190, self.joints_controller.move_yaw, (3, 0))
+	
+        self.add_timer(194, self.joints_movement.nod, (2, 2))
+        self.add_timer(196, self.led_controller.fade_in_led, (4, (255, 255, 0), 250))
+        self.add_timer(200, self.led_controller.fade_out_led, (2,))
+	
+        self.add_timer(203, self.cosmetics_controller.move_ears, (2, 1))
+        self.add_timer(208, self.joints_controller.move_pitch, (3, 7))
+        self.add_timer(208, self.joints_controller.move_yaw, (3, -25))
+	
+        self.add_timer(212, self.joints_movement.shake, (3, 2))
+        self.add_timer(215, self.cosmetics_controller.move_ears, (2, 0))
+        self.add_timer(221, self.joints_controller.move_yaw, (2, 20))
+        self.add_timer(224, self.joints_controller.move_yaw, (3, 0))
+        self.add_timer(225, self.cosmetics_movement.blink_eyes, (1, 2))
+        
+
+        self.add_timer(229, self.joints_controller.move_yaw, (3, -25))
+        self.add_timer(229, self.joints_controller.move_neck, (3, 30))
+        self.add_timer(231, self.led_controller.fade_in_led, (2, (255, 255, 0), 250))
+        self.add_timer(234, self.joints_movement.shake, (3, 2))
+        
+        self.add_timer(242, self.joints_controller.move_neck, (3, 30))
+        self.add_timer(242, self.led_controller.fade_in_led, (2, (0, 0, 255), 250))
+        self.add_timer(242, self.led_controller.fade_out_led, (2,))
+        
+        self.add_timer(246, self.cosmetics_controller.move_ears, (2, 1))
+        self.add_timer(252, self.joints_movement.nod, (3, 2))
+        
+        self.add_timer(255, self.joints_controller.move_yaw, (3, -25))
+        self.add_timer(255, self.joints_controller.move_neck, (3, 20))
+        
+        self.add_timer(259, self.joints_controller.move_pitch, (2, -15))
+        
+        self.add_timer(261, self.joints_controller.move_yaw, (4, 25))
+        
+        self.add_timer(266, self.joints_movement.nod, (3, 3))
+        self.add_timer(275, self.joints_movement.shake, (2, 2))
+        
+        self.add_timer(280, self.cosmetics_controller.move_ears, (2, 0.6))
+        
+        self.add_timer(285, self.joints_movement.nod, (3, 3))
+        self.add_timer(288, self.joints_movement.shake, (2, 2))
+        
+        self.add_timer(295, self.cosmetics_controller.move_ears, (2, 0))
+        
+        self.add_timer(297, self.joints_controller.move_yaw, (3, 25))
+        
+        self.add_timer(302, self.cosmetics_movement.eyes_squint, (1,))
+        self.add_timer(305, self.led_controller.fade_in_led, (2, (255, 65, 0), 250))
+        self.add_timer(307, self.led_controller.fade_in_led, (2, (255, 165, 0), 250))
+        
+        self.add_timer(309, self.cosmetics_movement.open_eyes, (3,))
+        self.add_timer(315, self.cosmetics_controller.move_ears, (2, 1))
+        self.add_timer(318, self.joints_controller.move_yaw, (4, 0))
+        self.add_timer(324, self.joints_controller.move_pitch, (3, -15))
+	  
+        self.add_timer(329, self.cosmetics_controller.move_ears, (3, 0))
+        self.add_timer(329, self.joints_controller.move_pitch, (3, 0))
+        self.add_timer(337, self.joints_movement.shake, (2, 2))
+        self.add_timer(342, self.joints_movement.shake, (2, 2))
+	
+        self.add_timer(345, self.joints_controller.move_pitch, (3, -15))
+        self.add_timer(348, self.joints_movement.shake, (1, 1))
+        self.add_timer(350, self.joints_movement.shake, (1, 1))
+        self.add_timer(353, self.led_controller.fade_in_led, (2, (255, 0, 0), 250))
+        self.add_timer(359, self.cosmetics_movement.blink_eyes, (1, 1))
+        self.add_timer(362, self.cosmetics_movement.blink_eyes, (1, 1))
+        self.add_timer(365, self.led_controller.fade_out_led, (2,))
+        self.add_timer(367, self.cosmetics_controller.move_ears, (3, 1))
+        self.add_timer(370, self.led_controller.toggle_led_sections, (15, (255, 0, 0), (0, 255, 0), (0, 0, 255), 250))
+	
+        self.add_timer(374, self.led_controller.fade_out_led, (2,))
+        self.add_timer(374, self.cosmetics_controller.move_ears, (2, 0))
+        
 
         # Monitor play_audio thread
         while play_thread.is_alive():
@@ -162,7 +294,19 @@ class AudiobooksBehavior:
             time.sleep(0.5)
 
         # Wait for all threads to finish (including the audio playback)
-        play_thread.join()        
+        play_thread.join()
+        
+        
+        
+        print("[AUDIOBOOK] Playing ending line Rumpelstiltskin")
+        audiobook_end_file = 'mp3_files/rumpelstiltskin_end.mp3'
+        play_end_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_end_file,))
+        play_end_thread.start()
+        self.add_timer(0, self.joints_movement.nod, (2,1))
+        play_end_thread.join()
+        
+
+        
         
 
     def book2(self): #The Emperor's New Clothes
