@@ -18,6 +18,8 @@ from actuators.node_actuators import NodeActuators  # assuming this import for N
 # from actuators import node_actuators
 
 # State constants
+MUSCLE_RELAXATION = 1
+AUDIOBOOK = 2
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
 
@@ -41,23 +43,27 @@ def main():
             test_behaviour.run()
             reset_behaviour.run()
             user_input = INTERACTIVE_STANDBY
+            print("Test ended.")
         elif user_input == 2:
             print("2) dance")
             dance_behaviour = DanceBehavior()
             dance_behaviour.run()
             reset_behaviour.run()
             user_input = INTERACTIVE_STANDBY
+            print("Dance ended.")
         elif user_input == 3:
             print("3) audiobook")
             audiobooks_behaviour = AudiobooksBehavior()
             audiobooks_behaviour.run()
             reset_behaviour.run()
             user_input = INTERACTIVE_STANDBY
+            print("Audiobook ended.")
         elif user_input == 4:
             print("4) breathing exercise")
             breath_ex_behaviour = breath_ex()
             breath_ex_behaviour.run()
             user_input = INTERACTIVE_STANDBY
+            print("Breathing exercise ended.")
         elif user_input == 5:
             print("5) interactice standby")
             interactive_standby_behaviour = interactive_standby()
