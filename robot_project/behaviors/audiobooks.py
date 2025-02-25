@@ -48,7 +48,7 @@ class AudiobooksBehavior:
         #exit_thread.start()
         
         # Taking input from the user
-        user_input = int(input("Enter a number: \n0= exit \n1= Rumpelstiltskin \n2= The Emperor's New Clothes \n"))
+        """user_input = int(input("Enter a number: \n0= exit \n1= Rumpelstiltskin \n2= The Emperor's New Clothes \n"))
         
         if user_input == 0:
             print("[AUDIOBOOK] Exiting program...")
@@ -59,7 +59,22 @@ class AudiobooksBehavior:
             print("2) The Emperor's New Clothes")
             self.book2()
         else:
-            print("[AUDIOBOOK] Invalid choice or unrecognized number.")
+            print("[AUDIOBOOK] Invalid choice or unrecognized number.")"""
+
+        while True:
+            self.aruco_detect.tick_camera()
+
+            if self.aruco_detect.emperor:
+                print("[AUDIOBOOK] Aruco code detected, proceeding to relax_prompt.")
+                self.aruco_detect.emperor = False
+                self.book2()
+                break
+            if self.aruco_detect.rupelstiltskin:
+                print("[AUDIOBOOK] Head touch detected, proceeding to relax_prompt.")
+                self.aruco_detect.rupelstiltskin = False
+                self.book1()
+                break
+            time.sleep(0.1)
         
 
     def check_exit_flag(self):

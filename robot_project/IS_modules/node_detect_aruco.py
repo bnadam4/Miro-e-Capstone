@@ -28,7 +28,6 @@ START_AUDIOBOOK_ARUCO = 24
 START_AUDIOBOOK_EMPEROR_ARUCO = 29
 START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO = 28
 
-
 START_MUSCLE_RELAX_ARUCO = 22
 START_RELAX_PROMPT_ARUCO = 31
 
@@ -36,7 +35,6 @@ START_ARMS_RELAX = 23
 START_BACK_RELAX = 24
 START_LEGS_RELAX = 25
 START_TUMMY_RELAX = 26
-
 
 END_ARUCO = 27
 
@@ -79,6 +77,14 @@ class NodeDetectAruco:
         self.audiobook_ON = False
         self.exit_behaviour = False
         self.relax_prompt = False
+
+        self.rupelstiltskin = False
+        self.emperor = False
+
+        self.relax_arms = False
+        self.relax_back = False
+        self.relax_legs = False
+        self.relax_tummy = False
 
         # Main control loop iteration counter
         self.counter = 0
@@ -148,6 +154,24 @@ class NodeDetectAruco:
                         elif id == START_RELAX_PROMPT_ARUCO:
                             self.relax_prompt = True
                             print("START_RELAX_PROMPT has been seen")
+                        elif id == START_ARMS_RELAX:
+                            self.relax_arms = True
+                            print("START_ARMS_RELAX has been seen")
+                        elif id == START_BACK_RELAX:
+                            self.relax_back = True
+                            print("START_BACK_RELAX has been seen")
+                        elif id == START_LEGS_RELAX:
+                            self.relax_legs = True
+                            print("START_LEGS_RELAX has been seen")
+                        elif id == START_TUMMY_RELAX:
+                            self.relax_tummy = True
+                            print("START_TUMMY_RELAX has been seen")
+                        elif id == START_AUDIOBOOK_EMPEROR_ARUCO:
+                            self.emperor = True
+                            print("START_AUDIOBOOK_EMPEROR_ARUCO has been seen")
+                        elif id == START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO:
+                            self.rupelstiltskin = True
+                            print("START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO has been seen")
                         elif id == END_ARUCO:
                             self.exit_behaviour = True
                             print("END_ARUCO has been seen")
