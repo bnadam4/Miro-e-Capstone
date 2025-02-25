@@ -44,8 +44,8 @@ class AudiobooksBehavior:
         print("[AUDIOBOOK] Running audiobooks behavior")
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
-        #exit_thread = threading.Thread(target=self.check_exit_flag)
-        #exit_thread.start()
+        exit_thread = threading.Thread(target=self.check_exit_flag)
+        exit_thread.start()
         
         # Taking input from the user
         """user_input = int(input("Enter a number: \n0= exit \n1= Rumpelstiltskin \n2= The Emperor's New Clothes \n"))
