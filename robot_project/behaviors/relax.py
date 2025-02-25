@@ -40,6 +40,7 @@ class RelaxBehavior:
         self.timers = []  # List to track timers
         self.flag = None  # Initialize flag variable
         self.aruco_detect = NodeDetectAruco()
+        self.touch_detect = see_touch()
         self.audio_player = AudioPlayer()
         
         speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
@@ -53,7 +54,11 @@ class RelaxBehavior:
             if self.aruco_detect.exit_behaviour:
                 self.stop_flag = True
                 self.audio_player.stop()
-                print("[RELAXATION] Exit behaviour detected, stopping audiobook.")
+                exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+                exit_behaviour_thread.start()
+                exit_behaviour_thread.join()
+                print("[RELAXATION] Exit behaviour detected, stopping relaxation.")
+
             time.sleep(0.1)
 
     def safe_execute(self, func, args):
@@ -70,6 +75,10 @@ class RelaxBehavior:
         timer.start()
 
     def run(self):
+        self.parent_thread = threading.current_thread()
+        exit_thread = threading.Thread(target=self.check_exit_flag)
+        exit_thread.start()
+        
         self.relax_begin()
         self.wait_for_prompt()
         self.relax_prompt()
@@ -88,6 +97,8 @@ class RelaxBehavior:
             self.relax_legs()
         else:
             self.exit()
+        
+        
 
     def add_timer(self, delay, func, args=()):
         timer = threading.Timer(delay, lambda: func(*args))
@@ -113,7 +124,7 @@ class RelaxBehavior:
         play_thread.join()
         for timer in self.timers:
             timer.join()
-        time.sleep(5)
+        time.sleep(1)
 
     def wait_for_prompt(self):
         print("[RELAXATION] Waiting for head touch or aruco code...")
@@ -149,7 +160,7 @@ class RelaxBehavior:
         play_thread.join()
         for timer in self.timers:
             timer.join()
-        time.sleep(5)
+        time.sleep(1)
 
         full_check = ['full', 'everything', 'all']
         back_check = ['back']
@@ -189,7 +200,7 @@ class RelaxBehavior:
         play_thread.join()
         for timer in self.timers:
             timer.join()
-        time.sleep(5)
+        time.sleep(2)
 
         #self.state = "relax_arms"
 
@@ -212,7 +223,7 @@ class RelaxBehavior:
         play_thread.join()
         for timer in self.timers:
             timer.join()
-        time.sleep(5)
+        time.sleep(2)
 
         #self.state = "relax_tummy"
 
@@ -235,7 +246,7 @@ class RelaxBehavior:
         play_thread.join()
         for timer in self.timers:
             timer.join()
-        time.sleep(5)
+        time.sleep(2)
 
         #self.state = "relax_legs"
 
@@ -258,7 +269,7 @@ class RelaxBehavior:
         play_thread.join()
         for timer in self.timers:
             timer.join()
-        time.sleep(5)
+        time.sleep(2)
 
         #self.state = "relax_complete"
 
