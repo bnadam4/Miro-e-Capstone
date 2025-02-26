@@ -5,7 +5,7 @@
 # Description: A brief overview of what this script does
 # Author: Jasmine, Bryce
 # Date created: Dec 24, 2024
-# Date modified: Jan 8, 2024
+# Date modified: Feb 25, 2024
 # ----------------------------------------------
 
 from behaviors.dance import DanceBehavior
@@ -32,7 +32,8 @@ def main():
     reset_behaviour.run()
     interactive_standby_behaviour = interactive_standby()
 
-    user_input = int(input("Enter a number: \n0= exit \n1= test \n2= dance \n3= audiobook \n4= breathing exercise \n5= interactive standby\n"))
+    user_input = 5  # Use this starting value for release
+    # user_input = int(input("Enter a number: \n0= exit \n1= test \n2= dance \n3= audiobook \n4= breathing exercise \n5= interactive standby\n"))
     
     while True:  # Infinite loop that will continue until the user exits
         # Taking input from the user. For debugging only

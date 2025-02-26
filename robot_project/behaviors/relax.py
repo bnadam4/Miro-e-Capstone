@@ -43,6 +43,7 @@ class RelaxBehavior:
         self.touch_detect = see_touch()
         self.audio_player = AudioPlayer()
         
+        self.speech_to_text = SpeechToText()
         speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
         speech_to_text_thread.daemon = True
         speech_to_text_thread.start()
@@ -167,6 +168,8 @@ class RelaxBehavior:
         arms_check = ['arms']
         tummy_check = ['tummy']
         legs_check = ['legs']
+
+        start_time = time.time()
 
         if any(word in self.speech_to_text.last_text.lower() for word in full_check):
             self.flag = "relax_full"

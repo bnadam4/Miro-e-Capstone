@@ -60,6 +60,15 @@ class AudiobooksBehavior:
             self.book2()
         else:
             print("[AUDIOBOOK] Invalid choice or unrecognized number.")"""
+        
+        audiobook_confirm = 'mp3_files/audiobook_confirmation.mp3'
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_confirm,))
+        play_thread.start()
+        play_thread.join()
+        audiobook_select = 'mp3_files/audiobook_selection.mp3'
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_select,))
+        play_thread.start()
+        play_thread.join()
 
         while True:
             self.aruco_detect.tick_camera()
