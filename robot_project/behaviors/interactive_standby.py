@@ -38,6 +38,7 @@ from IS_modules.detect_touch import *
 
 ACT_ENGAGE = 1 # attempt to engage with person
 ACT_IDLE = 2 # do some idle animations
+ACT_LISTEN = 3 # listen to person
 
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
@@ -148,10 +149,17 @@ class interactive_standby:
         last_blink = time.time()
         last_crinkle = time.time()
         last_spoke = time.time()
+        trigger_time = time.time()
         blink_delay = self.random_delay(5, 20)
         speak_delay = 5.0
+        triggered = False
 
         last_react = 9
+
+        print("\n\n")
+        print("****************************\n\n")
+        print("INTERACTIVE STANDBY STARTED\n\n")
+        print("****************************\n\n")
 
         while not rospy.core.is_shutdown():
             # Detect aruco markers
@@ -159,6 +167,7 @@ class interactive_standby:
             # Detect touch
             self.touch_detect.check_touch()
 
+            trigger_words_to_check = ['miro', 'mirror', 'nero', 'amira, amiru']
             breath_words_to_check = ['breathe', 'breathing']
             audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
             muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
@@ -172,9 +181,33 @@ class interactive_standby:
                 play_thread.join()
                 self.speech_to_text.last_text= ''
                 self.speaking = False
+
+            if any(word in self.speech_to_text.last_text.lower() for word in trigger_words_to_check) or triggered:
+                print("\nTrigger word heard\n")
+                self.activity_level = ACT_LISTEN
+
+                if not triggered:
+                    audio_file = 'mp3_files/whats_up.mp3'
+                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                    play_thread.start()
+                    play_thread.join()
+                    trigger_time = time.time()
+                
+                triggered = True
+                print(f"Time remaining: {10 - (time.time() - trigger_time)}")
+
+                self.current_color = (255, 255, 0)  # Yellow
+                self.led_controller.turn_on_led(self.current_color, 250)
+
+            if time.time() - trigger_time >= 10 and triggered:
+                print("\nResetting trigger\n")
+                self.current_color = (0, 0, 255)  # Blue
+                self.led_controller.turn_on_led(self.current_color, 250)
+                triggered = False
+                self.activity_level = ACT_IDLE
                 
 
-            if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking:
+            if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking and triggered:
                 # audio_file = 'mp3_files/want_to_do_breath_ex.mp3'
                 # play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                 # play_thread.start()
@@ -189,7 +222,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
 
-            elif self.aruco_detect.muscle_relax_ON or any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check) and not self.speaking:
+            elif self.aruco_detect.muscle_relax_ON or any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check) and not self.speaking and triggered:
                 # audio_file = 'mp3_files/want_to_do_muscle_relax.mp3'
                 # play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                 # play_thread.start()
@@ -204,7 +237,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
 
-            elif self.aruco_detect.audiobook_ON or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and not self.speaking:
+            elif self.aruco_detect.audiobook_ON or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and not self.speaking and triggered:
                 # audio_file = 'mp3_files/want_to_do_audiobook.mp3'
                 # play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                 # play_thread.start()
@@ -231,14 +264,14 @@ class interactive_standby:
                     print(f"Face detected at distance: {self.stereovision.face_distance}")
                     self.activity_level = self.get_activity_level(self.stereovision.face_distance)
                     self.delay = 30 # Set high delay so that the robot continues to engage
-                else:
+                elif self.activity_level != ACT_LISTEN:
                     self.wait = False
                     self.activity_level = ACT_IDLE
                     # Move randomly
                     self.move_randomly()
                     #self.rotate_randomly()
                     self.speaking = True
-                    peak_delay = 0.5
+                    speak_delay = 0.3
                     last_spoke = time.time()
 
                 if self.activity_level == ACT_IDLE:
@@ -248,9 +281,11 @@ class interactive_standby:
                 elif self.activity_level == ACT_ENGAGE and not self.wait:
                     self.delay = self.random_delay(2,3)
                     self.current_color = (0, 255, 0)  # Green
+                    """
                     audio_file = 'mp3_files/hi_there.mp3'
                     play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
+                    """
 
                     self.wait = True
                     self.speaking = True

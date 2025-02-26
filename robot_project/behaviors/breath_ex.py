@@ -180,7 +180,7 @@ class breath_ex:
         self.silent_cycle_count = 0
 
         # Play the intro audio
-        BE_intro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/Breath_ex.mp3',))
+        BE_intro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/breath_confirm.mp3',))
         BE_intro_thread.start()
         head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
         head_thread.start()
@@ -189,11 +189,15 @@ class breath_ex:
         intro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/intro.mp3',))
         intro_thread.start()
 
-        print("MiRo does some deep breathing")
         self.aruco_detect.breath_ex_ON = True
 
         # Initialize state timers
         state_start_time = time.time()
+
+        print("\n\n")
+        print("****************************\n\n")
+        print("BREATHING EXERCISE STARTED\n\n")
+        print("****************************\n\n")
 
         while not rospy.core.is_shutdown() and not self.stop_flag:
 

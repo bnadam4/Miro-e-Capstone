@@ -47,21 +47,21 @@ def main():
             test_behaviour.run()
             reset_behaviour.run()
             user_input = INTERACTIVE_STANDBY
-            print("Test ended.")
+            print("Muscle relaxation ended.")
         elif user_input == 2:
             print("2) audiobook")
             audiobooks_behaviour = AudiobooksBehavior()
             audiobooks_behaviour.run()
             reset_behaviour.run()
             user_input = INTERACTIVE_STANDBY
-            print("Dance ended.")
+            print("Audiobook ended.")
         elif user_input == 3:
             print("3) dance")
             dance_behaviour = DanceBehavior()
             dance_behaviour.run()
             reset_behaviour.run()
             user_input = INTERACTIVE_STANDBY
-            print("Audiobook ended.")
+            print("Dance ended.")
         elif user_input == 4:
             print("4) breathing exercise")
             breath_ex_behaviour = breath_ex()
