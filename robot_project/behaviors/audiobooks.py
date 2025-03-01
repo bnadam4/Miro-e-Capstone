@@ -41,7 +41,10 @@ class AudiobooksBehavior:
         self.timers = []  # List to track timers
 
     def run(self):
-        print("[AUDIOBOOK] Running audiobooks behavior")
+        print("\n\n")
+        print("****************************\n\n")
+        print("AUDIOBOOK BEHAVIOUR STARTED\n\n")
+        print("****************************\n\n")
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)

@@ -24,7 +24,6 @@ AUDIOBOOK = 2
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
 MUSCLE_RELAXATION = 1
-AUDIOBOOK = 2
 
 def main():
     node_actuators = NodeActuators()  # Initialize NodeActuators instance

@@ -93,8 +93,12 @@ class RelaxBehavior:
         timer.start()
 
     def relax_begin(self):
-        audio_file = 'mp3_files/relax_begin.mp3'
-        play_thread = threading.Thread(target=play_audio, args=(audio_file,))
+        print("\n\n")
+        print("****************************\n\n")
+        print("MUSCLE RELAXATION STARTED\n\n")
+        print("****************************\n\n")
+        audiobook_open_file = 'mp3_files/relax_begin.mp3'
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_open_file,))
         play_thread.start()
 
         # Schedule all movements

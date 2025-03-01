@@ -167,7 +167,7 @@ class interactive_standby:
             # Detect touch
             self.touch_detect.check_touch()
 
-            trigger_words_to_check = ['miro', 'mirror', 'nero', 'amira, amiru']
+            trigger_words_to_check = ['miro', 'mirror', 'nero', 'amira', 'amiru', 'mural']
             breath_words_to_check = ['breathe', 'breathing']
             audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
             muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
@@ -187,10 +187,6 @@ class interactive_standby:
                 self.activity_level = ACT_LISTEN
 
                 if not triggered:
-                    audio_file = 'mp3_files/whats_up.mp3'
-                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
-                    play_thread.start()
-                    play_thread.join()
                     trigger_time = time.time()
                 
                 triggered = True
@@ -400,17 +396,8 @@ class interactive_standby:
                     last_pet = time.time()
 
             # Check if being crinkled and act accordingly
-            if not self.crinkled and not self.speaking and not self.wait:
-                if self.speech_to_text.tail_crinkle:
-                    self.crinkled = True
-                    print("Crinkling tail")
-                    audio_file = 'mp3_files/Tail_touch_1.mp3'
-                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
-                    play_thread.start()
-                    head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
-                    head_thread.start()
-                    last_crinkle = time.time()
-                elif self.speech_to_text.right_crinkle or self.speech_to_text.left_crinkle:
+            if not self.crinkled and not self.speaking and not self.wait and not self.petted:
+                if self.speech_to_text.right_crinkle or self.speech_to_text.left_crinkle:
                     print("Crinkling Right Ear")
                     self.crinkled = True
                     last_crinkle = time.time()
@@ -440,9 +427,18 @@ class interactive_standby:
                         # Wag MiRo's tail
                         tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
                         tail_thread.start()
+                elif self.speech_to_text.tail_crinkle:
+                    self.crinkled = True
+                    print("Crinkling tail")
+                    audio_file = 'mp3_files/Tail_touch_1.mp3'
+                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                    play_thread.start()
+                    head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
+                    head_thread.start()
+                    last_crinkle = time.time()
 
             # Reset petted variable if not petted for a certain time
-            if current_time - last_pet >= 3 and self.petted:
+            if current_time - last_pet >= 4 and self.petted:
                 self.petted = False
                 eye_thread = threading.Thread(target=self.cosmetics_movement.open_eyes, args=(2, ))
                 eye_thread.start()

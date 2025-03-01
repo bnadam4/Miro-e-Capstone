@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 
 # ----------------------------------------------
-# Title: joints_controller.py
-# Description: Fundation code
-# - Moves head and neck polynomials and sine movement
-# - Updates and publishs those movements
-# Author: Bryce, Jasmine 
-# Date created: Dec 24, 2024
-# Date modified: Dec 29, 2024
+# Title: wheels_controller.py
+# Description: Actuator for controlling the wheels of MiRo
+# - Rotates the robot with a given angular velocity for a specified duration
+# Author: Bryce
+# Date created: Mar 1, 2025
+# Date modified: Mar 1, 2025
 # ----------------------------------------------
 
 import rospy
@@ -18,6 +17,8 @@ import os
 import math
 import miro2 as miro
 import numpy as np
+
+ANGLE_VEL_MAX = miro.constants.WHEEL_MAX_ANG_SPEED_RAD_PER_S
 
 
 class WheelsController:
@@ -31,11 +32,6 @@ class WheelsController:
 
         # Create object to hold published data
         self.velocity = TwistStamped()        # Publish the initial head position
-
-        # Set left/right wheels speeds in m/s
-        # self.l_val = 0
-        # self.r_val = 0
-        # self.wheel_speed = [self.l_val, self.r_val]
 
         self.dr = 0
         self.dtheta = 0
@@ -73,6 +69,14 @@ class WheelsController:
         # Stop the rotation by setting angular velocity to 0
         #self.set_ang_vel(0)
         print("Rotation complete")
+
+    def test(self):
+        """Test the robot by rotating it"""
+        # Rotate the robot
+        print("Wheel max speed is {}".format(ANGLE_VEL_MAX))
+        self.rotate(ANGLE_VEL_MAX/4, 2)
+        self.rotate(-ANGLE_VEL_MAX/4, 2)
+        self.rotate(0, 1)
         
 
 
