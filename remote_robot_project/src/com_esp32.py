@@ -6,7 +6,7 @@ import threading
 import random
 
 # ESP32 IP address (replace with your ESP32 IP)
-esp32_ip = "http://192.168.1.102"
+esp32_ip = "http://192.168.1.103"
 
 def send_data(data):
     try:
