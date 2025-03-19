@@ -27,7 +27,7 @@ START_CHECKLIST_ARUCO = 30
 START_AUDIOBOOK_EMPEROR_ARUCO = 29
 START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO = 28
 
-START_RELAX_PROMPT_ARUCO = 31
+START_RELAX_FULL = 31
 
 START_ARMS_RELAX = 23
 START_BACK_RELAX = 24
@@ -143,28 +143,29 @@ class NodeDetectAruco:
                         if id == START_BREATH_ARUCO and time.time() > self.activation_timer + 0.5:
                             self.breath_ex_ON = True
                             print("START_BREATH_ARUCO has been seen")
-                        elif id == START_RELAX_PROMPT_ARUCO:
-                            self.relax_prompt = True
+                        elif id == START_RELAX_FULL:
+                            #self.relax_prompt = True
+                            self.muscle_relax_ON = True
                             print("START_RELAX_PROMPT has been seen")
                         elif id == START_ARMS_RELAX:
                             self.relax_arms = True
-                            self.muscle_relax_ON = True
-                            self.relax_prompt = True
+                            #self.muscle_relax_ON = True
+                            #self.relax_prompt = True
                             print("START_ARMS_RELAX has been seen")
                         elif id == START_BACK_RELAX:
                             self.relax_back = True
-                            self.muscle_relax_ON = True
-                            self.relax_prompt = True
+                            #self.muscle_relax_ON = True
+                            #self.relax_prompt = True
                             print("START_BACK_RELAX has been seen")
                         elif id == START_LEGS_RELAX:
                             self.relax_legs = True
-                            self.muscle_relax_ON = True
-                            self.relax_prompt = True
+                            #self.muscle_relax_ON = True
+                            #self.relax_prompt = True
                             print("START_LEGS_RELAX has been seen")
                         elif id == START_TUMMY_RELAX:
                             self.relax_tummy = True
-                            self.muscle_relax_ON = True
-                            self.relax_prompt = True
+                            #self.muscle_relax_ON = True
+                            #self.relax_prompt = True
                             print("START_TUMMY_RELAX has been seen")
                         elif id == START_AUDIOBOOK_EMPEROR_ARUCO:
                             self.emperor = True

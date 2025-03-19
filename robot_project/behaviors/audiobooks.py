@@ -62,7 +62,8 @@ class AudiobooksBehavior:
             print("2) The Emperor's New Clothes")
             self.book2()
         else:
-            print("[AUDIOBOOK] Invalid choice or unrecognized number.")"""
+            print("[AUDIOBOOK] Invalid choice or unrecognized number.")
+        """
         
         audiobook_confirm = 'mp3_files/audiobook_confirmation.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_confirm,))
