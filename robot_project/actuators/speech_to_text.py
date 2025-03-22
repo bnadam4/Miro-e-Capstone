@@ -157,10 +157,11 @@ class SpeechToText:
 
                     buffer.seek(0)
                     
+                    """
                     with sr.AudioFile(buffer) as source:
                         audio_data = r.record(source)
                         try:
-                            text = r.recognize_azure(audio_data, key="Ft27qAeJW6CJup9n2XJfsWdrnsz6mtTZygdG8SZx6BuJzktUEVM9JQQJ99ALACBsN54XJ3w3AAAYACOGhZ9C", location="canadacentral")
+                            text = r.recognize_azure(audio_data, key="G0SAwy78QOIZQmQWkYR35l6xsuRfr1hHwQmeQadb8vNNB8Uf62lwJQQJ99BCACBsN54XJ3w3AAAYACOGAWb6", location="canadacentral")
                             print(f"\n{text}\n")
                             with self.lock:
                                 self.last_text = text[0]
@@ -169,7 +170,7 @@ class SpeechToText:
                             print("\nAudio could not be understood.\n")
                         except sr.RequestError as e:
                             print(f"API error: {e}")
-
+                    """
 
                 self.record = False
                 self.valid_time = False
@@ -216,7 +217,7 @@ class SpeechToText:
         print ("recording from 4 microphones for", RECORD_TIME, "seconds...")
 
         # Give it some time to make sure everything is initialised
-        rospy.sleep(2.0)
+        # rospy.sleep(2.0)
 
 if __name__ == "__main__":
     # Initialize a ROS node to communicate with MiRo

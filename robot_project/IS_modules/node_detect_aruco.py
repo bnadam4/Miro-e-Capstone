@@ -26,6 +26,7 @@ START_CHECKLIST_ARUCO = 30
 
 START_AUDIOBOOK_EMPEROR_ARUCO = 29
 START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO = 28
+START_AUDIOBOOK_FROG_ARUCO = 32
 
 START_RELAX_FULL = 31
 
@@ -33,6 +34,7 @@ START_ARMS_RELAX = 23
 START_BACK_RELAX = 24
 START_LEGS_RELAX = 25
 START_TUMMY_RELAX = 26
+SELECT_RELAX_FULL = 36
 
 END_ARUCO = 27
 
@@ -78,6 +80,7 @@ class NodeDetectAruco:
 
         self.rupelstiltskin = False
         self.emperor = False
+        self.frog = False
 
         self.relax_arms = False
         self.relax_back = False
@@ -144,7 +147,7 @@ class NodeDetectAruco:
                             self.breath_ex_ON = True
                             print("START_BREATH_ARUCO has been seen")
                         elif id == START_RELAX_FULL:
-                            #self.relax_prompt = True
+                            self.relax_prompt = True
                             self.muscle_relax_ON = True
                             print("START_RELAX_PROMPT has been seen")
                         elif id == START_ARMS_RELAX:
@@ -175,6 +178,10 @@ class NodeDetectAruco:
                             self.rupelstiltskin = True
                             self.audiobook_ON = True
                             print("START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO has been seen")
+                        elif id == START_AUDIOBOOK_FROG_ARUCO:
+                            self.frog = True
+                            self.audiobook_ON = True
+                            print("START_AUDIOBOOK_FROG_ARUCO has been seen")
                         elif id == END_ARUCO:
                             self.exit_behaviour = True
                             print("END_ARUCO has been seen")
