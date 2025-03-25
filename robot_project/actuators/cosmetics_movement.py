@@ -86,6 +86,13 @@ class CosmeticsMovement:
         rospy.loginfo("Closing both eyes.")
         self.controller.move_eyes(duration, 1.0)  # Close both eyes
 
+    def blink(self, duration):
+        """Performs a blink by closing and then opening both eyes."""
+        rospy.loginfo("Blinking eyes.")
+        self.close_eyes(duration / 2)
+        rospy.sleep(duration / 2)
+        self.open_eyes(duration / 2)
+
     def wagging_tail(self, duration, repetitions):
         """Performs a wagging motion for the tail with optional repetition."""
         rospy.loginfo(f"Wagging tail {repetitions} times for {duration} seconds each.")

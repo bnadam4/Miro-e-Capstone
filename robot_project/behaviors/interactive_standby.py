@@ -167,8 +167,8 @@ class interactive_standby:
             # Detect touch
             self.touch_detect.check_touch()
 
-            trigger_words_to_check = ['miro', 'mirror', 'nero', 'amira', 'amiru', 'mural']
-            breath_words_to_check = ['breathe', 'breathing']
+            trigger_words_to_check = ['miro', 'mirror', 'nero', 'amira', 'amiru', 'mural', 'neural', 'emira', 'amero', 'mira']
+            breath_words_to_check = ['breathe', 'breathing', 'breath']
             audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
             muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
 
@@ -188,6 +188,8 @@ class interactive_standby:
 
                 if not triggered:
                     trigger_time = time.time()
+                    ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
+                    ear_thread.start()
                 
                 triggered = True
                 print(f"Time remaining: {10 - (time.time() - trigger_time)}")
@@ -201,6 +203,9 @@ class interactive_standby:
                 self.led_controller.turn_on_led(self.current_color, 250)
                 triggered = False
                 self.activity_level = ACT_IDLE
+                ear_thread = threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, ))
+                ear_thread.start()
+
                 
 
             if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking and triggered:
@@ -277,11 +282,10 @@ class interactive_standby:
                 elif self.activity_level == ACT_ENGAGE and not self.wait:
                     self.delay = self.random_delay(2,3)
                     self.current_color = (0, 255, 0)  # Green
-                    """
+    
                     audio_file = 'mp3_files/hi_there.mp3'
                     play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
-                    """
 
                     self.wait = True
                     self.speaking = True
@@ -453,7 +457,7 @@ class interactive_standby:
 
             # Reset speak variable if not spoken for a certain time
             if current_time - last_spoke >= speak_delay and self.speaking:
-                print("Set speaking to False")
+                # print("Set speaking to False")
                 self.speaking = False
 
             #### End of 5 second loop ####
