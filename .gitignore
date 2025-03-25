@@ -31,3 +31,4 @@ actuators & modules/
 robot_project/behaviors/actuators/
 
 robot_project/behaviors/IS_modules/
+robot_project/gui/__pycache__/main_gui.cpython-38.pyc
