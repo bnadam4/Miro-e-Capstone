@@ -34,7 +34,7 @@ class see_touch:
         # Initialize a ROS node to communicate with MiRo
         # rospy.init_node("node_aruco_detector")
         # Give it some time to make sure everything is initialised
-        rospy.sleep(2.0)
+        rospy.sleep(0.1)
 
 
     def check_touch(self):

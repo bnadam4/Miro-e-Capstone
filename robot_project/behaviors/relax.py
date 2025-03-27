@@ -19,11 +19,11 @@ from actuators.joints_movement import JointsMovement #class
 from actuators.cosmetics_controller import CosmeticsController #class
 from actuators.cosmetics_movement import CosmeticsMovement #class
 
-from actuators.play_audio import AudioPlayer  # function
+from actuators.play_audio import AudioPlayer  # class
 #from robot_interface import RobotInterface  # class
 
-from IS_modules.node_detect_aruco import *
-from IS_modules.detect_touch import *
+from IS_modules.node_detect_aruco import NodeDetectAruco
+from IS_modules.detect_touch import see_touch
 
 from actuators.speech_to_text import SpeechToText
 
@@ -46,15 +46,21 @@ class RelaxBehavior:
         self.flag = None  # Initialize flag variable
 
         
+        self.speech_to_text = SpeechToText()
         speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
         speech_to_text_thread.daemon = True
         speech_to_text_thread.start()
+        self.audio_player = AudioPlayer()
+        self.aruco_detect = NodeDetectAruco()
+        self.touch_detect = see_touch() 
+        
 
     def check_exit_flag(self):
         while not self.stop_flag:
             # Detect aruco markers
             self.aruco_detect.tick_camera()
             if self.aruco_detect.exit_behaviour:
+                self.speech_to_text.stop = True
                 self.stop_flag = True
                 self.audio_player.stop()
                 print("[RELAXATION] Exit behaviour detected, stopping audiobook.")
@@ -260,6 +266,7 @@ class RelaxBehavior:
         
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        self.speech_to_text.stop = True
 
     def relax_arms(self):
         print("relax arms on")
@@ -292,6 +299,7 @@ class RelaxBehavior:
         while play_thread.is_alive():
             if self.stop_flag:
                 print("[RELAXATION] Stopping ...")
+                self.speech_to_text.stop = True
                 for timer in self.timers:
                     timer.cancel()  # Cancel scheduled movements
                 break
@@ -299,6 +307,7 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        self.speech_to_text.stop = True
 
     def relax_tummy(self):
         audio_file = 'mp3_files/relax_tummy.mp3'
@@ -336,6 +345,7 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        self.speech_to_text.stop = True
 
     def relax_legs(self):
         audio_file = 'mp3_files/relax_legs.mp3'
@@ -374,6 +384,7 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        self.speech_to_text.stop = True
 
     def relax_complete(self):
         audio_file = 'mp3_files/relax_complete.mp3'
@@ -404,10 +415,12 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        self.speech_to_text.stop = True
     
     def exit(self):
         #play_thread.join()
 
+        self.speech_to_text.stop = True
         exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
         exit_behaviour_thread.start()
         exit_behaviour_thread.join()

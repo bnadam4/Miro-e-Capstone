@@ -8,6 +8,9 @@
 # Date modified: Feb 25, 2024
 # ----------------------------------------------
 
+import threading
+import queue
+from gui.main_gui import start_gui
 from behaviors.dance import DanceBehavior
 from behaviors.audiobooks import AudiobooksBehavior
 from behaviors.test import TestBehavior
@@ -16,26 +19,29 @@ from behaviors.breath_ex import breath_ex
 from behaviors.relax import RelaxBehavior
 from behaviors.interactive_standby import interactive_standby
 from actuators.node_actuators import NodeActuators  # assuming this import for NodeActuators
-# from actuators import node_actuators
 
 # State constants
 MUSCLE_RELAXATION = 1
 AUDIOBOOK = 2
+DANCE = 3
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
-MUSCLE_RELAXATION = 1
 
 def main():
+    command_queue = queue.Queue()
+    gui_thread = threading.Thread(target=start_gui, args=(command_queue,))
+    gui_thread.start()
+
     node_actuators = NodeActuators()  # Initialize NodeActuators instance
     reset_behaviour = ResetBehavior()
     reset_behaviour.run()
     interactive_standby_behaviour = interactive_standby()
 
-    user_input = 5  # Use this starting value for release
-    # user_input = int(input("Enter a number: \n0= exit \n1= test \n2= dance \n3= audiobook \n4= breathing exercise \n5= interactive standby\n"))
-    
-    while True:  # Infinite loop that will continue until the user exits
-        # Taking input from the user. For debugging only
+    user_input = INTERACTIVE_STANDBY  # Default starting value
+
+    while True:
+        if not command_queue.empty():
+            user_input = command_queue.get()
 
         if user_input == 0:
             print("Exiting program...")
@@ -68,7 +74,7 @@ def main():
             user_input = INTERACTIVE_STANDBY
             print("Breathing exercise ended.")
         elif user_input == 5:
-            print("5) interactice standby")
+            print("5) interactive standby")
             interactive_standby_behaviour = interactive_standby()
             interactive_standby_behaviour.loop()
             user_input = interactive_standby_behaviour.behaviour

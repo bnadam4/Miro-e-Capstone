@@ -251,14 +251,25 @@ class breath_ex:
                         state_start_time = time.time()  # Reset state timer
 
                         # Wait for touch, timeout, or stop_flag
-                        while not self.touch_detect.head_touched and (time.time() - state_start_time) < 10.0 and not self.stop_flag:
+                        asked = False
+                        while not self.touch_detect.head_touched and (time.time() - state_start_time) < 20.0 and not self.stop_flag:
                             self.touch_detect.check_touch()
                             rospy.sleep(self.TICK)
+                            if time.time() - state_start_time > 10.0 and not asked:
+                                asked = True
+                                print("Waiting for touch")
+                                time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_AreYouThere.mp3',))
+                                time_out_thread.start()
+                                time_out_thread.join()
 
                         if self.touch_detect.head_touched:
                             print("Head touched!")
                         else:
                             print("Timed out")
+                            self.behaviour = INTERACTIVE_STANDBY
+                            time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Timeout_1.mp3',))
+                            time_out_thread.start()
+                            time_out_thread.join()
                             break
 
                 # Check if state has changed
