@@ -29,8 +29,8 @@ INTERACTIVE_STANDBY = 5
 
 def main():
     command_queue = queue.Queue()
-    gui_thread = threading.Thread(target=start_gui, args=(command_queue,))
-    gui_thread.start()
+    # gui_thread = threading.Thread(target=start_gui, args=(command_queue,))
+    # gui_thread.start()
 
     node_actuators = NodeActuators()  # Initialize NodeActuators instance
     reset_behaviour = ResetBehavior()

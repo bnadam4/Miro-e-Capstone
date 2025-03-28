@@ -41,17 +41,14 @@ class AudiobooksBehavior:
         self.timers = []  # List to track timers
 
     def run(self):
-        print("\n\n")
-        print("****************************\n\n")
-        print("AUDIOBOOK BEHAVIOUR STARTED\n\n")
-        print("****************************\n\n")
+        print("[AUDIOBOOK] Running audiobooks behavior")
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
-        exit_thread = threading.Thread(target=self.check_exit_flag)
-        exit_thread.start()
+        #exit_thread = threading.Thread(target=self.check_exit_flag)
+        #exit_thread.start()
         
         # Taking input from the user
-        """user_input = int(input("Enter a number: \n0= exit \n1= Rumpelstiltskin \n2= The Emperor's New Clothes \n3= The Frog Prince \n"))
+        user_input = int(input("Enter a number: \n0= exit \n1= Rumpelstiltskin \n2= The Emperor's New Clothes \n"))
         
         if user_input == 0:
             print("[AUDIOBOOK] Exiting program...")
@@ -61,41 +58,8 @@ class AudiobooksBehavior:
         elif user_input == 2:
             print("2) The Emperor's New Clothes")
             self.book2()
-        elif user_input == 3:
-            print("3) The Frog Prince")
-            self.book3()
         else:
             print("[AUDIOBOOK] Invalid choice or unrecognized number.")
-        """
-        
-        audiobook_confirm = 'mp3_files/audiobook_confirmation.mp3'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_confirm,))
-        play_thread.start()
-        play_thread.join()
-        audiobook_select = 'mp3_files/audiobook_selection.mp3'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_select,))
-        play_thread.start()
-        play_thread.join()
-
-        while True:
-            self.aruco_detect.tick_camera()
-
-            if self.aruco_detect.emperor:
-                print("[AUDIOBOOK] Aruco code detected, proceeding to relax_prompt.")
-                self.aruco_detect.emperor = False
-                self.book2()
-                break
-            if self.aruco_detect.rupelstiltskin:
-                print("[AUDIOBOOK] Head touch detected, proceeding to relax_prompt.")
-                self.aruco_detect.rupelstiltskin = False
-                self.book1()
-                break
-            if self.aruco_detect.frog:
-                print("[AUDIOBOOK] Head touch detected, proceeding to relax_prompt.")
-                self.aruco_detect.frog = False
-                self.book3()
-                break
-            time.sleep(0.1)
         
 
     def check_exit_flag(self):
@@ -375,48 +339,4 @@ class AudiobooksBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
-
-    def book3(self): # Rumpelstiltskin
-        
-        print("[AUDIOBOOK] Playing opening line Frog Prince")
-        audiobook_open_file = 'mp3_files/FrogPrince_open.mp3'
-        play_open_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_open_file,))
-        play_open_thread.start()
-        self.add_timer(6, self.joints_movement.nod, (2,1))
-        play_open_thread.join()
-               
-
-        # Start playing the audiobook in the background
-        
-        print("[AUDIOBOOK] Playing Frog Prince")
-        audiobook_file = 'mp3_files/FrogPrince.mp3'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_file,))
-        play_thread.start()
-        
-        
-        # Schedule all movements
-        self.add_timer(4, self.joints_controller.move_neck, (4, 34))
-        self.add_timer(4, self.cosmetics_controller.move_eyes, (4, 0.2))
-        
-
-        # Monitor play_audio thread
-        while play_thread.is_alive():
-            if self.stop_flag:
-                print("[AUDIOBOOK] Stopping book3...")
-                for timer in self.timers:
-                    timer.cancel()  # Cancel scheduled movements
-                break
-            time.sleep(0.1)
-
-        # Wait for all threads to finish (including the audio playback)
-        play_thread.join()
-        
-        
-        
-        print("[AUDIOBOOK] Playing ending line Frog Prince")
-        audiobook_end_file = 'mp3_files/FrogPrince_end.mp3'
-        play_end_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_end_file,))
-        play_end_thread.start()
-        self.add_timer(0, self.joints_movement.nod, (2,1))
-        play_end_thread.join()
 
