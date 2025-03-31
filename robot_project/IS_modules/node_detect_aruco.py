@@ -38,9 +38,6 @@ SELECT_RELAX_FULL = 36
 
 END_ARUCO = 27
 
-# Add a constant for the minimum area
-MIN_ARUCO_AREA = 1500  # Adjust this value as needed
-
 class NodeDetectAruco:
 
     def __init__(self):
@@ -114,13 +111,15 @@ class NodeDetectAruco:
                 self.input_camera[0] = None
                 self.input_camera[1] = None
 
-        # Inside the tick_camera method, modify the detection loop
+        # for each channel to process
         for index in self.channels_to_process:
+
             # get image
             image = self.input_camera[index]
 
             # if present
             if not image is None:
+
                 # handle
                 self.input_camera[index] = None
 
@@ -133,6 +132,9 @@ class NodeDetectAruco:
                 detector = cv2.aruco.ArucoDetector(aruco_dict, parameters)
                 # Detect the markers
                 corners, ids, rejected = detector.detectMarkers(gray)
+                # Print the detected markers
+                # if len(ids) > 0:
+                #    print("Detected markers:", ids)
 
                 if ids is not None:
                     cv2.aruco.drawDetectedMarkers(image, corners, ids)
@@ -140,53 +142,49 @@ class NodeDetectAruco:
                         self.aruco_seen = True
                         self.activation_timer = time.time()
 
-                    for i, id in enumerate(ids):
-                        # Calculate the area of the detected marker
-                        x1, y1 = corners[i][0][0]
-                        x2, y2 = corners[i][0][1]
-                        x3, y3 = corners[i][0][2]
-                        x4, y4 = corners[i][0][3]
-                        track_area = abs((x1 * y2 - y1 * x2) + (x2 * y3 - y2 * x3) +
-                                         (x3 * y4 - y3 * x4) + (x4 * y1 - y4 * x1)) / 2
-
-                        # Check if the area is greater than the minimum threshold
-                        if track_area > MIN_ARUCO_AREA:
-                            if id == START_BREATH_ARUCO and time.time() > self.activation_timer + 0.5:
-                                self.breath_ex_ON = True
-                                print("START_BREATH_ARUCO has been seen")
-                            elif id == START_RELAX_FULL:
-                                self.relax_prompt = True
-                                self.muscle_relax_ON = True
-                                print("START_RELAX_PROMPT has been seen")
-                            elif id == START_ARMS_RELAX:
-                                self.relax_arms = True
-                                print("START_ARMS_RELAX has been seen")
-                            elif id == START_BACK_RELAX:
-                                self.relax_back = True
-                                print("START_BACK_RELAX has been seen")
-                            elif id == START_LEGS_RELAX:
-                                self.relax_legs = True
-                                print("START_LEGS_RELAX has been seen")
-                            elif id == START_TUMMY_RELAX:
-                                self.relax_tummy = True
-                                print("START_TUMMY_RELAX has been seen")
-                            elif id == START_AUDIOBOOK_EMPEROR_ARUCO:
-                                self.emperor = True
-                                self.audiobook_ON = True
-                                print("START_AUDIOBOOK_EMPEROR_ARUCO has been seen")
-                            elif id == START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO:
-                                self.rupelstiltskin = True
-                                self.audiobook_ON = True
-                                print("START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO has been seen")
-                            elif id == START_AUDIOBOOK_FROG_ARUCO:
-                                self.frog = True
-                                self.audiobook_ON = True
-                                print("START_AUDIOBOOK_FROG_ARUCO has been seen")
-                            elif id == END_ARUCO:
-                                self.exit_behaviour = True
-                                print("END_ARUCO has been seen")
-                        else:
-                            print(f"Marker {id} ignored due to small area: {track_area}")
+                    for id in ids:
+                        if id == START_BREATH_ARUCO and time.time() > self.activation_timer + 0.5:
+                            self.breath_ex_ON = True
+                            print("START_BREATH_ARUCO has been seen")
+                        elif id == START_RELAX_FULL:
+                            self.relax_prompt = True
+                            self.muscle_relax_ON = True
+                            print("START_RELAX_PROMPT has been seen")
+                        elif id == START_ARMS_RELAX:
+                            self.relax_arms = True
+                            #self.muscle_relax_ON = True
+                            #self.relax_prompt = True
+                            print("START_ARMS_RELAX has been seen")
+                        elif id == START_BACK_RELAX:
+                            self.relax_back = True
+                            #self.muscle_relax_ON = True
+                            #self.relax_prompt = True
+                            print("START_BACK_RELAX has been seen")
+                        elif id == START_LEGS_RELAX:
+                            self.relax_legs = True
+                            #self.muscle_relax_ON = True
+                            #self.relax_prompt = True
+                            print("START_LEGS_RELAX has been seen")
+                        elif id == START_TUMMY_RELAX:
+                            self.relax_tummy = True
+                            #self.muscle_relax_ON = True
+                            #self.relax_prompt = True
+                            print("START_TUMMY_RELAX has been seen")
+                        elif id == START_AUDIOBOOK_EMPEROR_ARUCO:
+                            self.emperor = True
+                            self.audiobook_ON = True
+                            print("START_AUDIOBOOK_EMPEROR_ARUCO has been seen")
+                        elif id == START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO:
+                            self.rupelstiltskin = True
+                            self.audiobook_ON = True
+                            print("START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO has been seen")
+                        elif id == START_AUDIOBOOK_FROG_ARUCO:
+                            self.frog = True
+                            self.audiobook_ON = True
+                            print("START_AUDIOBOOK_FROG_ARUCO has been seen")
+                        elif id == END_ARUCO:
+                            self.exit_behaviour = True
+                            print("END_ARUCO has been seen")
                 else:
                     self.activation_timer = time.time() + 10.0
                     self.aruco_seen = False
@@ -214,10 +212,8 @@ class NodeDetectAruco:
          
     # Callback for left camera feed
     def callback_caml(self, ros_image):
-         
          self.callback_cam(ros_image, 0)
 
     # Callback for right camera feed
     def callback_camr(self, ros_image):
-         
          self.callback_cam(ros_image, 1)

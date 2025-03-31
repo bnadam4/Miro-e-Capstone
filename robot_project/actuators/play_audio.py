@@ -14,6 +14,7 @@ import time
 import sys
 import os
 import numpy as np
+from actuators.audio_history import AudioHistory
 
 # messages larger than this will be dropped by the receiver
 MAX_STREAM_MSG_SIZE = (4096 - 48)
@@ -95,6 +96,9 @@ class AudioPlayer:
 
         if not os.path.isfile(TRACK_PATH):
             error('ERROR: file not found')
+
+        # Log the audio file to the shared history
+        AudioHistory().add_audio(TRACK_PATH)
 
         print("playing file", TRACK_PATH)
 

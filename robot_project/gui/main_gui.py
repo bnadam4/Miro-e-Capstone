@@ -1,32 +1,47 @@
 import tkinter as tk
-from tkinter import ttk
-import threading
-import queue
+from queue import Queue, Empty
+from gui.views.base_view import BaseView
+from actuators.audio_history import AudioHistory
 
 class MainGUI:
     def __init__(self, root, command_queue):
         self.root = root
         self.command_queue = command_queue
         self.create_widgets()
+        self.poll_queue()
+        self.update_audio_history()
 
     def create_widgets(self):
-        self.label = ttk.Label(self.root, text="Select an option:")
-        self.label.pack(pady=10)
+        self.base_view = BaseView(self.root)
+        self.base_view.pack(pady=10)
 
-        self.options = ["Exit", "Muscle relaxation", "Audiobook", "Dance", "Breathing exercise", "Interactive standby"]
-        self.combobox = ttk.Combobox(self.root, values=self.options)
-        self.combobox.pack(pady=10)
-        self.combobox.current(5)  # Default to "Interactive standby"
+    def poll_queue(self):
+        """
+        Poll the command queue for updates and handle them.
+        """
+        try:
+            while True:
+                message = self.command_queue.get_nowait()
+                if message["type"] == "connection_status":
+                    self.base_view.update_connection_status(message["connected"])
+                elif message["type"] == "behavior_update":
+                    self.base_view.update_behavior(message["behavior_name"])
+        except Empty:
+            pass
+        finally:
+            # Schedule the next poll
+            self.root.after(100, self.poll_queue)
 
-        self.button = ttk.Button(self.root, text="Run", command=self.send_command)
-        self.button.pack(pady=10)
-
-    def send_command(self):
-        user_input = self.combobox.current()
-        self.command_queue.put(user_input)
+    def update_audio_history(self):
+        """
+        Periodically update the audio history in the GUI.
+        """
+        self.base_view.update_audio_history()
+        self.root.after(1000, self.update_audio_history)  # Update every second
 
 def start_gui(command_queue):
     root = tk.Tk()
     root.title("Robot Control GUI")
+    root.geometry("400x400")  # Set the default window size to match BaseView
     gui = MainGUI(root, command_queue)
     root.mainloop()
