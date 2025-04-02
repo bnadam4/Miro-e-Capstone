@@ -19,6 +19,8 @@ import speech_recognition as sr
 
 import miro2 as miro
 
+from actuators.speech_history import SpeechHistory  # Import the SpeechHistory class
+
 # initialize the recognizer
 r = sr.Recognizer()
 
@@ -165,6 +167,9 @@ class SpeechToText:
                             with self.lock:
                                 self.last_text = text[0]
                                 self.last_confidence = text[1]
+                                if self.last_text.strip():  # Check if there is actual text
+                                    SpeechHistory().add_text(text)  # Add the text to the shared history
+
                         except sr.UnknownValueError:
                             print("\nAudio could not be understood.\n")
                         except sr.RequestError as e:

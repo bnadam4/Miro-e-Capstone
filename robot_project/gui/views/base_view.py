@@ -1,5 +1,6 @@
 import tkinter as tk
 from actuators.audio_history import AudioHistory
+from actuators.speech_history import SpeechHistory  # Import the SpeechHistory class
 
 class BaseView(tk.Frame):
     def __init__(self, parent):
@@ -10,20 +11,23 @@ class BaseView(tk.Frame):
 
     def create_widgets(self):
         self.label = tk.Label(self, text="Miro GUI", font=("Arial", 16))
-        self.label.place(relx=0.5, rely=0.3, anchor=tk.CENTER)
+        self.label.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
 
         # Add a label for connection status
         self.connection_status_label = tk.Label(self, text="Connecting...", font=("Arial", 12))
-        self.connection_status_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        self.connection_status_label.place(relx=0.5, rely=0.4, anchor=tk.CENTER)
 
         # Add a label for the current behavior
         self.behavior_label = tk.Label(self, text="Current Behavior: None", font=("Arial", 12))
-        self.behavior_label.place(relx=0.5, rely=0.7, anchor=tk.CENTER)
+        self.behavior_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # Add a label for the last played audio files
         self.audio_history_label = tk.Label(self, text="Last Played Audio:\nNone", font=("Arial", 10), justify=tk.LEFT)
-        self.audio_history_label.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
+        self.audio_history_label.place(relx=0.5, rely=0.7, anchor=tk.CENTER)
 
+        # Add a label for the last received speech texts
+        self.speech_history_label = tk.Label(self, text="Last Speech Texts:\nNone", font=("Arial", 10), justify=tk.LEFT)
+        self.speech_history_label.place(relx=0.5, rely=0.9, anchor=tk.CENTER)
 
     def update_connection_status(self, connected):
         """
@@ -45,6 +49,16 @@ class BaseView(tk.Frame):
         history = AudioHistory().get_history()
         history_text = "Last Played Audio:\n" + "\n".join(history) if history else "Last Played Audio:\nNone"
         self.audio_history_label.config(text=history_text)
+
+    def update_speech_history(self):
+        """
+        Update the speech history label with the last received texts.
+        """
+        history = SpeechHistory().get_history()
+        # Extract only the text from each tuple
+        history_texts = [item[0] for item in history]  # Assuming each tuple is (text, confidence)
+        history_text = "Last Speech Texts:\n" + "\n".join(history_texts) if history_texts else "Last Speech Texts:\nNone"
+        self.speech_history_label.config(text=history_text)
 
     def shutdown(self):
         """

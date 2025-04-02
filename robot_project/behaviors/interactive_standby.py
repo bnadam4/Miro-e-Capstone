@@ -237,6 +237,7 @@ class interactive_standby:
                     head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
                     head_thread.start()
                     play_thread.join()
+                    self.led_controller.turn_off_led()
                     print("Shutting down")
                     self.speech_to_text.stop = True
                     self.behaviour = SHUTDOWN

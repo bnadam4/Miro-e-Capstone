@@ -10,6 +10,7 @@ class MainGUI:
         self.create_widgets()
         self.poll_queue()
         self.update_audio_history()
+        self.update_speech_history()  # Add periodic speech history updates
 
     def create_widgets(self):
         self.base_view = BaseView(self.root)
@@ -40,6 +41,13 @@ class MainGUI:
         """
         self.base_view.update_audio_history()
         self.root.after(1000, self.update_audio_history)  # Update every second
+
+    def update_speech_history(self):
+        """
+        Periodically update the speech history in the GUI.
+        """
+        self.base_view.update_speech_history()
+        self.root.after(1000, self.update_speech_history)  # Update every second
 
 def start_gui(command_queue):
     root = tk.Tk()
