@@ -37,6 +37,8 @@ from actuators.led_controller import LEDController #class
 from IS_modules.pose_interp import *
 from actuators.play_audio import AudioPlayer  # class
 
+from actuators.status_handler import status_handler
+
 # to generate LED colour and brightness
 def generate_illum(r, g, b, bright):
 	return (int(bright) << 24) | (r << 16) | (g << 8) | b
@@ -182,6 +184,7 @@ class breath_ex:
         self.silent_cycle_count = 0
 
         # Play the intro audio
+        status_handler.update_status("Starting breathing exercise intro.")
         BE_intro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/breath_confirm.mp3',))
         BE_intro_thread.start()
         head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
@@ -234,14 +237,19 @@ class breath_ex:
 
                     if self.state == breath_in:
                         print("Switched to breath in")
+                        status_handler.update_status(f"Breathing in. Cycle {self.silent_cycle_count + 1} of {NUM_CYCLES}.")
                     elif self.state == hold_1:
                         print("Switch to hold 1")
+                        status_handler.update_status("Holding breath (in).")
                     elif self.state == breath_out:
                         print("Switch to breath out")
+                        status_handler.update_status(f"Breathing out. Cycle {self.silent_cycle_count} of {NUM_CYCLES}.")
                     elif self.state == hold_2:
                         print("Switch to hold 2")
+                        status_handler.update_status("Holding breath (out).")
                     elif self.state == outro:
                         print("outro")
+                        status_handler.update_status("Breathing exercise complete. Asking if user wants to go again.")
 
                     # Add delay between intro and ready prompt
                     if self.state == ready and self.last_state == intro:
@@ -253,6 +261,7 @@ class breath_ex:
                         state_start_time = time.time()  # Reset state timer
 
                         # Wait for touch, timeout, or stop_flag
+                        status_handler.update_status("Waiting for head touch to start breathing exercise.")
                         asked = False
                         while not self.touch_detect.head_touched and (time.time() - state_start_time) < 20.0 and not self.stop_flag:
                             self.touch_detect.check_touch()
@@ -268,6 +277,7 @@ class breath_ex:
                             print("Head touched!")
                         else:
                             print("Timed out")
+                            status_handler.update_status("Timed out waiting for head touch.")
                             self.behaviour = INTERACTIVE_STANDBY
                             time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Timeout_1.mp3',))
                             time_out_thread.start()
@@ -298,9 +308,10 @@ class breath_ex:
                         outro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Go_again.mp3',))
                         outro_thread.start()
 
-                        state_start_time = time.time()  # Reset state timer
+                        state_start_time = time.time()  # Reset =tate timer
 
                         # Wait for touch
+                        status_handler.update_status("Asking if user wants to go again. Waiting for head touch.")
                         self.touch_detect.check_touch()
                         while not self.touch_detect.head_touched and (time.time() - state_start_time) < 10.0 and not self.stop_flag:
                             self.touch_detect.check_touch()
@@ -314,11 +325,13 @@ class breath_ex:
                             self.step = 0
                             self.last_state = breath_in # Make sure the state stays consistent
                             print("Head touched!")
+                            status_handler.update_status("Restarting breathing exercise.")
                             breath_in_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/breatheIn.mp3',))
                             breath_in_thread.start()
                             self.silent_cycle_count += 1
                         else:
                             print("Timed out")
+                            status_handler.update_status("Timed out waiting for response to go again.")
                             self.behaviour = INTERACTIVE_STANDBY
                             breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/BrEx_Timeout.mp3',))
                             breath_out_thread.start()

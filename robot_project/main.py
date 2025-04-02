@@ -86,10 +86,6 @@ def main():
 
     try:
         while True:
-            if not command_queue.empty():
-                user_input = command_queue.get()
-                print(f'[MAIN] {user_input}')
-
             behavior_name = None  # Initialize behavior name for GUI updates
 
             if user_input == 0:
