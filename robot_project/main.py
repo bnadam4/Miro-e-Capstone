@@ -24,6 +24,8 @@ import signal
 import os
 import sys
 
+from actuators.status_handler import status_handler
+
 # State constants
 MUSCLE_RELAXATION = 1
 AUDIOBOOK = 2
@@ -54,6 +56,10 @@ def signal_handler(sig, frame):
 def main():
     global command_queue  # Make command_queue accessible in the signal handler
     command_queue = queue.Queue()
+
+    # Set the command queue in the status handler
+    status_handler.set_command_queue(command_queue)
+
     gui_thread = threading.Thread(target=start_gui, args=(command_queue,))
     gui_thread.daemon = True
     gui_thread.start()

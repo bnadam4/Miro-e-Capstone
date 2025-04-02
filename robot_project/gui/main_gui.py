@@ -27,6 +27,8 @@ class MainGUI:
                     self.base_view.update_connection_status(message["connected"])
                 elif message["type"] == "behavior_update":
                     self.base_view.update_behavior(message["behavior_name"])
+                elif message["type"] == "status_update":
+                    self.base_view.update_status(message["status"])
                 elif message["type"] == "shutdown":
                     self.base_view.shutdown()
         except Empty:
@@ -52,6 +54,6 @@ class MainGUI:
 def start_gui(command_queue):
     root = tk.Tk()
     root.title("Robot Control GUI")
-    root.geometry("400x400")  # Set the default window size to match BaseView
+    root.geometry("800x800")  # Set the default window size to 800x800
     gui = MainGUI(root, command_queue)
     root.mainloop()

@@ -32,6 +32,8 @@ from actuators.stereovision import Stereovision
 
 from actuators.speech_to_text import SpeechToText
 
+from actuators.status_handler import status_handler
+
 # Sensor nodes to import
 from IS_modules.node_detect_aruco import *
 from IS_modules.detect_touch import *
@@ -135,6 +137,9 @@ class interactive_standby:
         """
         Main control loop
         """
+        # Example: Update status when entering standby mode
+        status_handler.update_status("Interactive Standby Mode")
+
         # Start the stereovision in a separate thread
         stereovision_thread = threading.Thread(target=self.stereovision.loop)
         stereovision_thread.daemon = True
@@ -192,7 +197,7 @@ class interactive_standby:
             if any(word in self.speech_to_text.last_text.lower() for word in trigger_words_to_check) or triggered:
                 #print("\nTrigger word heard\n")
                 self.activity_level = ACT_LISTEN
-
+                status_handler.update_status("Listening for commands")
                 if not triggered:
                     self.current_color = (255, 255, 0)  # Yellow
                     self.led_controller.turn_on_led(self.current_color, 250)
@@ -226,6 +231,7 @@ class interactive_standby:
                     self.touch_detect.check_touch()
 
                     print("Waiting for touch")
+                    status_handler.update_status("waiting for touch to shutdown")
                     rospy.sleep(self.TICK)
 
                 if self.touch_detect.head_touched:
@@ -320,10 +326,12 @@ class interactive_standby:
                     last_spoke = time.time()
 
                 if self.activity_level == ACT_IDLE:
+                    status_handler.update_status("waiting for something to happen")
                     self.delay = self.random_delay(3,5)
                     self.current_color = (0, 0, 255)  # Blue
                     audio_file = None
                 elif self.activity_level == ACT_ENGAGE and not self.wait:
+                    status_handler.update_status("saw face")
                     self.delay = self.random_delay(2,3)
                     self.current_color = (0, 255, 0)  # Green
     
