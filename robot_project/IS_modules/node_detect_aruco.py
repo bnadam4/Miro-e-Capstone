@@ -71,7 +71,6 @@ class NodeDetectAruco:
         self.t0 = time.time()
         self.cam_names = ['left', 'right', 'stitched']
         self.breath_ex_ON = False
-        self.activation_timer = 0.0
         self.aruco_seen = False
         self.muscle_relax_ON = False
         self.audiobook_ON = False
@@ -140,10 +139,9 @@ class NodeDetectAruco:
                     cv2.aruco.drawDetectedMarkers(image, corners, ids)
                     if self.aruco_seen == False:
                         self.aruco_seen = True
-                        self.activation_timer = time.time()
 
                     for id in ids:
-                        if id == START_BREATH_ARUCO and time.time() > self.activation_timer + 0.5:
+                        if id == START_BREATH_ARUCO:
                             self.breath_ex_ON = True
                             print("START_BREATH_ARUCO has been seen")
                         elif id == START_RELAX_FULL:
@@ -186,7 +184,6 @@ class NodeDetectAruco:
                             self.exit_behaviour = True
                             print("END_ARUCO has been seen")
                 else:
-                    self.activation_timer = time.time() + 10.0
                     self.aruco_seen = False
 
                 # show

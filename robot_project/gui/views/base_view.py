@@ -45,3 +45,13 @@ class BaseView(tk.Frame):
         history = AudioHistory().get_history()
         history_text = "Last Played Audio:\n" + "\n".join(history) if history else "Last Played Audio:\nNone"
         self.audio_history_label.config(text=history_text)
+
+    def shutdown(self):
+        """
+        Perform cleanup actions before shutting down the application.
+        """
+        # Example: Print a message to the console
+        print("Shutting down the application...")
+
+        # Destroy the tkinter window
+        self.master.destroy()

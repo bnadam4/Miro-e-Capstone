@@ -77,30 +77,28 @@ class AudiobooksBehavior:
             time.sleep(0.1)
         
 
-    def run_command(self):
-        print("\n\n")
-        print("****************************\n\n")
-        print("AUDIOBOOK BEHAVIOUR STARTED\n\n")
-        print("****************************\n\n")
-        # Start the check_exit_flag thread
-        self.parent_thread = threading.current_thread()
-        exit_thread = threading.Thread(target=self.check_exit_flag)
-        exit_thread.start()
-        
-        # Taking input from the user
-        user_input = int(input("Enter a number: \n0= exit \n1= Rumpelstiltskin \n2= The Emperor's New Clothes \n3= The Frog Prince \n"))
-        
-        if user_input == 0:
-            print("[AUDIOBOOK] Exiting program...")
-        elif user_input == 1:
-            print("1) Rumpelstiltskin")
-            self.book1()
-        elif user_input == 2:
-            print("2) The Emperor's New Clothes")
-            self.book2()
-        elif user_input == 3:
-            print("3) The Frog Prince")
-            self.book3()
+    def check_exit_flag(self):
+        while not self.stop_flag:
+            # Detect aruco markers
+            self.aruco_detect.tick_camera()
+            if self.aruco_detect.exit_behaviour:
+                self.stop_flag = True
+                self.audio_player.stop()
+                exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+                exit_behaviour_thread.start()
+                exit_behaviour_thread.join()
+                print("[AUDIOBOOK] Exit behaviour detected, stopping audiobook.")
+
+                # Turn LEDs orange to indicate a transition period
+                self.current_color = (255, 165, 0)  # Orange
+                self.led_controller.turn_on_led(self.current_color, 250)
+
+            time.sleep(0.1)
+
+    def safe_execute(self, func, args):
+        """Execute function only if stop flag is not set and parent thread is still alive."""
+        if not self.stop_flag and (self.parent_thread and self.parent_thread.is_alive()):
+            func(*args)
         else:
             print("[AUDIOBOOK] Invalid choice or unrecognized number.")
 
@@ -174,7 +172,18 @@ class AudiobooksBehavior:
         # Wait for all threads to finish (including the audio playback)
         
         
-
+        
+        print("[AUDIOBOOK] Playing ending line Rumpelstiltskin")
+        audiobook_end_file = 'mp3_files/rumpelstiltskin_end.mp3'
+        play_end_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_end_file,))
+        play_end_thread.start()
+        self.add_timer(0, self.joints_movement.nod, (2,1))
+        # Turn LEDs orange to indicate a transition period
+        self.current_color = (255, 165, 0)  # Orange
+        self.led_controller.turn_on_led(self.current_color, 250)
+        play_end_thread.join()
+        
+        
 
         
         
@@ -182,8 +191,11 @@ class AudiobooksBehavior:
     def book2(self): #The day the crayons quit
         pass
 
-    def book3(self): # TBD
-        pass
+        # Wait for all threads to finish (including the audio playback)
+        # Turn LEDs orange to indicate a transition period
+        self.current_color = (255, 165, 0)  # Orange
+        self.led_controller.turn_on_led(self.current_color, 250)
+        play_thread.join()
 
     ##Exit###
 

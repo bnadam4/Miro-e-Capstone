@@ -2,7 +2,7 @@
 #
 # Author: Bryce Adam
 # Date created: October 8, 2024
-# Last modified: February 5, 2025
+# Last modified: April 2, 2025
 #
 # Main default program for MiRo when it is not undergoing some pre-programmed activity
 
@@ -42,6 +42,7 @@ ACT_LISTEN = 3 # listen to person
 
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
+SHUTDOWN = 0
 
 NECK_MAX = miro.constants.LIFT_RAD_MAX
 NECK_MIN = miro.constants.LIFT_RAD_MIN
@@ -62,6 +63,8 @@ BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
 
 class interactive_standby:
+    TICK = 0.02 # Update interval for the main controller loop in seconds
+
     def __init__(self):
         # Initialize all actuators
         self.led_controller = LEDController()
@@ -161,6 +164,9 @@ class interactive_standby:
         print("INTERACTIVE STANDBY STARTED\n\n")
         print("****************************\n\n")
 
+        self.current_color = (0, 0, 255)  # Blue
+        self.led_controller.turn_on_led(self.current_color, 250)
+
         while not rospy.core.is_shutdown():
             # Detect aruco markers
             self.aruco_detect.tick_camera()
@@ -171,6 +177,7 @@ class interactive_standby:
             breath_words_to_check = ['breathe', 'breathing', 'breath']
             audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
             muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
+            shutdown_words_to_check = ['shutdown', 'shut', 'down']
 
             if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower() and 'can' in self.speech_to_text.last_text.lower() and not self.speaking:
                 self.speaking = True
@@ -183,19 +190,18 @@ class interactive_standby:
                 self.speaking = False
 
             if any(word in self.speech_to_text.last_text.lower() for word in trigger_words_to_check) or triggered:
-                print("\nTrigger word heard\n")
+                #print("\nTrigger word heard\n")
                 self.activity_level = ACT_LISTEN
 
                 if not triggered:
+                    self.current_color = (255, 255, 0)  # Yellow
+                    self.led_controller.turn_on_led(self.current_color, 250)
                     trigger_time = time.time()
                     ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
                     ear_thread.start()
                 
                 triggered = True
-                print(f"Time remaining: {10 - (time.time() - trigger_time)}")
-
-                self.current_color = (255, 255, 0)  # Yellow
-                self.led_controller.turn_on_led(self.current_color, 250)
+                #print(f"Time remaining: {10 - (time.time() - trigger_time)}")
 
             if time.time() - trigger_time >= 10 and triggered:
                 print("\nResetting trigger\n")
@@ -206,6 +212,42 @@ class interactive_standby:
                 ear_thread = threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, ))
                 ear_thread.start()
 
+            if any(word in self.speech_to_text.last_text.lower() for word in shutdown_words_to_check) and triggered:
+                print("Activated the Shutdown sequence")
+                audio_file = 'mp3_files/shut_down_prompt.mp3'
+                play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                play_thread.start()
+                play_thread.join()
+
+                # Wait for touch
+                self.touch_detect.check_touch()
+                start_time = time.time()
+                while not self.touch_detect.head_touched and (time.time() - start_time) < 10.0:
+                    self.touch_detect.check_touch()
+
+                    print("Waiting for touch")
+                    rospy.sleep(self.TICK)
+
+                if self.touch_detect.head_touched:
+                    print("Head touched!")
+                    audio_file = 'mp3_files/shut_down.mp3'
+                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                    play_thread.start()
+                    # Nod MiRo's head
+                    head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
+                    head_thread.start()
+                    play_thread.join()
+                    print("Shutting down")
+                    self.speech_to_text.stop = True
+                    self.behaviour = SHUTDOWN
+                    break
+                else:
+                    print("Timed out")
+                    breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/shut_down_timout.mp3',))
+                    breath_out_thread.start()
+                    breath_out_thread.join()
+
+                self.touch_detect.head_touched = False # Reset head touch
                 
 
             if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking and triggered:
@@ -269,7 +311,8 @@ class interactive_standby:
                     self.wait = False
                     self.activity_level = ACT_IDLE
                     # Move randomly
-                    self.move_randomly()
+                    if not self.petted and not self.crinkled:
+                        self.move_randomly()
                     #self.rotate_randomly()
                     self.speaking = True
                     speak_delay = 0.3
@@ -307,7 +350,7 @@ class interactive_standby:
 
             rand_pet = random.randint(0, 3)
             # Check if being pet and act accordingly
-            if not self.petted and not self.speaking:
+            if not self.petted and not self.speaking and not self.activity_level == ACT_LISTEN:
                 self.touch_detect.check_touch()
                 if self.touch_detect.head_touched:
                     self.petted = True
@@ -400,9 +443,12 @@ class interactive_standby:
                     last_pet = time.time()
 
             # Check if being crinkled and act accordingly
-            if not self.crinkled and not self.speaking and not self.wait and not self.petted:
+            if not self.crinkled and not self.speaking and not self.wait and not self.petted and not self.activity_level == ACT_LISTEN:
                 if self.speech_to_text.right_crinkle or self.speech_to_text.left_crinkle:
-                    print("Crinkling Right Ear")
+                    if self.speech_to_text.right_crinkle:
+                        print("Crinkling Right Ear")
+                    elif self.speech_to_text.left_crinkle:
+                        print("Crinkling Left Ear")
                     self.crinkled = True
                     last_crinkle = time.time()
                     if rand_pet == 0 and last_react != 0:

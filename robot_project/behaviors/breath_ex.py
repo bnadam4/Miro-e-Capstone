@@ -5,7 +5,7 @@
 # Description: Do the pre-programmed breathing exercise behaviour
 # Author: Bryce
 # Date created: Jan 8, 2024
-# Date modified: Jan 28, 2024
+# Date modified: Mar 24, 2024
 # ----------------------------------------------
 
 # Misc useful python libraries
@@ -31,6 +31,7 @@ from actuators.cosmetics_controller import CosmeticsController
 from actuators.cosmetics_movement import CosmeticsMovement
 from actuators.joints_controller import JointsController #class
 from actuators.joints_movement import JointsMovement #class
+from actuators.led_controller import LEDController #class
 
 # Custom python files with useful functions
 from IS_modules.pose_interp import *
@@ -145,6 +146,7 @@ class breath_ex:
         self.cosmetics_movement = CosmeticsMovement()
         self.joints_controller = JointsController()
         self.joints_movement = JointsMovement()
+        self.led_controller = LEDController()
 
         self.audio_player = AudioPlayer()
 
@@ -406,3 +408,7 @@ class breath_ex:
             if self.behaviour == INTERACTIVE_STANDBY:
                 print("Hit the break")
                 break
+
+        # Turn LEDs orange to indicate a transition period
+        self.current_color = (255, 165, 0)  # Orange
+        self.led_controller.turn_on_led(self.current_color, 250)

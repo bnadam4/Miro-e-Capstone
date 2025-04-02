@@ -26,6 +26,8 @@ class MainGUI:
                     self.base_view.update_connection_status(message["connected"])
                 elif message["type"] == "behavior_update":
                     self.base_view.update_behavior(message["behavior_name"])
+                elif message["type"] == "shutdown":
+                    self.base_view.shutdown()
         except Empty:
             pass
         finally:

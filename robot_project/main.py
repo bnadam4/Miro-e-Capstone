@@ -22,6 +22,7 @@ from actuators.node_actuators import NodeActuators  # assuming this import for N
 import rospy
 import signal
 import os
+import sys
 
 # State constants
 MUSCLE_RELAXATION = 1
@@ -87,6 +88,10 @@ def main():
 
             if user_input == 0:
                 print("Exiting program...")
+                # Send a shutdown signal to the GUI
+                command_queue.put({"type": "shutdown"})
+                gui_thread.join()  # Wait for the GUI thread to finish
+                sys.exit(0)  # Exit the program
                 break  # Exit the loop if user chooses 0
             elif user_input == 1:
                 behavior_name = "Muscle Relaxation"
@@ -138,6 +143,7 @@ def main():
         # Send a shutdown signal to the GUI
         command_queue.put({"type": "shutdown"})
         gui_thread.join()  # Wait for the GUI thread to finish
+        sys.exit(0)
 
 
 if __name__ == "__main__":
