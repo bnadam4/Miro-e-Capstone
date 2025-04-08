@@ -103,6 +103,7 @@ class AudioPlayer:
         print("playing file", TRACK_PATH)
 
         file = "/tmp/" + os.path.basename(TRACK_PATH) + ".decode"
+        print("decoding to", file)
         if not os.path.isfile(file):
             cmd = f"ffmpeg -y -i \"{TRACK_PATH}\" -f s16le -acodec pcm_s16le -ar 8000 -ac 1 \"{file}\" > /dev/null 2>&1"
             os.system(cmd)
