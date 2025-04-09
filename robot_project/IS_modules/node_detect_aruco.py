@@ -28,13 +28,14 @@ START_AUDIOBOOK_EMPEROR_ARUCO = 29
 START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO = 28
 START_AUDIOBOOK_FROG_ARUCO = 32
 
-START_RELAX_FULL = 31
+START_RELAX_FULL = 36
 
 START_ARMS_RELAX = 23
 START_BACK_RELAX = 24
 START_LEGS_RELAX = 25
 START_TUMMY_RELAX = 26
-SELECT_RELAX_FULL = 36
+
+START_SHUTDOWN_ARUCO = 33
 
 END_ARUCO = 27
 
@@ -72,10 +73,11 @@ class NodeDetectAruco:
         self.cam_names = ['left', 'right', 'stitched']
         self.breath_ex_ON = False
         self.aruco_seen = False
-        self.muscle_relax_ON = False
-        self.audiobook_ON = False
+        #self.muscle_relax_ON = False
+        #self.audiobook_ON = False
         self.exit_behaviour = False
-        self.relax_prompt = False
+        self.shut_down_ON= False
+        self.relax_all = False
 
         self.rupelstiltskin = False
         self.emperor = False
@@ -141,12 +143,15 @@ class NodeDetectAruco:
                         self.aruco_seen = True
 
                     for id in ids:
-                        if id == START_BREATH_ARUCO:
+                        if id == START_SHUTDOWN_ARUCO:
+                            self.shut_down_ON = True
+                            print("START_SHUTDOWN_ARUCO has been seen")
+                        elif id == START_BREATH_ARUCO:
                             self.breath_ex_ON = True
                             print("START_BREATH_ARUCO has been seen")
                         elif id == START_RELAX_FULL:
-                            self.relax_prompt = True
-                            self.muscle_relax_ON = True
+                            self.relax_all = True
+                            #self.muscle_relax_ON = True
                             print("START_RELAX_PROMPT has been seen")
                         elif id == START_ARMS_RELAX:
                             self.relax_arms = True
@@ -170,15 +175,15 @@ class NodeDetectAruco:
                             print("START_TUMMY_RELAX has been seen")
                         elif id == START_AUDIOBOOK_EMPEROR_ARUCO:
                             self.emperor = True
-                            self.audiobook_ON = True
+                            #self.audiobook_ON = True
                             print("START_AUDIOBOOK_EMPEROR_ARUCO has been seen")
                         elif id == START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO:
                             self.rupelstiltskin = True
-                            self.audiobook_ON = True
+                            #self.audiobook_ON = True
                             print("START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO has been seen")
                         elif id == START_AUDIOBOOK_FROG_ARUCO:
                             self.frog = True
-                            self.audiobook_ON = True
+                            #self.audiobook_ON = True
                             print("START_AUDIOBOOK_FROG_ARUCO has been seen")
                         elif id == END_ARUCO:
                             self.exit_behaviour = True
