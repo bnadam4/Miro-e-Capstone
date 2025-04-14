@@ -84,7 +84,10 @@ def main():
 
     user_input = INTERACTIVE_STANDBY  # Default starting value
 
+    interactive_standby_behaviour.startup()
+
     try:
+
         while True:
             behavior_name = None  # Initialize behavior name for GUI updates
 
@@ -134,7 +137,6 @@ def main():
                 behavior_name = "Interactive Standby"
                 command_queue.put({"type": "behavior_update", "behavior_name": behavior_name})
                 print("5) Interactive standby")
-                interactive_standby_behaviour = interactive_standby()
                 interactive_standby_behaviour.loop()
                 user_input = interactive_standby_behaviour.behaviour
                 print("Interactive standby ended.")

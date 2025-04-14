@@ -2,7 +2,7 @@
 #
 # Author: Bryce Adam
 # Date created: October 8, 2024
-# Last modifiec: October 8, 2024
+# Last modifiec: April 8, 2024
 #
 # Aruco detection routine. Used to find arucos that start or end activities
 
@@ -27,14 +27,14 @@ START_CHECKLIST_ARUCO = 30
 START_AUDIOBOOK_EMPEROR_ARUCO = 29
 START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO = 28
 START_AUDIOBOOK_FROG_ARUCO = 32
+SHUT_DOWN_ARUCO = 33
 
-START_RELAX_FULL = 31
+START_RELAX_FULL = 36
 
 START_ARMS_RELAX = 23
 START_BACK_RELAX = 24
 START_LEGS_RELAX = 25
 START_TUMMY_RELAX = 26
-SELECT_RELAX_FULL = 36
 
 END_ARUCO = 27
 
@@ -76,6 +76,7 @@ class NodeDetectAruco:
         self.audiobook_ON = False
         self.exit_behaviour = False
         self.relax_prompt = False
+        self.shut_down = False
 
         self.rupelstiltskin = False
         self.emperor = False
@@ -183,6 +184,9 @@ class NodeDetectAruco:
                         elif id == END_ARUCO:
                             self.exit_behaviour = True
                             print("END_ARUCO has been seen")
+                        elif id == SHUT_DOWN_ARUCO:
+                            self.shut_down = True
+                            print("SHUT_DOWN_ARUCO has been seen")
                 else:
                     self.aruco_seen = False
 

@@ -174,17 +174,6 @@ class interactive_standby:
         self.current_color = (0, 0, 255)  # Blue
         self.led_controller.turn_on_led(self.current_color, 250)
 
-        # Play the intro sequence
-        audio_file = 'mp3_files/startup.mp3'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
-        play_thread.start()
-        head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
-        head_thread.start()
-        ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
-        ear_thread.start()
-        threading.Timer(1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
-        play_thread.join()
-
         while not rospy.core.is_shutdown():
             # Detect aruco markers
             self.aruco_detect.tick_camera()
@@ -230,7 +219,7 @@ class interactive_standby:
                 ear_thread = threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, ))
                 ear_thread.start()
 
-            if any(word in self.speech_to_text.last_text.lower() for word in shutdown_words_to_check) and triggered:
+            if (any(word in self.speech_to_text.last_text.lower() for word in shutdown_words_to_check) and triggered) or self.aruco_detect.shut_down:
                 print("Activated the Shutdown sequence")
                 audio_file = 'mp3_files/shut_down_prompt.mp3'
                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
@@ -268,6 +257,7 @@ class interactive_standby:
                     breath_out_thread.join()
 
                 self.touch_detect.head_touched = False # Reset head touch
+                self.aruco_detect.shut_down = False # Reset shutdown variable
                 
 
             if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking and triggered:
@@ -562,3 +552,15 @@ class interactive_standby:
             # self.stereovision.draw_frames()
 
         print("Exited the loop")
+
+    def startup(self):
+        # Play the intro sequence
+        audio_file = 'mp3_files/startup.mp3'
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+        play_thread.start()
+        head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
+        head_thread.start()
+        ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
+        ear_thread.start()
+        threading.Timer(1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
+        play_thread.join()
