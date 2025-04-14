@@ -83,6 +83,7 @@ def main():
     interactive_standby_behaviour = interactive_standby()
 
     user_input = INTERACTIVE_STANDBY  # Default starting value
+    sub_user_input=0
 
     interactive_standby_behaviour.startup()
 
@@ -102,27 +103,45 @@ def main():
                 behavior_name = "Muscle Relaxation"
                 command_queue.put({"type": "behavior_update", "behavior_name": behavior_name})
                 print("1) Muscle relaxation")
-                test_behaviour = RelaxBehavior()
-                test_behaviour.run()
-                reset_behaviour.run()
-                user_input = INTERACTIVE_STANDBY
+                relax_behaviour = RelaxBehavior()
+                if sub_user_input== 0:
+                    relax_behaviour.run()
+                if sub_user_input== 1:
+                    relax_behaviour.full_relaxation()
+                if sub_user_input== 2:
+                    relax_behaviour.relax_arms()
+                if sub_user_input== 3:
+                    relax_behaviour.relax_back()
+                if sub_user_input== 4:
+                    relax_behaviour.relax_tummy()
+                if sub_user_input== 5:
+                    relax_behaviour.relax_legs()
+                #reset_behaviour.run()
                 print("Muscle relaxation ended.")
+                user_input = INTERACTIVE_STANDBY
+                
             elif user_input == 2:
                 behavior_name = "Audiobook"
                 command_queue.put({"type": "behavior_update", "behavior_name": behavior_name})
-                print("2) Audiobook")
                 audiobooks_behaviour = AudiobooksBehavior()
-                audiobooks_behaviour.run()
-                reset_behaviour.run()
-                user_input = INTERACTIVE_STANDBY
+                print("2) Audiobook")
+                if sub_user_input== 0:
+                    audiobooks_behaviour.run()
+                if sub_user_input== 1:
+                    audiobooks_behaviour.book1()
+                if sub_user_input== 2:
+                    audiobooks_behaviour.book2()
+                #reset_behaviour.run()
                 print("Audiobook ended.")
+                user_input = INTERACTIVE_STANDBY
+                
             elif user_input == 3:
                 behavior_name = "Dance"
                 command_queue.put({"type": "behavior_update", "behavior_name": behavior_name})
                 print("3) Dance")
                 dance_behaviour = DanceBehavior()
                 dance_behaviour.run()
-                reset_behaviour.run()
+                #reset_behaviour.run()
                 user_input = INTERACTIVE_STANDBY
                 print("Dance ended.")
             elif user_input == 4:
@@ -139,6 +158,7 @@ def main():
                 print("5) Interactive standby")
                 interactive_standby_behaviour.loop()
                 user_input = interactive_standby_behaviour.behaviour
+                sub_user_input= interactive_standby_behaviour.sub_behaviour
                 print("Interactive standby ended.")
             else:
                 print("Invalid choice or unrecognized number.")

@@ -4,6 +4,12 @@ Description:
 - This document is meant to give details about functions, comments and common code in order to stay consistent throughout the files.
 - Do not try to run this file (just meant for notes)
 
+dependinecies: 
+pip3 install --upgrade Pillow
+
+
+
+Comments:
 # ----------------------------------------------
 # Title: 
 # Description: A brief overview of what this script does
