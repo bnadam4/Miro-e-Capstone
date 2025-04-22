@@ -334,9 +334,9 @@ class interactive_standby:
                 self.stereovision.stop = True
                 self.speech_to_text.stop = True
                 break
-            #Audio and aruco for 
-            elif self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['invisible', 'alligators']) and not self.speaking and triggered:
-                print("Activated the audiobook1: The invisible alligators")
+            #Audio and aruco for
+            elif self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built']) and not self.speaking and triggered:
+                print("Activated the audiobook3: how miro was built")
                 self.behaviour = AUDIOBOOK
                 self.aruco_detect.rupelstiltskin = False
                 #self.aruco_detect.audiobook_ON = False
@@ -345,8 +345,8 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
             #Audio and aruco for 
-            elif self.aruco_detect.emperor or any(word in self.speech_to_text.last_text.lower() for word in ['crayons']) and not self.speaking and triggered:
-                print("Activated the audiobook2: the day the crayons quit")
+            elif self.aruco_detect.emperor or any(word in self.speech_to_text.last_text.lower() for word in ['clock']) and not self.speaking and triggered:
+                print("Activated the audiobook4: The clock that ran backwards")
                 self.behaviour = AUDIOBOOK
                 self.aruco_detect.emperor = False
                 self.aruco_detect.audiobook_ON = False
@@ -354,7 +354,16 @@ class interactive_standby:
                 self.stereovision.stop = True
                 self.speech_to_text.stop = True
                 break
-                
+            #Audio and aruco for 
+            elif self.aruco_detect.frog or any(word in self.speech_to_text.last_text.lower() for word in ['crayons']) and not self.speaking and triggered:
+                print("Activated the audiobook4: The day the crayons quit")
+                self.behaviour = AUDIOBOOK
+                self.aruco_detect.frog = False
+                self.aruco_detect.audiobook_ON = False
+                self.sub_behaviour=3
+                self.stereovision.stop = True
+                self.speech_to_text.stop = True
+                break
 
 
             ##### Interactive Standby #####

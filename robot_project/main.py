@@ -128,8 +128,10 @@ def main():
                 if sub_user_input== 0:
                     audiobooks_behaviour.run()
                 if sub_user_input== 1:
-                    audiobooks_behaviour.book1()
+                    audiobooks_behaviour.book3()
                 if sub_user_input== 2:
+                    audiobooks_behaviour.book4()
+                if sub_user_input== 3:
                     audiobooks_behaviour.book2()
                 #reset_behaviour.run()
                 print("Audiobook ended.")
