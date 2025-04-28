@@ -37,9 +37,9 @@ class ResetBehavior:
         print("Resetting actuators to default positions")
         print(f"Thread count: {threading.active_count()}")
 
-        led_thread = threading.Thread(target=self.led_controller.turn_off_led)
+        led_thread = threading.Thread(target=self.led_controller.turn_off_led, args=())
         led_thread.start()
-        led_thread.join()
+        
         
         eyes_thread = threading.Thread(target=self.cosmetics_controller.move_eyes, args=(2, 0))
         eyes_thread.start()  
@@ -47,13 +47,14 @@ class ResetBehavior:
         ears_thread = threading.Thread(target=self.cosmetics_controller.move_ears, args=(2, 0))
         ears_thread.start()
         
-        tail_thread = threading.Thread(target=self.cosmetics_controller.move_wag_tail, args=(2, 0))
-        tail_thread.start()
+        #tail_thread = threading.Thread(target=self.cosmetics_controller.move_wag_tail, args=(2, 0))
+        #tail_thread.start()
         
-        head_yaw_thread = threading.Thread(target=self.joints_controller.move_yaw, args=(2, 0))
-        head_yaw_thread.start()
-        head_yaw_thread.join()
+        head_thread = threading.Thread(target=self.joints_controller.move_all, args=(2, 0,-10,0,20))
+        head_thread.start()
         
+        
+        """
         head_pitch_thread = threading.Thread(target=self.joints_controller.move_pitch, args=(2, 0))
         head_pitch_thread.start()
         head_pitch_thread.join()
@@ -61,10 +62,12 @@ class ResetBehavior:
         neck_thread = threading.Thread(target=self.joints_controller.move_neck, args=(2, 20))
         neck_thread.start()
         neck_thread.join()        
-        
+        """
+        led_thread.join()
         eyes_thread.join() 
         ears_thread.join()
-        tail_thread.join()
+        head_thread.join()
+        #tail_thread.join()
         print("Reset complete")
         print(f"Thread count: {threading.active_count()}")
         

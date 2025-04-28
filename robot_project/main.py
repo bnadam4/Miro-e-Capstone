@@ -124,16 +124,19 @@ def main():
                 behavior_name = "Audiobook"
                 command_queue.put({"type": "behavior_update", "behavior_name": behavior_name})
                 audiobooks_behaviour = AudiobooksBehavior()
+                reset_behaviour.run()
                 print("2) Audiobook")
                 if sub_user_input== 0:
                     audiobooks_behaviour.run()
                 if sub_user_input== 1:
                     audiobooks_behaviour.book3()
+                    audiobooks_behaviour.ending_line()
                 if sub_user_input== 2:
                     audiobooks_behaviour.book4()
+                    audiobooks_behaviour.ending_line()
                 if sub_user_input== 3:
                     audiobooks_behaviour.book2()
-                #reset_behaviour.run()
+                    audiobooks_behaviour.ending_line()
                 print("Audiobook ended.")
                 user_input = INTERACTIVE_STANDBY
                 

@@ -184,9 +184,14 @@ class CosmeticsController:
                     last_right_sent_position = right_step  # Update the last sent position for right ear
 
             rospy.sleep(0.02)  # Sleep briefly for smooth transition
-        
-        # Ensure final position is exactly the target position
-        #print(f"{select.capitalize()} ear fully moved to {target_position}.")
+        if select == "left":
+            # Ensure final position is exactly the target position
+            self.position_ears(target_position, self.current_right_ear)
+            self.current_left_ear = target_position  # Update the current position to target
+        else:
+            # Ensure final position is exactly the target position
+            self.position_ears(self.current_left_ear, target_position)
+            self.current_right_ear = target_position  # Update the current position to target
 ###EYES###
     def move_eyes(self, duration, target_position):
         """Move BOTH eyes from current_position to target_position over the specified duration."""
