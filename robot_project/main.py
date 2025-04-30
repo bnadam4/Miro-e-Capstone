@@ -85,6 +85,19 @@ def main():
     user_input = INTERACTIVE_STANDBY  # Default starting value
     sub_user_input=0
 
+    # Delete all .decode files created in last run of main
+    target_folder = "/tmp"
+    # Loop through all files in the directory
+    for filename in os.listdir(target_folder):
+        if filename.endswith(".decode"):
+            file_path = os.path.join(target_folder, filename)
+            try:
+                os.remove(file_path)
+                print(f"Deleted: {file_path}")
+            except Exception as e:
+                print(f"Failed to delete {file_path}: {e}")
+
+
     interactive_standby_behaviour.startup()
 
     try:

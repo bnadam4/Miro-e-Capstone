@@ -145,6 +145,7 @@ class SpeechToText:
     def loop(self):
         while not rospy.core.is_shutdown() and self.listen:
             if self.stop:
+                print("\nStopping the speech recognition loop...\n")
                 break
             
             if self.record:

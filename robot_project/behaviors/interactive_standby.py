@@ -140,6 +140,10 @@ class interactive_standby:
         # Example: Update status when entering standby mode
         status_handler.update_status("Interactive Standby Mode")
 
+        # Make sure the various daemons are not stopped
+        self.stereovision.stop = False
+        self.speech_to_text.stop = False
+
         # Start the stereovision in a separate thread
         stereovision_thread = threading.Thread(target=self.stereovision.loop)
         stereovision_thread.daemon = True
@@ -250,6 +254,7 @@ class interactive_standby:
                     self.led_controller.turn_off_led()
                     print("Shutting down")
                     self.speech_to_text.stop = True
+                    self.stereovision.stop = True
                     self.behaviour = SHUTDOWN
                     break
                 else:
