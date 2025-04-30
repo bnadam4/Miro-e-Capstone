@@ -22,7 +22,7 @@ from cv_bridge import CvBridge, CvBridgeError
 
 # Global variables
 START_BREATH_ARUCO = 22
-START_CHECKLIST_ARUCO = 30
+START_DANCE_ARUCO = 30
 
 START_AUDIOBOOK_EMPEROR_ARUCO = 29
 START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO = 28
@@ -83,6 +83,7 @@ class NodeDetectAruco:
         self.rupelstiltskin = False
         self.emperor = False
         self.frog = False
+        self.dance = False
 
         self.relax_arms = False
         self.relax_back = False
@@ -192,6 +193,9 @@ class NodeDetectAruco:
                         elif id == SHUT_DOWN_ARUCO:
                             self.shut_down = True
                             print("SHUT_DOWN_ARUCO has been seen")
+                        elif id == START_DANCE_ARUCO:
+                            self.dance = True
+                            print("START_DANCE_ARUCO has been seen")
                 else:
                     self.aruco_seen = False
 

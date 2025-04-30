@@ -5,11 +5,13 @@
 # Description: Do a fun dance
 # Author: Bryce Adam
 # Date created: Apr 15, 2025
-# Date modified: Apr 15, 2025
+# Date modified: Apr 30, 2025
 # ----------------------------------------------
 
 import threading
 import time
+import random
+import rospy
 from actuators.node_actuators import NodeActuators #class
 from actuators.led_controller import LEDController #class
 
@@ -25,6 +27,10 @@ from actuators.wheels_controller import WheelsController #class
 
 from IS_modules.node_detect_aruco import *
 
+from actuators.wheels_controller import WheelsController #class
+
+LOW_RAND = 0
+HIGH_RAND = 1
 
 class DanceBehavior:
     def __init__(self):
@@ -40,6 +46,9 @@ class DanceBehavior:
         self.stop_flag = False
         self.parent_thread = None  # Store parent thread reference
         self.timers = []  # List to track timers
+        self.move_duration = 0.5  # Default duration for movements
+        self.move_time = 0.0 # Variable to help with the timing of the dance moves
+        self.wheels_controller = WheelsController()
 
 
     def run(self):
@@ -52,81 +61,93 @@ class DanceBehavior:
         exit_thread = threading.Thread(target=self.check_exit_flag)
         exit_thread.start()
                 
-        audiobook_confirm = 'mp3_files/audiobook_confirmation.mp3'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_confirm,))
-        play_thread.start()
-        play_thread.join()
-        audiobook_select = 'mp3_files/audiobook_selection.mp3'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_select,))
+        dance_confirm = 'mp3_files_slushy/dance/dance_intro.mp3'
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(dance_confirm,))
         play_thread.start()
         play_thread.join()
 
-       
-    def book1(self): # The invisible alligators
-        # Start the check_exit_flag thread
-        self.parent_thread = threading.current_thread()
-        exit_thread = threading.Thread(target=self.check_exit_flag)
-        exit_thread.start()
+        move_time = 0.0
 
-        # Start playing the audiobook in the background
-        print("[AUDIOBOOK] Playing The Invisible Alligators")
-        audiobook_file = 'mp3_files/audiobooks/invisible_alligatorsApr5.m4a'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_file,))
+        # Start the dance party
+        print("[DANCE] Start the dance party!")
+        dance_num = random.randint(0, 3)
+        if dance_num == 0:
+            music_file = 'mp3_files_slushy/dance/music_0.mp3'
+        elif dance_num == 1:
+            music_file = 'mp3_files_slushy/dance/music_1.mp3'
+        elif dance_num == 2:
+            music_file = 'mp3_files_slushy/dance/music_2.mp3'
+        elif dance_num == 3:
+            music_file = 'mp3_files_slushy/dance/music_3.mp3'
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(music_file,))
         play_thread.start()
 
         # Schedule all movements
-        self.add_timer(0, self.joints_controller.move_neck, (3, 20))  # A young monkey named Ivy
-        self.add_timer(2.5, self.cosmetics_controller.move_eyes, (2, 0.3))  # woke up one morning
-        self.add_timer(4.5, self.led_controller.fade_in_led, (2, (255, 165, 0), 200))  # knew there was trouble
+        while move_time < 30.0:
+            dance_num = random.randint(0, 3)
+            if dance_num == 0:
+                self.move_1(move_time)
+            elif dance_num == 1:
+                self.move_2(move_time)
+            elif dance_num == 2:
+                self.move_3(move_time)
+            elif dance_num == 3:
+                self.move_4(move_time)
+            move_time += self.move_duration
+                
+
         play_thread.join()
         # Monitor play_audio thread
         while play_thread.is_alive():
             if self.stop_flag:
-                print("[AUDIOBOOK] Stopping book1...")
+                print("[DANCE] Stopping dance...")
                 for timer in self.timers:
                     timer.cancel()  # Cancel scheduled movements
                 break
             time.sleep(0.1)
+
+        print("[DANCE] Ending line")
+        end_file = 'mp3_files_slushy/dance/dance_end.mp3'
+        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(end_file,))
+        play_thread.start()
+        play_thread.join()
+        rospy.sleep(1.5)
 
         # Wait for all threads to finish (including the audio playback)
         self.add_timer(0, self.joints_movement.nod, (2,1))
         # Turn LEDs orange to indicate a transition period
         self.current_color = (255, 165, 0)  # Orange
         self.led_controller.turn_on_led(self.current_color, 250)
-        play_end_thread.join()
         
-        
+    def move_1(self, move_time):
+        print("[DANCE] Move 1: Turn and nod")
+        self.move_duration = 2.5  # Duration of move_1
+        threading.Timer(move_time, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
+        threading.Timer(move_time, lambda: threading.Thread(target=self.joints_movement.nod, args=(2, 2)).start()).start()
+        threading.Timer(move_time + 0.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(-1.0, 1.0)).start()).start()
+        threading.Timer(move_time + 1.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
 
-    def book2(self): #The day the crayons quit
-        # Start the check_exit_flag thread
-        self.parent_thread = threading.current_thread()
-        exit_thread = threading.Thread(target=self.check_exit_flag)
-        exit_thread.start()
+    def move_2(self, move_time):
+        print("[DANCE] Move 2: Pause")
+        self.move_duration = 2.0
+        # threading.Timer(move_time, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(-2.0, 2.0)).start()).start()
 
-        # Start playing the audiobook in the background
-        print("[AUDIOBOOK] Playing The Invisible Alligators")
-        audiobook_file = 'mp3_files/audiobooks/the_day_the_crayons_quitApr5.m4a'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_file,))
-        play_thread.start()
-        play_thread.join()
-        
+    def move_3(self, move_time):
+        print("[DANCE] Move 3: Shake head")
+        self.move_duration = 2.0
+        threading.Timer(move_time, lambda: threading.Thread(target=self.joints_movement.shake, args=(1, 2)).start()).start()
+        threading.Timer(move_time, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
+        threading.Timer(move_time + 0.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(-1.0, 1.0)).start()).start()
 
-        # Monitor play_audio thread
-        while play_thread.is_alive():
-            if self.stop_flag:
-                print("[AUDIOBOOK] Stopping book1...")
-                for timer in self.timers:
-                    timer.cancel()  # Cancel scheduled movements
-                break
-            time.sleep(0.1)
-        # Wait for all threads to finish (including the audio playback)
-        # Turn LEDs orange to indicate a transition period
-        self.current_color = (255, 165, 0)  # Orange
-        self.led_controller.turn_on_led(self.current_color, 250)
-        
+    def move_4(self, move_time):
+        print("[DANCE] Move 4: Move neck")
+        self.move_duration = 2.5
+        threading.Timer(move_time, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(15, )).start()).start()
+        threading.Timer(move_time + 1.0, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(40, )).start()).start()
+        threading.Timer(move_time + 1.5, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(15, )).start()).start()
+        threading.Timer(move_time + 2.0, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(40, )).start()).start()
 
     ##Exit###
-
 
     def check_exit_flag(self):
         while not self.stop_flag:
@@ -138,7 +159,7 @@ class DanceBehavior:
                 exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
-                print("[AUDIOBOOK] Exit behaviour detected, stopping relaxation exercise.")
+                print("[DANCE] Exit behaviour detected, stopping the dance.")
                 
                 # Turn LEDs orange to indicate a transition period
                 self.current_color = (255, 165, 0)  # Orange
@@ -151,7 +172,7 @@ class DanceBehavior:
         if not self.stop_flag and (self.parent_thread and self.parent_thread.is_alive()):
             func(*args)
         else:
-            print(f"[AUDIOBOOK] Skipping {func.__name__} because parent thread has exited.")
+            print(f"[DANCE] Skipping {func.__name__} because parent thread has exited.")
 
     # Function to safely start actions
     def add_timer(self, delay, func, args=()):

@@ -42,9 +42,10 @@ ACT_ENGAGE = 1 # attempt to engage with person
 ACT_IDLE = 2 # do some idle animations
 ACT_LISTEN = 3 # listen to person
 
+SHUTDOWN = 0
+DANCE = 3
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
-SHUTDOWN = 0
 
 NECK_MAX = miro.constants.LIFT_RAD_MAX
 NECK_MIN = miro.constants.LIFT_RAD_MIN
@@ -366,6 +367,14 @@ class interactive_standby:
                 self.aruco_detect.frog = False
                 self.aruco_detect.audiobook_ON = False
                 self.sub_behaviour=3
+                self.stereovision.stop = True
+                self.speech_to_text.stop = True
+                break
+
+            elif self.aruco_detect.dance or any(word in self.speech_to_text.last_text.lower() for word in ['dance']) and not self.speaking and triggered:
+                print("Activated the dance")
+                self.behaviour = DANCE
+                self.aruco_detect.dance = False
                 self.stereovision.stop = True
                 self.speech_to_text.stop = True
                 break
