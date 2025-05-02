@@ -195,7 +195,7 @@ class interactive_standby:
             if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower() and 'can' in self.speech_to_text.last_text.lower() and not self.speaking:
                 self.speaking = True
                 print("Activated capability response")
-                audio_file = 'mp3_files/what_can_i_do.mp3'
+                audio_file = 'mp3_files_slushy/interactive_standby/what_can_i_do.mp3'
                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                 play_thread.start()
                 play_thread.join()
@@ -228,7 +228,7 @@ class interactive_standby:
             if self.aruco_detect.shut_down_ON or any(word in self.speech_to_text.last_text.lower() for word in shutdown_words_to_check) and triggered:
                 self.aruco_detect.shut_down_ON= False
                 print("Activated the Shutdown sequence")
-                audio_file = 'mp3_files/shut_down_prompt.mp3'
+                audio_file = 'mp3_files_slushy/interactive_standby/shut_down_prompt.mp3'
                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                 play_thread.start()
                 play_thread.join()
@@ -245,7 +245,7 @@ class interactive_standby:
 
                 if self.touch_detect.head_touched:
                     print("Head touched!")
-                    audio_file = 'mp3_files/shut_down.mp3'
+                    audio_file = 'mp3_files_slushy/interactive_standby/shut_down.mp3'
                     play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
                     # Nod MiRo's head
@@ -260,7 +260,7 @@ class interactive_standby:
                     break
                 else:
                     print("Timed out")
-                    breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/shut_down_timout.mp3',))
+                    breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/interactive_standby/shut_down_timout.mp3',))
                     breath_out_thread.start()
                     breath_out_thread.join()
 
@@ -413,7 +413,7 @@ class interactive_standby:
                     self.delay = self.random_delay(2,3)
                     self.current_color = (0, 255, 0)  # Green
     
-                    audio_file = 'mp3_files/hi_there.mp3'
+                    audio_file = 'mp3_files_slushy/interactive_standby/hi_there.mp3'
                     play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
 
@@ -450,7 +450,7 @@ class interactive_standby:
                     if rand_pet == 0 and last_react != 0:
                         last_react = 0
                         print("Petting 1: Ears")
-                        audio_file = 'mp3_files/Petting_1.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Petting_1.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
@@ -459,7 +459,7 @@ class interactive_standby:
                     elif rand_pet == 1 and last_react != 1:
                         last_react = 1
                         print("Petting 2: Eyes")
-                        audio_file = 'mp3_files/Petting_2.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Petting_2.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         # Narrow MiRo's eyes in contentment
@@ -468,7 +468,7 @@ class interactive_standby:
                     elif rand_pet == 2 and last_react != 2:
                         last_react = 2
                         print("Petting 3: Head nod")
-                        audio_file = 'mp3_files/Petting_3.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Petting_3.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         # Nod MiRo's head
@@ -495,7 +495,7 @@ class interactive_standby:
                     if rand_pet == 0 and last_react != 0:
                         last_react = 0
                         print("Petting 5: Thanks")
-                        audio_file = 'mp3_files/Pet_back1.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Pet_back1.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
@@ -505,7 +505,7 @@ class interactive_standby:
                     elif rand_pet == 1 and last_react != 1:
                         last_react = 1
                         print("Petting 6: Ticklish")
-                        audio_file = 'mp3_files/Pet_back2.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Pet_back2.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
@@ -513,7 +513,7 @@ class interactive_standby:
                     elif rand_pet == 2 and last_react != 2:
                         last_react = 2
                         print("Petting 7: Hehe")
-                        audio_file = 'mp3_files/Pet_back3.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Pet_back3.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
@@ -548,21 +548,21 @@ class interactive_standby:
                         if self.speech_to_text.right_crinkle or self.speech_to_text.left_crinkle:
                             if rand_pet == 0 and last_react != 0:
                                 last_react = 0
-                                audio_file = 'mp3_files/Ear_touch_1.mp3'
+                                audio_file = 'mp3_files_slushy/interactive_standby/Ear_touch_1.mp3'
                                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                                 play_thread.start()
                                 eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(1, ))
                                 eye_thread.start()
                             elif rand_pet == 1 and last_react != 1:
                                 last_react = 1
-                                audio_file = 'mp3_files/Petting_1.mp3'
+                                audio_file = 'mp3_files_slushy/interactive_standby/Petting_1.mp3'
                                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                                 play_thread.start()
                                 tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
                                 tail_thread.start()
                             elif rand_pet == 2 and last_react != 2:
                                 last_react = 2
-                                audio_file = 'mp3_files/Ear_touch_2.mp3'
+                                audio_file = 'mp3_files_slushy/interactive_standby/Ear_touch_2.mp3'
                                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                                 play_thread.start()
                                 self.move_randomly()
@@ -576,7 +576,7 @@ class interactive_standby:
                         if self.speech_to_text.tail_crinkle:
                             self.crinkled = True
                             print("Crinkling tail")
-                            audio_file = 'mp3_files/Tail_touch_1.mp3'
+                            audio_file = 'mp3_files_slushy/interactive_standby/Tail_touch_1.mp3'
                             play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                             play_thread.start()
                             head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
@@ -630,7 +630,7 @@ class interactive_standby:
 
     def startup(self):
         # Play the intro sequence
-        audio_file = 'mp3_files/startup.mp3'
+        audio_file = 'mp3_files_slushy/interactive_standby/startup.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
         head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))

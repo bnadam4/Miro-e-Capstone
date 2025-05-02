@@ -47,11 +47,11 @@ class AudiobooksBehavior:
         exit_thread = threading.Thread(target=self.check_exit_flag)
         exit_thread.start()
                 
-        audiobook_confirm = 'mp3_files/audiobook_confirmation.mp3'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_confirm,))
-        play_thread.start()
-        play_thread.join()
-        audiobook_select = 'mp3_files/audiobook_selection.mp3'
+        #audiobook_confirm = 'mp3_files/audiobook_confirmation.mp3' # NOT slushy. Requires a different file
+        #play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_confirm,))
+        #play_thread.start()
+        #play_thread.join()
+        audiobook_select = 'mp3_files_slushy/audiobooks/story_choice.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_select,))
         play_thread.start()
         play_thread.join()
@@ -735,7 +735,7 @@ class AudiobooksBehavior:
             if self.aruco_detect.exit_behaviour:
                 self.stop_flag = True
                 self.audio_player.stop()
-                exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+                exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/i_will_stop.mp3',))
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
                 print("[AUDIOBOOK] Exit behaviour detected, stopping relaxation exercise.")
