@@ -82,7 +82,7 @@ class RelaxBehavior:
         play_thread.start()
         # Wait for touch or timeout
         start_time = time.time()
-        while ((time.time() - start_time) < 15) and (self.stop_flag == False):
+        while ((time.time() - start_time) < 20) and (self.stop_flag == False):
             
             self.touch_detect.check_touch()
             if self.touch_detect.head_touched:
@@ -90,10 +90,10 @@ class RelaxBehavior:
                 return True
             time.sleep(0.1)
         print("Timeout. No head touch detected. Exiting relaxation.")
-        time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
-        time_out_thread.start()
-        time_out_thread.join()
-        play_thread.join()
+        #time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
+        #time_out_thread.start()
+        #time_out_thread.join()
+        
         return False
 
     def relax_back(self):
@@ -104,7 +104,7 @@ class RelaxBehavior:
         if not self.wait_for_head_touch('mp3_files_slushy/relax/relax_back_intro.mp3'):
             return  # Exit if no head touch detected within 10 seconds
 
-        audio_file = 'mp3_files_slushy/relax/relax_back.mp3'
+        
         audio_file = 'mp3_files_slushy/relax/relax_back.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
@@ -130,7 +130,7 @@ class RelaxBehavior:
         if not self.wait_for_head_touch('mp3_files_slushy/relax/relax_arms_intro.mp3'):
             return  # Exit if no head touch detected within 10 seconds
 
-        audio_file = 'mp3_files_slushy_slushy/relax/relax_arms.mp3'
+        audio_file = 'mp3_files_slushy/relax/relax_arms.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -155,7 +155,7 @@ class RelaxBehavior:
         if not self.wait_for_head_touch('mp3_files_slushy/relax/relax_tummy_intro.mp3'):
             return  # Exit if no head touch detected within 10 seconds
 
-        audio_file = 'mp3_files_slushy_slushy/relax/relax_tummy.mp3'
+        audio_file = 'mp3_files_slushy/relax/relax_tummy.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -180,7 +180,7 @@ class RelaxBehavior:
         if not self.wait_for_head_touch('mp3_files_slushy/relax/relax_legs_intro.mp3'):
             return  # Exit if no head touch detected within 10 seconds
 
-        audio_file = 'mp3_files_slushy_slushy/relax/relax_legs.mp3'
+        audio_file = 'mp3_files_slushy/relax/relax_legs.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -210,7 +210,7 @@ class RelaxBehavior:
         self.relax_complete()
 
     def relax_complete(self):
-        audio_file = 'mp3_files_slushy_slushy/relax/relax_end.mp3'
+        audio_file = 'mp3_files_slushy/relax/relax_end.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
 
@@ -239,7 +239,7 @@ class RelaxBehavior:
                 self.stop_flag = True
                 self.audio_player.stop()
                 exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/i_will_stop.mp3',))
-                exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/i_will_stop.mp3',))
+                
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
                 print("[RELAXATION] Exit behaviour detected, stopping relaxation exercise.")
