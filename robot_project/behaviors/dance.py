@@ -5,7 +5,7 @@
 # Description: Do a fun dance
 # Author: Bryce Adam
 # Date created: Apr 15, 2025
-# Date modified: Apr 30, 2025
+# Date modified: May 2, 2025
 # ----------------------------------------------
 
 import threading
@@ -130,9 +130,14 @@ class DanceBehavior:
         threading.Timer(move_time + 1.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
 
     def move_2(self, move_time):
-        print("[DANCE] Move 2: Pause")
+        print("[DANCE] Move 2: Turn and wiggle ears")
         self.move_duration = 2.0
         # threading.Timer(move_time, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(-2.0, 2.0)).start()).start()
+        threading.Timer(move_time, lambda: threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1,)).start()).start()
+        threading.Timer(move_time + 1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
+        threading.Timer(move_time, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
+        threading.Timer(move_time + 0.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(-1.0, 1.0)).start()).start()
+        threading.Timer(move_time + 1.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
 
     def move_3(self, move_time):
         print("[DANCE] Move 3: Shake head")
@@ -148,6 +153,14 @@ class DanceBehavior:
         threading.Timer(move_time + 1.0, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(40, )).start()).start()
         threading.Timer(move_time + 1.5, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(15, )).start()).start()
         threading.Timer(move_time + 2.0, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(40, )).start()).start()
+
+    def head_bop(self,t,t0):
+        print("head bop")
+        freq = 2
+
+        pitch = abs(self.new_sine_generator(0.26,-0.26,freq,0,t,t0))-0.2
+        self.kinematic_joint_cmd.position = [0,0,0,pitch]
+
 
     ##Exit###
 
