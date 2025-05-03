@@ -82,7 +82,7 @@ class RelaxBehavior:
         play_thread.start()
         # Wait for touch or timeout
         start_time = time.time()
-        while ((time.time() - start_time) < 20) and (self.stop_flag == False):
+        while ((time.time() - start_time) < 15) and (self.stop_flag == False):
             
             self.touch_detect.check_touch()
             if self.touch_detect.head_touched:
@@ -90,6 +90,9 @@ class RelaxBehavior:
                 return True
             time.sleep(0.1)
         print("Timeout. No head touch detected. Exiting relaxation.")
+        time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
+        time_out_thread.start()
+        time_out_thread.join()
         play_thread.join()
         return False
 
