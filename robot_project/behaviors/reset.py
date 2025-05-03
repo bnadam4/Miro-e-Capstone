@@ -50,7 +50,7 @@ class ResetBehavior:
         #tail_thread = threading.Thread(target=self.cosmetics_controller.move_wag_tail, args=(2, 0))
         #tail_thread.start()
         
-        head_thread = threading.Thread(target=self.joints_controller.move_all, args=(2, 0,-10,0,20))
+        head_thread = threading.Thread(target=self.joints_controller.move_all, args=(2, 0,-10,20))
         head_thread.start()
         
         

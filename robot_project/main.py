@@ -25,6 +25,7 @@ import os
 import sys
 
 from actuators.status_handler import status_handler
+from actuators.remote import connect_remote, receive_data, send_data, close_connection
 
 # State constants
 MUSCLE_RELAXATION = 1
@@ -54,6 +55,13 @@ def signal_handler(sig, frame):
     os._exit(0)  # Exit the program
 
 def main():
+    remote_connect_flag= connect_remote()#establish a bluetooth connection with remote
+    if remote_connect_flag:
+        try:
+            send_data(b'\x00\x00\x02\x00\x00')
+        except Exception as e:
+            print(f"Failed to send data: {e}")
+
     global command_queue  # Make command_queue accessible in the signal handler
     command_queue = queue.Queue()
 
@@ -137,7 +145,7 @@ def main():
                 behavior_name = "Audiobook"
                 command_queue.put({"type": "behavior_update", "behavior_name": behavior_name})
                 audiobooks_behaviour = AudiobooksBehavior()
-                reset_behaviour.run()
+                #reset_behaviour.run()
                 print("2) Audiobook")
                 if sub_user_input== 0:
                     audiobooks_behaviour.run()
@@ -183,6 +191,7 @@ def main():
 
     finally:
         # Send a shutdown signal to the GUI
+        close_connection()#closes connect to remote
         command_queue.put({"type": "shutdown"})
         gui_thread.join()  # Wait for the GUI thread to finish
         sys.exit(0)

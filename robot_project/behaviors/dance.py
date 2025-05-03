@@ -28,6 +28,7 @@ from actuators.wheels_controller import WheelsController #class
 from IS_modules.node_detect_aruco import *
 
 from actuators.wheels_controller import WheelsController #class
+from actuators.remote import connect_remote, receive_data, send_data, close_connection
 
 LOW_RAND = 0
 HIGH_RAND = 1
@@ -49,6 +50,7 @@ class DanceBehavior:
         self.move_duration = 0.5  # Default duration for movements
         self.move_time = 0.0 # Variable to help with the timing of the dance moves
         self.wheels_controller = WheelsController()
+        self.remote_data=[0,0,0,0,0]
 
 
     def run(self):
@@ -153,10 +155,14 @@ class DanceBehavior:
         while not self.stop_flag:
             # Detect aruco markers
             self.aruco_detect.tick_camera()
-            if self.aruco_detect.exit_behaviour:
+            try:
+                self.remote_data = receive_data()
+            except Exception as e:
+                print(f"Failed to send data: {e}")
+            if self.aruco_detect.exit_behaviour or self.remote_data[4]==2:
                 self.stop_flag = True
                 self.audio_player.stop()
-                exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/i_will_stop.mp3',))
+                exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/i_will_stop.mp3',))
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
                 print("[DANCE] Exit behaviour detected, stopping the dance.")

@@ -33,6 +33,7 @@ from actuators.stereovision import Stereovision
 from actuators.speech_to_text import SpeechToText
 
 from actuators.status_handler import status_handler
+from actuators.remote import connect_remote, receive_data, send_data, close_connection
 
 # Sensor nodes to import
 from IS_modules.node_detect_aruco import *
@@ -98,6 +99,9 @@ class interactive_standby:
         self.speaking = False
         self.activity_level = ACT_IDLE
 
+        self.time_counter=0
+        self.remote_data=[0,0,0,0,0]
+
     def random_delay(self, low, high):
         return random.randint(low, high)
 
@@ -138,6 +142,13 @@ class interactive_standby:
         """
         Main control loop
         """
+        #send_data('EEDDCCBBAA')
+        try:
+            self.remote_data = receive_data()
+            print(self.remote_data)
+        except Exception as e:
+            print(f"Failed to send data: {e}")
+
         # Example: Update status when entering standby mode
         status_handler.update_status("Interactive Standby Mode")
 
@@ -146,9 +157,11 @@ class interactive_standby:
         self.speech_to_text.stop = False
 
         # Start the stereovision in a separate thread
+        
         stereovision_thread = threading.Thread(target=self.stereovision.loop)
         stereovision_thread.daemon = True
         stereovision_thread.start()
+        
 
         speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
         speech_to_text_thread.daemon = True
@@ -186,6 +199,15 @@ class interactive_standby:
             # Detect touch
             self.touch_detect.check_touch()
 
+            self.time_counter= self.time_counter+1
+            if self.time_counter==75:
+                try:
+                    self.remote_data = receive_data()
+                    print(self.remote_data)
+                    self.time_counter=0
+                except Exception as e:
+                    print(f"Failed to send data: {e}")
+
             trigger_words_to_check = ['miro', 'mirror', 'nero', 'amira', 'amiru', 'mural', 'neural', 'emira', 'amero', 'mira']
             breath_words_to_check = ['breathe', 'breathing', 'breath']
             audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
@@ -195,7 +217,7 @@ class interactive_standby:
             if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower() and 'can' in self.speech_to_text.last_text.lower() and not self.speaking:
                 self.speaking = True
                 print("Activated capability response")
-                audio_file = 'mp3_files/what_can_i_do.mp3'
+                audio_file = 'mp3_files_slushy/interactive_standby/what_can_i_do.mp3'
                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                 play_thread.start()
                 play_thread.join()
@@ -225,10 +247,10 @@ class interactive_standby:
                 ear_thread = threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, ))
                 ear_thread.start()
 
-            if self.aruco_detect.shut_down_ON or any(word in self.speech_to_text.last_text.lower() for word in shutdown_words_to_check) and triggered:
+            if self.remote_data[2]==3 or self.aruco_detect.shut_down_ON or any(word in self.speech_to_text.last_text.lower() for word in shutdown_words_to_check) and triggered:
                 self.aruco_detect.shut_down_ON= False
                 print("Activated the Shutdown sequence")
-                audio_file = 'mp3_files/shut_down_prompt.mp3'
+                audio_file = 'mp3_files_slushy/interactive_standby/shut_down_prompt.mp3'
                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                 play_thread.start()
                 play_thread.join()
@@ -245,7 +267,7 @@ class interactive_standby:
 
                 if self.touch_detect.head_touched:
                     print("Head touched!")
-                    audio_file = 'mp3_files/shut_down.mp3'
+                    audio_file = 'mp3_files_slushy/interactive_standby/shut_down.mp3'
                     play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
                     # Nod MiRo's head
@@ -260,7 +282,7 @@ class interactive_standby:
                     break
                 else:
                     print("Timed out")
-                    breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files/shut_down_timout.mp3',))
+                    breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/interactive_standby/shut_down_timout.mp3',))
                     breath_out_thread.start()
                     breath_out_thread.join()
 
@@ -268,7 +290,7 @@ class interactive_standby:
                 self.aruco_detect.shut_down = False # Reset shutdown variable
                 
 
-            if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking and triggered:
+            if self.remote_data[0]==2 or self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking and triggered:
                 print("Activated the breathing exercise")
                 self.behaviour = BREATHING_EXERCISE
                 self.aruco_detect.breath_ex_ON = False
@@ -278,15 +300,19 @@ class interactive_standby:
 
             ###Relax activation####
             #Audio only for intro
-            elif any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check) and not self.speaking and triggered:
+            elif (self.remote_data[0]==3 and self.remote_data[4]==1) or any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check) and not self.speaking and triggered:
                 print("Activated the relax")
-                self.behaviour = MUSCLE_RELAXATION
-                self.sub_behaviour=0
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
+                #self.behaviour = MUSCLE_RELAXATION
+                #self.sub_behaviour=0
+                #self.stereovision.stop = True
+                #self.speech_to_text.stop = True
+                relax_prompt = 'mp3_files_slushy/relax/relax_choice.mp3'
+                play_thread = threading.Thread(target=self.audio_player.play_audio, args=(relax_prompt,))
+                play_thread.start()
+                play_thread.join()
                 break
             #Aruco for all relax
-            elif self.aruco_detect.relax_all :
+            elif (self.remote_data[0]==3 and self.remote_data[4]== 8) or self.aruco_detect.relax_all :
                 print("Activated the relax: All relax")
                 self.aruco_detect.relax_all = False
                 self.behaviour = MUSCLE_RELAXATION
@@ -295,7 +321,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
             #Audio and aruco for arms
-            elif self.aruco_detect.relax_arms or any(word in self.speech_to_text.last_text.lower() for word in ['arms', 'arm']) and not self.speaking and triggered:
+            elif (self.remote_data[0]==3 and self.remote_data[4]==3) or self.aruco_detect.relax_arms or any(word in self.speech_to_text.last_text.lower() for word in ['arms', 'arm']) and not self.speaking and triggered:
                 print("Activated the relax: Arms")
                 self.aruco_detect.relax_arms = False
                 self.behaviour = MUSCLE_RELAXATION
@@ -304,7 +330,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
             #Audio and aruco for back
-            elif self.aruco_detect.relax_back or any(word in self.speech_to_text.last_text.lower() for word in ['back']) and not self.speaking and triggered:
+            elif (self.remote_data[0]==3 and self.remote_data[4]==5) or self.aruco_detect.relax_back or any(word in self.speech_to_text.last_text.lower() for word in ['back']) and not self.speaking and triggered:
                 print("Activated the relax: Back")
                 self.sub_behaviour=3
                 self.aruco_detect.relax_back = False
@@ -313,7 +339,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
             #Audio and aruco for tummy
-            elif self.aruco_detect.relax_tummy or any(word in self.speech_to_text.last_text.lower() for word in ['tummy']) and not self.speaking and triggered:
+            elif (self.remote_data[0]==3 and self.remote_data[4]==6) or self.aruco_detect.relax_tummy or any(word in self.speech_to_text.last_text.lower() for word in ['tummy']) and not self.speaking and triggered:
                 print("Activated the relax: Tummy")
                 self.aruco_detect.relax_tummy = False
                 self.sub_behaviour=4
@@ -322,7 +348,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
             #Audio and aruco for legs
-            elif self.aruco_detect.relax_legs or any(word in self.speech_to_text.last_text.lower() for word in ['legs', 'leg']) and not self.speaking and triggered:
+            elif (self.remote_data[0]==3 and self.remote_data[4]==7) or self.aruco_detect.relax_legs or any(word in self.speech_to_text.last_text.lower() for word in ['legs', 'leg']) and not self.speaking and triggered:
                 print("Activated the relax: Legs")
                 self.aruco_detect.relax_legs = False
                 self.sub_behaviour=5
@@ -333,15 +359,19 @@ class interactive_standby:
 
             ###Audiobook activation####
             #Audio only for intro
-            elif any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and not self.speaking and triggered:
+            elif (self.remote_data[0]==4 and self.remote_data[4]==1) or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and not self.speaking and triggered:
                 print("Activated the audio book")
-                self.behaviour = AUDIOBOOK
-                self.sub_behaviour=0
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
+                #self.behaviour = AUDIOBOOK
+                #self.sub_behaviour=0
+                #self.stereovision.stop = True
+                #self.speech_to_text.stop = True
+                audiobook_confirm = 'mp3_files_slushy/audiobooks/audiobook_choice.mp3'
+                play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_confirm,))
+                play_thread.start()
+                play_thread.join()
                 break
             #Audio and aruco for
-            elif self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built']) and not self.speaking and triggered:
+            elif (self.remote_data[0]==4 and self.remote_data[4]==3) or self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built']) and not self.speaking and triggered:
                 print("Activated the audiobook3: how miro was built")
                 self.behaviour = AUDIOBOOK
                 self.aruco_detect.rupelstiltskin = False
@@ -351,7 +381,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
             #Audio and aruco for 
-            elif self.aruco_detect.emperor or any(word in self.speech_to_text.last_text.lower() for word in ['clock']) and not self.speaking and triggered:
+            elif (self.remote_data[0]==4 and self.remote_data[4]==4) or self.aruco_detect.emperor or any(word in self.speech_to_text.last_text.lower() for word in ['clock']) and not self.speaking and triggered:
                 print("Activated the audiobook4: The clock that ran backwards")
                 self.behaviour = AUDIOBOOK
                 self.aruco_detect.emperor = False
@@ -361,7 +391,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
             #Audio and aruco for 
-            elif self.aruco_detect.frog or any(word in self.speech_to_text.last_text.lower() for word in ['crayons']) and not self.speaking and triggered:
+            elif (self.remote_data[0]==4 and self.remote_data[4]==5) or self.aruco_detect.frog or any(word in self.speech_to_text.last_text.lower() for word in ['crayons']) and not self.speaking and triggered:
                 print("Activated the audiobook4: The day the crayons quit")
                 self.behaviour = AUDIOBOOK
                 self.aruco_detect.frog = False
@@ -371,7 +401,7 @@ class interactive_standby:
                 self.speech_to_text.stop = True
                 break
 
-            elif self.aruco_detect.dance or any(word in self.speech_to_text.last_text.lower() for word in ['dance']) and not self.speaking and triggered:
+            elif (self.remote_data[0]==5 and self.remote_data[4]==1) or self.aruco_detect.dance or any(word in self.speech_to_text.last_text.lower() for word in ['dance']) and not self.speaking and triggered:
                 print("Activated the dance")
                 self.behaviour = DANCE
                 self.aruco_detect.dance = False
@@ -388,6 +418,7 @@ class interactive_standby:
                 #print number of threads running
                 print(f"Thread count: {threading.active_count()}")
                 audio_file = None
+                
                 if self.stereovision.face_detected:
                     print(f"Face detected at distance: {self.stereovision.face_distance}")
                     self.activity_level = self.get_activity_level(self.stereovision.face_distance)
@@ -398,11 +429,14 @@ class interactive_standby:
                     # Move randomly
                     if not self.petted and not self.crinkled:
                         self.move_randomly()
-                    #self.rotate_randomly()
+                    ##self.rotate_randomly()
                     self.speaking = True
                     speak_delay = 0.3
                     last_spoke = time.time()
-
+                """
+                if not self.petted and not self.crinkled:
+                    self.move_randomly()            
+                """
                 if self.activity_level == ACT_IDLE:
                     status_handler.update_status("waiting for something to happen")
                     self.delay = self.random_delay(3,5)
@@ -413,7 +447,7 @@ class interactive_standby:
                     self.delay = self.random_delay(2,3)
                     self.current_color = (0, 255, 0)  # Green
     
-                    audio_file = 'mp3_files/hi_there.mp3'
+                    audio_file = 'mp3_files_slushy/interactive_standby/hi_there.mp3'
                     play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
 
@@ -427,12 +461,14 @@ class interactive_standby:
                 last_time = current_time
 
             # Add time to ACT_ENGAGE state if face detected
+            
             if self.stereovision.face_detected and self.activity_level == ACT_ENGAGE:
                 if current_time - last_time + 5 >= self.delay:
                     self.delay += 10 # Add time to ACT_ENGAGE state
                     self.current_color = (0, 255, 0)  # Green
                     print(f"\nTime added to engaged state\n")
                     print(f"New delay: {self.delay}")
+            
 
 
             rand_pet = random.randint(0, 3)
@@ -450,7 +486,7 @@ class interactive_standby:
                     if rand_pet == 0 and last_react != 0:
                         last_react = 0
                         print("Petting 1: Ears")
-                        audio_file = 'mp3_files/Petting_1.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Petting_1.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         ear_thread = threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1, ))
@@ -459,7 +495,7 @@ class interactive_standby:
                     elif rand_pet == 1 and last_react != 1:
                         last_react = 1
                         print("Petting 2: Eyes")
-                        audio_file = 'mp3_files/Petting_2.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Petting_2.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         # Narrow MiRo's eyes in contentment
@@ -468,7 +504,7 @@ class interactive_standby:
                     elif rand_pet == 2 and last_react != 2:
                         last_react = 2
                         print("Petting 3: Head nod")
-                        audio_file = 'mp3_files/Petting_3.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Petting_3.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         # Nod MiRo's head
@@ -495,7 +531,7 @@ class interactive_standby:
                     if rand_pet == 0 and last_react != 0:
                         last_react = 0
                         print("Petting 5: Thanks")
-                        audio_file = 'mp3_files/Pet_back1.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Pet_back1.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
@@ -505,7 +541,7 @@ class interactive_standby:
                     elif rand_pet == 1 and last_react != 1:
                         last_react = 1
                         print("Petting 6: Ticklish")
-                        audio_file = 'mp3_files/Pet_back2.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Pet_back2.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
@@ -513,7 +549,7 @@ class interactive_standby:
                     elif rand_pet == 2 and last_react != 2:
                         last_react = 2
                         print("Petting 7: Hehe")
-                        audio_file = 'mp3_files/Pet_back3.mp3'
+                        audio_file = 'mp3_files_slushy/interactive_standby/Pet_back3.mp3'
                         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                         play_thread.start()
                         tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
@@ -548,21 +584,21 @@ class interactive_standby:
                         if self.speech_to_text.right_crinkle or self.speech_to_text.left_crinkle:
                             if rand_pet == 0 and last_react != 0:
                                 last_react = 0
-                                audio_file = 'mp3_files/Ear_touch_1.mp3'
+                                audio_file = 'mp3_files_slushy/interactive_standby/Ear_touch_1.mp3'
                                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                                 play_thread.start()
                                 eye_thread = threading.Thread(target=self.cosmetics_movement.eyes_squint, args=(1, ))
                                 eye_thread.start()
                             elif rand_pet == 1 and last_react != 1:
                                 last_react = 1
-                                audio_file = 'mp3_files/Petting_1.mp3'
+                                audio_file = 'mp3_files_slushy/interactive_standby/Petting_1.mp3'
                                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                                 play_thread.start()
                                 tail_thread = threading.Thread(target=self.cosmetics_controller.wagging, args=(3.0, 15.0, ))
                                 tail_thread.start()
                             elif rand_pet == 2 and last_react != 2:
                                 last_react = 2
-                                audio_file = 'mp3_files/Ear_touch_2.mp3'
+                                audio_file = 'mp3_files_slushy/interactive_standby/Ear_touch_2.mp3'
                                 play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                                 play_thread.start()
                                 self.move_randomly()
@@ -576,7 +612,7 @@ class interactive_standby:
                         if self.speech_to_text.tail_crinkle:
                             self.crinkled = True
                             print("Crinkling tail")
-                            audio_file = 'mp3_files/Tail_touch_1.mp3'
+                            audio_file = 'mp3_files_slushy/interactive_standby/Tail_touch_1.mp3'
                             play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                             play_thread.start()
                             head_thread = threading.Thread(target=self.joints_movement.shake, args=(1, 2, ))
@@ -624,13 +660,13 @@ class interactive_standby:
 
             # Yield
             rospy.sleep(0.02)
-            # self.stereovision.draw_frames()
+            ## self.stereovision.draw_frames()
 
         print("Exited the loop")
 
     def startup(self):
         # Play the intro sequence
-        audio_file = 'mp3_files/startup.mp3'
+        audio_file = 'mp3_files_slushy/interactive_standby/startup.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
         head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
