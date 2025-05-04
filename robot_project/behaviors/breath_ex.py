@@ -40,6 +40,8 @@ from actuators.play_audio import AudioPlayer  # class
 from actuators.status_handler import status_handler
 from actuators.remote import connect_remote, receive_data, send_data, close_connection
 
+from actuators.speech_to_text import SpeechToText
+
 # to generate LED colour and brightness
 def generate_illum(r, g, b, bright):
 	return (int(bright) << 24) | (r << 16) | (g << 8) | b
@@ -53,7 +55,6 @@ intro, ready, breath_in, hold_1, breath_out, hold_2, silent_cycles, outro = rang
 droop, wag, left_eye, right_eye, left_ear, right_ear = range(6)
 # Generate enum and constants for the LEDS
 front_left, mid_left, rear_left, front_right, mid_right, rear_right = range(6)
-
 
 NECK_MAX = miro.constants.LIFT_RAD_MAX
 NECK_MIN = miro.constants.LIFT_RAD_MIN
@@ -97,6 +98,8 @@ class breath_ex:
         self.pitch_pos = pitch_upper
         self.eyelid_pos = 0.0
         self.led_brightness = led_lower
+
+        self.speech_to_text = SpeechToText()
 
         # robot name
         topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
@@ -159,16 +162,18 @@ class breath_ex:
         while not self.stop_flag:
             # Detect aruco markers
             self.aruco_detect.tick_camera()
+            stop_words_to_check = ['stop']
             try:
                 self.remote_data = receive_data()
             except Exception as e:
                 print(f"Failed to send data: {e}")
-            if self.aruco_detect.exit_behaviour or self.remote_data[4]==2:
+            if self.aruco_detect.exit_behaviour or self.remote_data[4]==2 or (any(word in self.speech_to_text.last_text.lower() for word in stop_words_to_check)):
                 self.stop_flag = True
                 self.audio_player.stop()
                 exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/i_will_stop.mp3',))
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
+                self.speech_to_text.stop = True
                 print("[BREATHE EX] Exit behaviour detected, stopping breathing exercise.")
                 
             time.sleep(0.1)
@@ -188,6 +193,12 @@ class breath_ex:
         self.last_state = None
         
         self.silent_cycle_count = 0
+
+        # Start speech to text
+        self.speech_to_text.stop = False
+        speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
+        speech_to_text_thread.daemon = True
+        speech_to_text_thread.start()
 
         # Play the intro audio
         status_handler.update_status("Starting breathing exercise intro.")
