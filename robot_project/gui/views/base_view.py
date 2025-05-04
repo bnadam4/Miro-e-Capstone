@@ -85,7 +85,7 @@ class BaseView(tk.Frame):
         Update the audio history label with the last played audio files.
         """
         history = AudioHistory().get_history()
-        history_text = "Last Played Audio:\n" + "\n".join(history) if history else "Last Played Audio:\nNone"
+        history_text = "\n".join(history) if history else "None"
         self.audio_history_label.config(text=history_text)
 
     def update_speech_history(self):
@@ -95,7 +95,7 @@ class BaseView(tk.Frame):
         history = SpeechHistory().get_history()
         # Extract only the text from each tuple
         history_texts = [item[0] for item in history]  # Assuming each tuple is (text, confidence)
-        history_text = "Last Speech Texts:\n" + "\n".join(history_texts) if history_texts else "Last Speech Texts:\nNone"
+        history_text = "\n".join(history_texts) if history_texts else "None"
         self.speech_history_label.config(text=history_text)
 
     def update_status(self, status):
