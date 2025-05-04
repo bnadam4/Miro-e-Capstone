@@ -3,14 +3,35 @@ from queue import Queue, Empty
 from gui.views.base_view import BaseView
 from actuators.audio_history import AudioHistory
 
+# Robot specific libraries
+import rospy
+from std_msgs.msg import Float32MultiArray, UInt32MultiArray, Int16MultiArray, String, UInt16MultiArray
+from sensor_msgs.msg import JointState
+import miro2 as miro
+
+import os
+
 class MainGUI:
     def __init__(self, root, command_queue):
         self.root = root
         self.command_queue = command_queue
+        self.shutdown_flag = False  # Initialize the shutdown flag
         self.create_widgets()
         self.poll_queue()
         self.update_audio_history()
         self.update_speech_history()  # Add periodic speech history updates
+
+        self.voltage = 0
+        self.update_battery_voltage()
+
+        topic_base_name = "/" + os.getenv("MIRO_ROBOT_NAME")
+        self.sub_package = rospy.Subscriber(topic_base_name + "/sensors/package",
+            miro.msg.sensors_package, self.callback_package, queue_size=1, tcp_nodelay=True)
+        self.input_package = None
+
+    def callback_package(self, msg):
+        # store for processing in update_gui
+        self.voltage = msg.battery.voltage
 
     def create_widgets(self):
         self.base_view = BaseView(self.root)
@@ -50,6 +71,14 @@ class MainGUI:
         """
         self.base_view.update_speech_history()
         self.root.after(1000, self.update_speech_history)  # Update every second
+
+    def update_battery_voltage(self):
+        """
+        Periodically update the battery voltage in the GUI.
+        """
+        if self.voltage is not None:
+            self.base_view.update_battery_voltage(self.voltage)
+        self.root.after(1000, self.update_battery_voltage)  # Update every second
 
 def start_gui(command_queue):
     root = tk.Tk()

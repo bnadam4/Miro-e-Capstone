@@ -34,6 +34,7 @@ DANCE = 3
 BREATHING_EXERCISE = 4
 INTERACTIVE_STANDBY = 5
 
+
 def check_ros_connection():
     """
     Check if the ROS node is connected and the required topics are available.

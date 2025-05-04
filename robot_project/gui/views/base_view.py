@@ -50,6 +50,11 @@ class BaseView(tk.Frame):
         self.status_label = tk.Label(self, text="Status: Standby", font=("Arial", 12), anchor="w")
         self.status_label.place(relx=0.5, rely=0.9, anchor=tk.CENTER)  # Place it at the bottom center
 
+        # Add a battery voltage label in the bottom right
+        self.battery_label = tk.Label(self, text="Battery Voltage: -- V", font=("Arial", 12))
+        self.battery_label.place(x=650, y=50)  # Adjust position as needed
+        
+
     def update_connection_status(self, connected):
         """
         Update the connection status label.
@@ -65,8 +70,9 @@ class BaseView(tk.Frame):
         behavior_images = {
             "Muscle Relaxation": "images/muscle_relaxation.png",
             "Audiobook": "images/audiobook.png",
-            "Dance": "images/checklist.png",
+            "Dance": "images/dance.png",
             "Breathing Exercise": "images/breathing_exercise.png",
+            "Shutdown": "images/shutdown.png",
             # Add more behaviors and their corresponding images here
         }
         behavior_image_path = behavior_images.get(behavior_name, None)  # Get the image path or None if not found
@@ -113,3 +119,11 @@ class BaseView(tk.Frame):
 
         # Destroy the tkinter window
         self.master.destroy()
+
+    def update_battery_voltage(self, voltage):
+        """
+        Update the battery voltage label.
+        """
+        self.battery_label.config(text=f"Battery Voltage: {voltage:.2f} V")
+
+    

@@ -21,6 +21,8 @@ import cv2
 from cv_bridge import CvBridge, CvBridgeError
 
 # Global variables
+MIN_ARUCO_AREA = 1500
+
 START_BREATH_ARUCO = 22
 START_DANCE_ARUCO = 30
 
@@ -144,58 +146,71 @@ class NodeDetectAruco:
                     if self.aruco_seen == False:
                         self.aruco_seen = True
 
-                    for id in ids:
-                        if id == START_SHUTDOWN_ARUCO:
-                            self.shut_down_ON = True
-                            print("START_SHUTDOWN_ARUCO has been seen")
-                        elif id == START_BREATH_ARUCO:
-                            self.breath_ex_ON = True
-                            print("START_BREATH_ARUCO has been seen")
-                        elif id == START_RELAX_FULL:
-                            self.relax_all = True
-                            #self.muscle_relax_ON = True
-                            print("START_RELAX_PROMPT has been seen")
-                        elif id == START_ARMS_RELAX:
-                            self.relax_arms = True
-                            #self.muscle_relax_ON = True
-                            #self.relax_prompt = True
-                            print("START_ARMS_RELAX has been seen")
-                        elif id == START_BACK_RELAX:
-                            self.relax_back = True
-                            #self.muscle_relax_ON = True
-                            #self.relax_prompt = True
-                            print("START_BACK_RELAX has been seen")
-                        elif id == START_LEGS_RELAX:
-                            self.relax_legs = True
-                            #self.muscle_relax_ON = True
-                            #self.relax_prompt = True
-                            print("START_LEGS_RELAX has been seen")
-                        elif id == START_TUMMY_RELAX:
-                            self.relax_tummy = True
-                            #self.muscle_relax_ON = True
-                            #self.relax_prompt = True
-                            print("START_TUMMY_RELAX has been seen")
-                        elif id == START_AUDIOBOOK_EMPEROR_ARUCO:
-                            self.emperor = True
-                            #self.audiobook_ON = True
-                            print("START_AUDIOBOOK_EMPEROR_ARUCO has been seen")
-                        elif id == START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO:
-                            self.rupelstiltskin = True
-                            #self.audiobook_ON = True
-                            print("START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO has been seen")
-                        elif id == START_AUDIOBOOK_FROG_ARUCO:
-                            self.frog = True
-                            #self.audiobook_ON = True
-                            print("START_AUDIOBOOK_FROG_ARUCO has been seen")
-                        elif id == END_ARUCO:
-                            self.exit_behaviour = True
-                            print("END_ARUCO has been seen")
-                        elif id == SHUT_DOWN_ARUCO:
-                            self.shut_down = True
-                            print("SHUT_DOWN_ARUCO has been seen")
-                        elif id == START_DANCE_ARUCO:
-                            self.dance = True
-                            print("START_DANCE_ARUCO has been seen")
+
+                    for i, id in enumerate(ids):
+                        # Calculate the area of the detected marker
+                        x1, y1 = corners[i][0][0]
+                        x2, y2 = corners[i][0][1]
+                        x3, y3 = corners[i][0][2]
+                        x4, y4 = corners[i][0][3]
+                        track_area = abs((x1 * y2 - y1 * x2) + (x2 * y3 - y2 * x3) + (x3 * y4 - y3 * x4) + (x4 * y1 - y4 * x1)) / 2
+
+
+                        # Check if the area is greater than the minimum threshold
+                        if track_area > MIN_ARUCO_AREA:
+
+
+                            if id == START_SHUTDOWN_ARUCO:
+                                self.shut_down_ON = True
+                                print("START_SHUTDOWN_ARUCO has been seen")
+                            elif id == START_BREATH_ARUCO:
+                                self.breath_ex_ON = True
+                                print("START_BREATH_ARUCO has been seen")
+                            elif id == START_RELAX_FULL:
+                                self.relax_all = True
+                                #self.muscle_relax_ON = True
+                                print("START_RELAX_PROMPT has been seen")
+                            elif id == START_ARMS_RELAX:
+                                self.relax_arms = True
+                                #self.muscle_relax_ON = True
+                                #self.relax_prompt = True
+                                print("START_ARMS_RELAX has been seen")
+                            elif id == START_BACK_RELAX:
+                                self.relax_back = True
+                                #self.muscle_relax_ON = True
+                                #self.relax_prompt = True
+                                print("START_BACK_RELAX has been seen")
+                            elif id == START_LEGS_RELAX:
+                                self.relax_legs = True
+                                #self.muscle_relax_ON = True
+                                #self.relax_prompt = True
+                                print("START_LEGS_RELAX has been seen")
+                            elif id == START_TUMMY_RELAX:
+                                self.relax_tummy = True
+                                #self.muscle_relax_ON = True
+                                #self.relax_prompt = True
+                                print("START_TUMMY_RELAX has been seen")
+                            elif id == START_AUDIOBOOK_EMPEROR_ARUCO:
+                                self.emperor = True
+                                #self.audiobook_ON = True
+                                print("START_AUDIOBOOK_EMPEROR_ARUCO has been seen")
+                            elif id == START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO:
+                                self.rupelstiltskin = True
+                                #self.audiobook_ON = True
+                                print("START_AUDIOBOOK_RUMPELSTILTSKIN_ARUCO has been seen")
+                            elif id == START_AUDIOBOOK_FROG_ARUCO:
+                                self.frog = True
+                                #self.audiobook_ON = True
+                                print("START_AUDIOBOOK_FROG_ARUCO has been seen")
+                            elif id == END_ARUCO:
+                                self.exit_behaviour = True
+                                print("END_ARUCO has been seen")
+                            elif id == SHUT_DOWN_ARUCO:
+                                self.shut_down = True
+                                print("SHUT_DOWN_ARUCO has been seen")
+                            elif id == START_DANCE_ARUCO:
+                                self.dance = True
+                                print("START_DANCE_ARUCO has been seen")
                 else:
                     self.aruco_seen = False
 
@@ -204,10 +219,8 @@ class NodeDetectAruco:
                 #cv2.waitKey(1)
 
     def callback_cam(self, ros_image, index):
-        
         # silently (ish) handle corrupted JPEG frames
         try:
-             
             # convert compressed ROS image to raw CV image
             image = self.image_converter.compressed_imgmsg_to_cv2(ros_image, "bgr8")
 
@@ -215,11 +228,10 @@ class NodeDetectAruco:
             self.input_camera[index] = image
 
         except CvBridgeError as e:
-             # swallow error, silently
-             #print(e)
-             pass
-        
-         
+            # swallow error, silently
+            # print(e)
+            pass
+
     # Callback for left camera feed
     def callback_caml(self, ros_image):
          self.callback_cam(ros_image, 0)
