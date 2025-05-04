@@ -164,6 +164,7 @@ class SpeechToText:
                         audio_data = r.record(source)
                         try:
                             text = r.recognize_azure(audio_data, key="G0SAwy78QOIZQmQWkYR35l6xsuRfr1hHwQmeQadb8vNNB8Uf62lwJQQJ99BCACBsN54XJ3w3AAAYACOGAWb6", location="canadacentral")
+                            #text = r.recognize_google(audio_data)
                             print(f"\n{text}\n")
                             with self.lock:
                                 self.last_text = text[0]
