@@ -8,6 +8,14 @@ class BaseView(tk.Frame):
         super().__init__(parent)
         self.configure(width=800, height=800)  # Set default size to 800x800
         self.pack_propagate(False)  # Prevent resizing to fit child widgets
+
+        # Define reusable constants
+        self.frame_relwidth = 0.9
+        self.frame_relheight = 0.2
+        self.label_wrap_factor = 0.80
+        self.padding_x = 0.02
+        self.padding_y = 0.05
+
         self.create_widgets()
 
     def create_widgets(self):
@@ -16,44 +24,67 @@ class BaseView(tk.Frame):
         self.image = self.image.resize((100, 100), Image.Resampling.LANCZOS)  # Resize the image
         self.photo = ImageTk.PhotoImage(self.image)
         self.image_label = tk.Label(self, image=self.photo)
-        self.image_label.place(x=10, y=10)  # Place the image in the top left corner
+        self.image_label.place(relx=0.01, rely=0.01, anchor=tk.NW)  # Relative position in the top left corner
 
         # Add a label for connection status in the top right
         self.connection_status_label = tk.Label(self, text="Connecting...", font=("Arial", 12))
-        self.connection_status_label.place(x=650, y=20)  # Place the label in the top right corner
+        self.connection_status_label.place(relx=0.95, rely=0.02, anchor=tk.NE)  # Relative position in the top right corner
 
         # Add an image for the current behavior in the middle
         self.behavior_image_label = tk.Label(self)
-        self.behavior_image_label.place(relx=0.5, rely=0.1, anchor=tk.CENTER)
+        self.behavior_image_label.place(relx=0.5, rely=0.1, anchor=tk.CENTER)  # Centered horizontally
 
         # Add a label for the current behavior in the middle
         self.behavior_label = tk.Label(self, text="Current Behavior: None", font=("Arial", 14))
-        self.behavior_label.place(relx=0.5, rely=0.2, anchor=tk.CENTER)
+        self.behavior_label.place(relx=0.5, rely=0.2, anchor=tk.CENTER)  # Centered horizontally
 
         # Create a frame for the "Last Played Audio" section
-        self.audio_frame = tk.Frame(self, width=400, height=150, relief=tk.SOLID, borderwidth=1)
-        self.audio_frame.place(relx=0.5, rely=0.6, anchor=tk.CENTER)  # Center the frame
+        self.audio_frame = tk.Frame(self, relief=tk.SOLID, borderwidth=1)
+        self.audio_frame.place(relx=0.5, rely=0.44, relwidth=self.frame_relwidth, relheight=0.27, anchor=tk.CENTER)  # Moved up and increased height
         self.audio_title = tk.Label(self.audio_frame, text="Last Played Audio", font=("Arial", 12), anchor="w")
-        self.audio_title.place(x=5, y=5)  # Place the title at the top left of the frame
-        self.audio_history_label = tk.Label(self.audio_frame, text="None", font=("Arial", 10), justify=tk.LEFT, wraplength=580)
-        self.audio_history_label.place(x=5, y=30)  # Place the content inside the frame
+        self.audio_title.place(relx=self.padding_x, rely=self.padding_y, anchor=tk.NW)
+        self.audio_history_label = tk.Label(
+            self.audio_frame,
+            text="None",
+            font=("Arial", 10),
+            justify=tk.LEFT,
+            wraplength=int(self.label_wrap_factor * self.audio_frame.winfo_width())  # Dynamically set wraplength
+        )
+        self.audio_history_label.place(relx=self.padding_x, rely=0.3, anchor=tk.NW)
 
         # Create a frame for the "Last Speech Texts" section
-        self.speech_frame = tk.Frame(self, width=400, height=150, relief=tk.SOLID, borderwidth=1)
-        self.speech_frame.place(relx=0.5, rely=0.8, anchor=tk.CENTER)  # Center the frame
+        self.speech_frame = tk.Frame(self, relief=tk.SOLID, borderwidth=1)
+        self.speech_frame.place(relx=0.5, rely=0.69, relwidth=self.frame_relwidth, relheight=0.27, anchor=tk.CENTER)  # Moved up and increased height
         self.speech_title = tk.Label(self.speech_frame, text="Last Speech Texts", font=("Arial", 12), anchor="w")
-        self.speech_title.place(x=5, y=5)  # Place the title at the top left of the frame
-        self.speech_history_label = tk.Label(self.speech_frame, text="None", font=("Arial", 10), justify=tk.LEFT, wraplength=580)
-        self.speech_history_label.place(x=5, y=30)  # Place the content inside the frame
+        self.speech_title.place(relx=self.padding_x, rely=self.padding_y, anchor=tk.NW)
+        self.speech_history_label = tk.Label(
+            self.speech_frame,
+            text="None",
+            font=("Arial", 10),
+            justify=tk.LEFT,
+            wraplength=int(self.label_wrap_factor * self.speech_frame.winfo_width())  # Dynamically set wraplength
+        )
+        self.speech_history_label.place(relx=self.padding_x, rely=0.3, anchor=tk.NW)
 
         # Add a status label at the bottom of the GUI
         self.status_label = tk.Label(self, text="Status: Standby", font=("Arial", 12), anchor="w")
-        self.status_label.place(relx=0.5, rely=0.9, anchor=tk.CENTER)  # Place it at the bottom center
+        self.status_label.place(relx=0.5, rely=0.95, anchor=tk.CENTER)  # Centered at the bottom
 
         # Add a battery voltage label in the bottom right
         self.battery_label = tk.Label(self, text="Battery Voltage: -- V", font=("Arial", 12))
-        self.battery_label.place(x=650, y=50)  # Adjust position as needed
-        
+        self.battery_label.place(relx=0.95, rely=0.1, anchor=tk.NE)  # Relative to the top right
+
+        # Dynamically update wraplength after the GUI is rendered
+        self.after(100, self.update_wraplengths)
+
+    def update_wraplengths(self):
+        """
+        Dynamically update the wraplength of labels to match the frame width.
+        """
+        audio_frame_width = self.audio_frame.winfo_width()
+        speech_frame_width = self.speech_frame.winfo_width()
+        self.audio_history_label.config(wraplength=int(self.label_wrap_factor * audio_frame_width))
+        self.speech_history_label.config(wraplength=int(self.label_wrap_factor * speech_frame_width))
 
     def update_connection_status(self, connected):
         """
@@ -126,4 +157,4 @@ class BaseView(tk.Frame):
         """
         self.battery_label.config(text=f"Battery Voltage: {voltage:.2f} V")
 
-    
+

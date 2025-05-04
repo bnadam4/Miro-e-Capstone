@@ -35,7 +35,7 @@ class MainGUI:
 
     def create_widgets(self):
         self.base_view = BaseView(self.root)
-        self.base_view.pack(pady=10)
+        self.base_view.pack(pady=5)
 
     def poll_queue(self):
         """
@@ -83,6 +83,6 @@ class MainGUI:
 def start_gui(command_queue):
     root = tk.Tk()
     root.title("Robot Control GUI")
-    root.geometry("800x800")  # Set the default window size to 800x800
+    root.geometry("700x500")  # Set the default window size to 800x800
     gui = MainGUI(root, command_queue)
     root.mainloop()

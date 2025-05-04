@@ -6,7 +6,7 @@ class SpeechHistory:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(SpeechHistory, cls).__new__(cls)
-            cls._instance.history = deque(maxlen=6)  # Store up to 3 texts
+            cls._instance.history = deque(maxlen=3)  # Store up to 3 texts
         return cls._instance
 
     def add_text(self, text):

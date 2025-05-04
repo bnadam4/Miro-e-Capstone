@@ -17,7 +17,7 @@ class AudioHistory:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(AudioHistory, cls).__new__(cls)
-            cls._instance.history = deque(maxlen=6)
+            cls._instance.history = deque(maxlen=3)
             if cls._scripts is None:
                 with open("scripts.json", "r") as f:
                     cls._scripts = json.load(f)
