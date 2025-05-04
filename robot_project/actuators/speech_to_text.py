@@ -75,8 +75,8 @@ class SpeechToText:
             rms_right = int(np.sqrt(np.mean(right_ear_data.astype(np.float32) ** 2)))
             rms_tail = int(np.sqrt(np.mean(tail_data.astype(np.float32) ** 2)))
 
-            THRESHOLD_CRINKLE_TAIL = 19000 
-            THRESHOLD_CRINKLE_EARS = 8000
+            THRESHOLD_CRINKLE_TAIL = 20000 
+            THRESHOLD_CRINKLE_EARS = 9000
 
             if rms > THRESHOLD_CRINKLE_EARS:
                 #print(f"The rms for the left ear is {rms}")

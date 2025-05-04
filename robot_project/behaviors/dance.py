@@ -86,7 +86,7 @@ class DanceBehavior:
 
         # Schedule all movements
         while move_time < 30.0:
-            dance_num = random.randint(0, 3)
+            dance_num = random.randint(0, 4)
             if dance_num == 0:
                 self.move_1(move_time)
             elif dance_num == 1:
@@ -95,10 +95,21 @@ class DanceBehavior:
                 self.move_3(move_time)
             elif dance_num == 3:
                 self.move_4(move_time)
+            elif dance_num == 4:
+                self.move_5(move_time)
             move_time += self.move_duration
-                
 
+        # Schedule led color changes
+        led_time = 0.0
+        while led_time < 30.0:
+            led_time += 0.5
+            color = self.rand_color()
+            self.add_timer(led_time, self.led_controller.turn_on_led, (color, 250))
+
+        print("[DANCE] All moves scheduled, waiting for the dance to finish...")
+        
         play_thread.join()
+
         # Monitor play_audio thread
         while play_thread.is_alive():
             if self.stop_flag:
@@ -124,42 +135,46 @@ class DanceBehavior:
     def move_1(self, move_time):
         print("[DANCE] Move 1: Turn and nod")
         self.move_duration = 2.5  # Duration of move_1
-        threading.Timer(move_time, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
-        threading.Timer(move_time, lambda: threading.Thread(target=self.joints_movement.nod, args=(2, 2)).start()).start()
-        threading.Timer(move_time + 0.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(-1.0, 1.0)).start()).start()
-        threading.Timer(move_time + 1.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
+        self.add_timer(move_time, self.wheels_controller.rotate, (1.0, 0.5))
+        self.add_timer(move_time, self.joints_movement.nod, (2, 2))
+        self.add_timer(move_time + 0.5, self.wheels_controller.rotate, (-1.0, 1.0))
+        self.add_timer(move_time + 1.5, self.wheels_controller.rotate, (1.0, 0.5))
 
     def move_2(self, move_time):
         print("[DANCE] Move 2: Turn and wiggle ears")
         self.move_duration = 2.0
-        # threading.Timer(move_time, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(-2.0, 2.0)).start()).start()
-        threading.Timer(move_time, lambda: threading.Thread(target=self.cosmetics_movement.ear_outwards, args=(1,)).start()).start()
-        threading.Timer(move_time + 1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
-        threading.Timer(move_time, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
-        threading.Timer(move_time + 0.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(-1.0, 1.0)).start()).start()
-        threading.Timer(move_time + 1.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
+        # self.add_timer(move_time, wheels_controller.rotate, args=(-2.0, 2.0)).start()).start()
+        self.add_timer(move_time, self.cosmetics_movement.ear_outwards, (1,))
+        self.add_timer(move_time + 1.0, self.cosmetics_movement.ears_inwards, (1, ))
+        self.add_timer(move_time, self.wheels_controller.rotate, (1.0, 0.5))
+        self.add_timer(move_time + 0.5, self.wheels_controller.rotate, args=(-1.0, 1.0))
+        self.add_timer(move_time + 1.5, self.wheels_controller.rotate, args=(1.0, 0.5))
 
     def move_3(self, move_time):
         print("[DANCE] Move 3: Shake head")
         self.move_duration = 2.0
-        threading.Timer(move_time, lambda: threading.Thread(target=self.joints_movement.shake, args=(1, 2)).start()).start()
-        threading.Timer(move_time, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(1.0, 0.5)).start()).start()
-        threading.Timer(move_time + 0.5, lambda: threading.Thread(target=self.wheels_controller.rotate, args=(-1.0, 1.0)).start()).start()
+        self.add_timer(move_time, self.joints_movement.shake, (1, 2))
+        self.add_timer(move_time, self.wheels_controller.rotate, (1.0, 0.5))
+        self.add_timer(move_time + 0.5, self.wheels_controller.rotate, (-1.0, 1.0))
+        self.add_timer(move_time + 1.5, self.wheels_controller.rotate, (1.0, 0.5))
 
     def move_4(self, move_time):
         print("[DANCE] Move 4: Move neck")
         self.move_duration = 2.5
-        threading.Timer(move_time, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(15, )).start()).start()
-        threading.Timer(move_time + 1.0, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(40, )).start()).start()
-        threading.Timer(move_time + 1.5, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(15, )).start()).start()
-        threading.Timer(move_time + 2.0, lambda: threading.Thread(target=self.joints_controller.position_neck, args=(40, )).start()).start()
+        self.add_timer(move_time, self.joints_controller.position_neck, (25, ))
+        self.add_timer(move_time + 1.0, self.joints_controller.position_neck, (40, ))
+        self.add_timer(move_time + 1.25, self.joints_controller.position_neck, (25, ))
+        self.add_timer(move_time + 1.5, self.joints_controller.position_neck, (40, ))
 
-    def head_bop(self,t,t0):
-        print("head bop")
-        freq = 2
-
-        pitch = abs(self.new_sine_generator(0.26,-0.26,freq,0,t,t0))-0.2
-        self.kinematic_joint_cmd.position = [0,0,0,pitch]
+    def move_5(self, move_time):
+        print("[DANCE] Move 5: Move head side to side and wag tail")
+        self.move_duration = 4.5
+        self.add_timer(move_time, self.cosmetics_controller.wagging, (4.0, 15))
+        self.add_timer(move_time, self.joints_controller.position_neck, (-55, ))
+        self.add_timer(move_time + 1.0, self.joints_controller.position_yaw, (55, ))
+        self.add_timer(move_time + 2.0, self.joints_controller.position_yaw, (-55, ))
+        self.add_timer(move_time + 3.0, self.joints_controller.position_yaw, (55, ))
+        self.add_timer(move_time + 4.0, self.joints_controller.position_yaw, (0, ))
 
 
     ##Exit###
@@ -198,3 +213,44 @@ class DanceBehavior:
         timer = threading.Timer(delay, lambda: self.safe_execute(func, args))
         self.timers.append(timer)
         timer.start()
+
+    def rand_color(self):
+        # Generate a random color
+        rand_num = random.randint(0, 8)
+        if rand_num == 0: # red
+            r = 255
+            g = 0
+            b = 0
+        elif rand_num == 1: #blue
+            r = 0
+            g = 0
+            b = 255
+        elif rand_num == 2: #green
+            r = 0
+            g = 255
+            b = 0
+        elif rand_num == 3:
+            r = 255
+            g = 255
+            b = 0
+        elif rand_num == 4:
+            r = 255
+            g = 165
+            b = 0
+        elif rand_num == 5:
+            r = 255
+            g = 0
+            b = 255
+        elif rand_num == 6:
+            r = 255
+            g = 255
+            b = 255
+        elif rand_num == 7:
+            r = 0
+            g = 255
+            b = 255
+        else:
+            r = random.randint(0, 255)
+            g = random.randint(0, 255)
+            b = random.randint(0, 255)
+        return (r, g, b)

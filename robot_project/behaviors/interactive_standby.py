@@ -192,6 +192,7 @@ class interactive_standby:
 
         self.current_color = (0, 0, 255)  # Blue
         self.led_controller.turn_on_led(self.current_color, 250)
+        self.start_time = time.time() # Keep track of how long interactive standby has been running
 
         while not rospy.core.is_shutdown():
             # Detect aruco markers
@@ -224,7 +225,7 @@ class interactive_standby:
                 self.speech_to_text.last_text= ''
                 self.speaking = False
 
-            if any(word in self.speech_to_text.last_text.lower() for word in trigger_words_to_check) or triggered:
+            if (any(word in self.speech_to_text.last_text.lower() for word in trigger_words_to_check) or triggered) and time.time() - self.start_time > 3.0:
                 #print("\nTrigger word heard\n")
                 self.activity_level = ACT_LISTEN
                 status_handler.update_status("Listening for commands")
@@ -274,6 +275,11 @@ class interactive_standby:
                     head_thread = threading.Thread(target=self.joints_movement.nod, args=(2, 2, ))
                     head_thread.start()
                     play_thread.join()
+                    rospy.sleep(1.0)
+                    audio_file = 'mp3_files_slushy/interactive_standby/Goodbye_.mp3'
+                    play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
+                    play_thread.start()
+                    play_thread.join()
                     self.led_controller.turn_off_led()
                     print("Shutting down")
                     self.speech_to_text.stop = True
@@ -289,125 +295,120 @@ class interactive_standby:
                 self.touch_detect.head_touched = False # Reset head touch
                 self.aruco_detect.shut_down = False # Reset shutdown variable
                 
+            if time.time() - self.start_time > 10.0: # Ensure that false starts do not occur
+                ###Breathing exercise activation####
+                #Audio only for intro
+                if self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking and triggered:
+                    print("Activated the breathing exercise")
+                    self.behaviour = BREATHING_EXERCISE
+                    self.aruco_detect.breath_ex_ON = False
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
 
-            if self.remote_data[0]==2 or self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and not self.speaking and triggered:
-                print("Activated the breathing exercise")
-                self.behaviour = BREATHING_EXERCISE
-                self.aruco_detect.breath_ex_ON = False
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
 
-            ###Relax activation####
-            #Audio only for intro
-            elif (self.remote_data[0]==3 and self.remote_data[4]==1) or any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check) and not self.speaking and triggered:
-                print("Activated the relax")
-                #self.behaviour = MUSCLE_RELAXATION
-                #self.sub_behaviour=0
-                #self.stereovision.stop = True
-                #self.speech_to_text.stop = True
-                relax_prompt = 'mp3_files_slushy/relax/relax_choice.mp3'
-                play_thread = threading.Thread(target=self.audio_player.play_audio, args=(relax_prompt,))
-                play_thread.start()
-                play_thread.join()
-                break
-            #Aruco for all relax
-            elif (self.remote_data[0]==3 and self.remote_data[4]== 8) or self.aruco_detect.relax_all :
-                print("Activated the relax: All relax")
-                self.aruco_detect.relax_all = False
-                self.behaviour = MUSCLE_RELAXATION
-                self.sub_behaviour=1
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
-            #Audio and aruco for arms
-            elif (self.remote_data[0]==3 and self.remote_data[4]==3) or self.aruco_detect.relax_arms or any(word in self.speech_to_text.last_text.lower() for word in ['arms', 'arm']) and not self.speaking and triggered:
-                print("Activated the relax: Arms")
-                self.aruco_detect.relax_arms = False
-                self.behaviour = MUSCLE_RELAXATION
-                self.sub_behaviour=2
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
-            #Audio and aruco for back
-            elif (self.remote_data[0]==3 and self.remote_data[4]==5) or self.aruco_detect.relax_back or any(word in self.speech_to_text.last_text.lower() for word in ['back']) and not self.speaking and triggered:
-                print("Activated the relax: Back")
-                self.sub_behaviour=3
-                self.aruco_detect.relax_back = False
-                self.behaviour = MUSCLE_RELAXATION
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
-            #Audio and aruco for tummy
-            elif (self.remote_data[0]==3 and self.remote_data[4]==6) or self.aruco_detect.relax_tummy or any(word in self.speech_to_text.last_text.lower() for word in ['tummy']) and not self.speaking and triggered:
-                print("Activated the relax: Tummy")
-                self.aruco_detect.relax_tummy = False
-                self.sub_behaviour=4
-                self.behaviour = MUSCLE_RELAXATION
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
-            #Audio and aruco for legs
-            elif (self.remote_data[0]==3 and self.remote_data[4]==7) or self.aruco_detect.relax_legs or any(word in self.speech_to_text.last_text.lower() for word in ['legs', 'leg']) and not self.speaking and triggered:
-                print("Activated the relax: Legs")
-                self.aruco_detect.relax_legs = False
-                self.sub_behaviour=5
-                self.behaviour = MUSCLE_RELAXATION
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
+                ###Relax activation####
+                #Audio only for intro
+                elif any(word in self.speech_to_text.last_text.lower() for word in muscle_words_to_check) and not self.speaking and triggered:
+                    print("Activated the relax")
+                    self.behaviour = MUSCLE_RELAXATION
+                    self.sub_behaviour=0
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
+                #Aruco for all relax
+                elif self.aruco_detect.relax_all :
+                    print("Activated the relax: All relax")
+                    self.aruco_detect.relax_all = False
+                    self.behaviour = MUSCLE_RELAXATION
+                    self.sub_behaviour=1
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
+                #Audio and aruco for arms
+                elif self.aruco_detect.relax_arms or any(word in self.speech_to_text.last_text.lower() for word in ['arms', 'arm']) and not self.speaking and triggered:
+                    print("Activated the relax: Arms")
+                    self.aruco_detect.relax_arms = False
+                    self.behaviour = MUSCLE_RELAXATION
+                    self.sub_behaviour=2
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
+                #Audio and aruco for back
+                elif self.aruco_detect.relax_back or any(word in self.speech_to_text.last_text.lower() for word in ['back']) and not self.speaking and triggered:
+                    print("Activated the relax: Back")
+                    self.sub_behaviour=3
+                    self.aruco_detect.relax_back = False
+                    self.behaviour = MUSCLE_RELAXATION
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
+                #Audio and aruco for tummy
+                elif self.aruco_detect.relax_tummy or any(word in self.speech_to_text.last_text.lower() for word in ['tummy']) and not self.speaking and triggered:
+                    print("Activated the relax: Tummy")
+                    self.aruco_detect.relax_tummy = False
+                    self.sub_behaviour=4
+                    self.behaviour = MUSCLE_RELAXATION
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
+                #Audio and aruco for legs
+                elif self.aruco_detect.relax_legs or any(word in self.speech_to_text.last_text.lower() for word in ['legs', 'leg']) and not self.speaking and triggered:
+                    print("Activated the relax: Legs")
+                    self.aruco_detect.relax_legs = False
+                    self.sub_behaviour=5
+                    self.behaviour = MUSCLE_RELAXATION
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
 
-            ###Audiobook activation####
-            #Audio only for intro
-            elif (self.remote_data[0]==4 and self.remote_data[4]==1) or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and not self.speaking and triggered:
-                print("Activated the audio book")
-                #self.behaviour = AUDIOBOOK
-                #self.sub_behaviour=0
-                #self.stereovision.stop = True
-                #self.speech_to_text.stop = True
-                audiobook_confirm = 'mp3_files_slushy/audiobooks/audiobook_choice.mp3'
-                play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_confirm,))
-                play_thread.start()
-                play_thread.join()
-                break
-            #Audio and aruco for
-            elif (self.remote_data[0]==4 and self.remote_data[4]==3) or self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built']) and not self.speaking and triggered:
-                print("Activated the audiobook3: how miro was built")
-                self.behaviour = AUDIOBOOK
-                self.aruco_detect.rupelstiltskin = False
-                #self.aruco_detect.audiobook_ON = False
-                self.sub_behaviour=1
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
-            #Audio and aruco for 
-            elif (self.remote_data[0]==4 and self.remote_data[4]==4) or self.aruco_detect.emperor or any(word in self.speech_to_text.last_text.lower() for word in ['clock']) and not self.speaking and triggered:
-                print("Activated the audiobook4: The clock that ran backwards")
-                self.behaviour = AUDIOBOOK
-                self.aruco_detect.emperor = False
-                self.aruco_detect.audiobook_ON = False
-                self.sub_behaviour=2
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
-            #Audio and aruco for 
-            elif (self.remote_data[0]==4 and self.remote_data[4]==5) or self.aruco_detect.frog or any(word in self.speech_to_text.last_text.lower() for word in ['crayons']) and not self.speaking and triggered:
-                print("Activated the audiobook4: The day the crayons quit")
-                self.behaviour = AUDIOBOOK
-                self.aruco_detect.frog = False
-                self.aruco_detect.audiobook_ON = False
-                self.sub_behaviour=3
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
+                ###Audiobook activation####
+                #Audio only for intro
+                elif any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and not self.speaking and triggered:
+                    print("Activated the audio book")
+                    self.behaviour = AUDIOBOOK
+                    self.sub_behaviour=0
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
+                #Audio and aruco for
+                elif self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built']) and not self.speaking and triggered:
+                    print("Activated the audiobook3: how miro was built")
+                    self.behaviour = AUDIOBOOK
+                    self.aruco_detect.rupelstiltskin = False
+                    #self.aruco_detect.audiobook_ON = False
+                    self.sub_behaviour=1
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
+                #Audio and aruco for 
+                elif self.aruco_detect.emperor or any(word in self.speech_to_text.last_text.lower() for word in ['clock']) and not self.speaking and triggered:
+                    print("Activated the audiobook4: The clock that ran backwards")
+                    self.behaviour = AUDIOBOOK
+                    self.aruco_detect.emperor = False
+                    self.aruco_detect.audiobook_ON = False
+                    self.sub_behaviour=2
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
+                #Audio and aruco for 
+                elif self.aruco_detect.frog or any(word in self.speech_to_text.last_text.lower() for word in ['crayons']) and not self.speaking and triggered:
+                    print("Activated the audiobook4: The day the crayons quit")
+                    self.behaviour = AUDIOBOOK
+                    self.aruco_detect.frog = False
+                    self.aruco_detect.audiobook_ON = False
+                    self.sub_behaviour=3
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
 
-            elif (self.remote_data[0]==5 and self.remote_data[4]==1) or self.aruco_detect.dance or any(word in self.speech_to_text.last_text.lower() for word in ['dance']) and not self.speaking and triggered:
-                print("Activated the dance")
-                self.behaviour = DANCE
-                self.aruco_detect.dance = False
-                self.stereovision.stop = True
-                self.speech_to_text.stop = True
-                break
+                elif self.aruco_detect.dance or any(word in self.speech_to_text.last_text.lower() for word in ['dance']) and not self.speaking and triggered:
+                    print("Activated the dance")
+                    self.behaviour = DANCE
+                    self.aruco_detect.dance = False
+                    self.stereovision.stop = True
+                    self.speech_to_text.stop = True
+                    break
 
 
             ##### Interactive Standby #####
@@ -442,7 +443,7 @@ class interactive_standby:
                     self.delay = self.random_delay(3,5)
                     self.current_color = (0, 0, 255)  # Blue
                     audio_file = None
-                elif self.activity_level == ACT_ENGAGE and not self.wait:
+                elif self.activity_level == ACT_ENGAGE and not self.wait and not self.speaking:
                     status_handler.update_status("saw face")
                     self.delay = self.random_delay(2,3)
                     self.current_color = (0, 255, 0)  # Green
@@ -566,7 +567,7 @@ class interactive_standby:
                     last_pet = time.time()
 
             # Check if being crinkled and act accordingly
-            if not self.crinkled and not self.speaking and not self.wait and not self.petted and not self.activity_level == ACT_LISTEN:
+            if not self.crinkled and not self.speaking and not self.wait and not self.petted and not self.activity_level == ACT_LISTEN and time.time() - self.start_time > 10.0:
                 if self.speech_to_text.right_crinkle or self.speech_to_text.left_crinkle or self.speech_to_text.tail_crinkle:
                     print("Crinkling")
                     if crinkle_counter == 0:
