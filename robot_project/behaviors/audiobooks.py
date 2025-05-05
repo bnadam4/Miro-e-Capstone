@@ -38,6 +38,7 @@ class AudiobooksBehavior:
 
         self.stop_flag = False
         self.parent_thread = None  # Store parent thread reference
+        self.parent_intro_thread= None
         self.timers = []  # List to track timers
         self.remote_data=[0,0,0,0,0]
 
@@ -45,7 +46,7 @@ class AudiobooksBehavior:
     def run(self):
         print("[AUDIOBOOK] Running audiobooks behavior")
         # Start the check_exit_flag thread
-        self.parent_thread = threading.current_thread()
+        self.parent_intro_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
         exit_thread.start()
                 
@@ -54,9 +55,10 @@ class AudiobooksBehavior:
         #play_thread.start()
         #play_thread.join()
         audiobook_select = 'mp3_files_slushy/audiobooks/story_choice.mp3'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_select,))
-        play_thread.start()
-        play_thread.join()
+        play_book_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_select,))
+        play_book_thread.start()
+        play_book_thread.join()
+
 
        
     def book1(self): # The invisible alligators
@@ -362,6 +364,7 @@ class AudiobooksBehavior:
         self.led_controller.turn_on_led(self.current_color, 250)
 
     def book3(self): # how miro was built
+        self.stop_flag = False
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -752,6 +755,19 @@ class AudiobooksBehavior:
                 # Turn LEDs orange to indicate a transition period
                 self.current_color = (255, 165, 0)  # Orange
                 self.led_controller.turn_on_led(self.current_color, 250)
+            
+            elif self.aruco_detect.rupelstiltskin or self.remote_data[4]==3:
+                self.stop_flag = True
+                self.audio_player.stop()
+                self.book3()
+            elif self.aruco_detect.emperor or self.remote_data[4]==4:
+                self.stop_flag = True
+                self.audio_player.stop()
+                self.book4()
+            elif self.aruco_detect.frog or self.remote_data[4]==5:
+                self.stop_flag = True
+                self.audio_player.stop()
+                self.book4()
 
             time.sleep(0.1)
 
