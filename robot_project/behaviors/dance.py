@@ -30,6 +30,8 @@ from IS_modules.node_detect_aruco import *
 from actuators.wheels_controller import WheelsController #class
 from actuators.remote import connect_remote, receive_data, send_data, close_connection
 
+from actuators.speech_to_text import SpeechToText
+
 LOW_RAND = 0
 HIGH_RAND = 1
 
@@ -52,12 +54,20 @@ class DanceBehavior:
         self.wheels_controller = WheelsController()
         self.remote_data=[0,0,0,0,0]
 
+        self.speech_to_text = SpeechToText()
+
 
     def run(self):
         print("\n\n")
         print("****************************\n\n")
         print("DANCE STARTED\n\n")
         print("****************************\n\n")
+        # Start speech to text
+        self.speech_to_text.stop = False
+        speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
+        speech_to_text_thread.daemon = True
+        speech_to_text_thread.start()
+
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -183,16 +193,18 @@ class DanceBehavior:
         while not self.stop_flag:
             # Detect aruco markers
             self.aruco_detect.tick_camera()
+            stop_words_to_check = ['stop']
             try:
                 self.remote_data = receive_data()
             except Exception as e:
                 print(f"Failed to send data: {e}")
-            if self.aruco_detect.exit_behaviour or self.remote_data[4]==2:
+            if self.aruco_detect.exit_behaviour or self.remote_data[4]==2 or (any(word in self.speech_to_text.last_text.lower() for word in stop_words_to_check)):
                 self.stop_flag = True
                 self.audio_player.stop()
                 exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/i_will_stop.mp3',))
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
+                self.speech_to_text.stop = True
                 print("[DANCE] Exit behaviour detected, stopping the dance.")
                 
                 # Turn LEDs orange to indicate a transition period
