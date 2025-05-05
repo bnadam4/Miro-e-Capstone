@@ -130,14 +130,34 @@ def main():
                     relax_behaviour.run()
                 if sub_user_input== 1:
                     relax_behaviour.full_relaxation()
+                    try:
+                        send_data(b'\x01\x00\x00\x00\x02')  
+                    except Exception as e:
+                        pass
                 if sub_user_input== 2:
                     relax_behaviour.relax_arms()
+                    try:
+                        send_data(b'\x01\x00\x00\x00\x02')  
+                    except Exception as e:
+                        pass
                 if sub_user_input== 3:
                     relax_behaviour.relax_back()
+                    try:
+                        send_data(b'\x01\x00\x00\x00\x02')  
+                    except Exception as e:
+                        pass
                 if sub_user_input== 4:
                     relax_behaviour.relax_tummy()
+                    try:
+                        send_data(b'\x01\x00\x00\x00\x02')  
+                    except Exception as e:
+                        pass
                 if sub_user_input== 5:
                     relax_behaviour.relax_legs()
+                    try:
+                        send_data(b'\x01\x00\x00\x00\x02')  
+                    except Exception as e:
+                        pass
                 #reset_behaviour.run()
                 print("Muscle relaxation ended.")
                 user_input = INTERACTIVE_STANDBY
@@ -153,13 +173,26 @@ def main():
                 if sub_user_input== 1:
                     audiobooks_behaviour.book3()
                     audiobooks_behaviour.ending_line()
+                    try:
+                        send_data(b'\x01\x00\x00\x00\x02')  
+                    except Exception as e:
+                        pass
                 if sub_user_input== 2:
                     audiobooks_behaviour.book4()
                     audiobooks_behaviour.ending_line()
+                    try:
+                        send_data(b'\x01\x00\x00\x00\x02')  
+                    except Exception as e:
+                        pass
                 if sub_user_input== 3:
                     audiobooks_behaviour.book2()
                     audiobooks_behaviour.ending_line()
+                    try:
+                        send_data(b'\x01\x00\x00\x00\x02')  
+                    except Exception as e:
+                        pass
                 print("Audiobook ended.")
+
                 user_input = INTERACTIVE_STANDBY
                 
             elif user_input == 3:
@@ -169,6 +202,10 @@ def main():
                 dance_behaviour = DanceBehavior()
                 dance_behaviour.run()
                 #reset_behaviour.run()
+                try:
+                    send_data(b'\x01\x00\x00\x00\x02')  
+                except Exception as e:
+                    pass
                 user_input = INTERACTIVE_STANDBY
                 print("Dance ended.")
             elif user_input == 4:
@@ -177,6 +214,10 @@ def main():
                 print("4) Breathing exercise")
                 breath_ex_behaviour = breath_ex()
                 breath_ex_behaviour.run()
+                try:
+                    send_data(b'\x01\x00\x00\x00\x02')  
+                except Exception as e:
+                    pass
                 user_input = INTERACTIVE_STANDBY
                 print("Breathing exercise ended.")
             elif user_input == 5:

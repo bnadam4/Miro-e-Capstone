@@ -69,6 +69,17 @@ class AudiobooksBehavior:
         play_book_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_select,))
         play_book_thread.start()
         play_book_thread.join()
+        
+        start_time = time.time()
+        while  ((time.time() - start_time) < 15) and (self.stop_flag == False):
+            pass
+        time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
+        time_out_thread.start()
+        time_out_thread.join()
+        try:
+            send_data(b'\x01\x00\x00\x00\x02')  
+        except Exception as e:
+            pass
 
 
        
@@ -391,15 +402,6 @@ class AudiobooksBehavior:
         self.led_controller.turn_on_led(self.current_color, 250)
 
     def book3(self): # how miro was built
-        #self.stop_flag = False
-        """
-        if not self.speech_started:
-            self.speech_started = True
-            speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
-            speech_to_text_thread.daemon = True
-            speech_to_text_thread.start()
-        """
-        
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -797,14 +799,17 @@ class AudiobooksBehavior:
             elif self.aruco_detect.rupelstiltskin or self.remote_data[4]==3:
                 self.stop_flag = True
                 self.audio_player.stop()
+                self.stop_flag = False
                 self.book3()
             elif self.aruco_detect.emperor or self.remote_data[4]==4:
                 self.stop_flag = True
                 self.audio_player.stop()
+                self.stop_flag = False
                 self.book4()
             elif self.aruco_detect.frog or self.remote_data[4]==5:
                 self.stop_flag = True
                 self.audio_player.stop()
+                self.stop_flag = False
                 self.book4()
 
             time.sleep(0.1)
