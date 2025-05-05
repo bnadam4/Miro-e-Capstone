@@ -166,7 +166,7 @@ class breath_ex:
             try:
                 self.remote_data = receive_data()
             except Exception as e:
-                print(f"Failed to send data: {e}")
+                pass
             if self.aruco_detect.exit_behaviour or self.remote_data[4]==2 or (any(word in self.speech_to_text.last_text.lower() for word in stop_words_to_check)):
                 self.stop_flag = True
                 self.audio_player.stop()
