@@ -198,7 +198,7 @@ class DanceBehavior:
                 self.remote_data = receive_data()
             except Exception as e:
                 pass
-            if self.aruco_detect.exit_behaviour or self.remote_data[4]==2:
+            if self.aruco_detect.exit_behaviour or self.remote_data[4]==2 or (any(word in self.speech_to_text.last_text.lower() for word in stop_words_to_check)):
                 self.stop_flag = True
                 self.audio_player.stop()
                 exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/i_will_stop.mp3',))

@@ -24,8 +24,7 @@ from actuators.play_audio import AudioPlayer  # class
 from IS_modules.node_detect_aruco import *
 from actuators.remote import connect_remote, receive_data, send_data, close_connection
 
-from actuators.speech_to_text import SpeechToText
-
+#from actuators.speech_to_text import SpeechToText
 
 class AudiobooksBehavior:
     def __init__(self):
@@ -44,24 +43,28 @@ class AudiobooksBehavior:
         self.timers = []  # List to track timers
         self.remote_data=[0,0,0,0,0]
 
-        self.speech_to_text = SpeechToText()
+        #self.speech_to_text = SpeechToText()
+        #self.speech_started = False
 
 
     def run(self):
-        print("[AUDIOBOOK] Running audiobooks behavior")
+        print("\n\n")
+        print("****************************\n\n")
+        print("AUDIOBOOK STARTED\n\n")
+        print("****************************\n\n")
+        """
         self.speech_to_text.stop = False
+        self.speech_started = True
         speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
         speech_to_text_thread.daemon = True
         speech_to_text_thread.start()
+        """
+        
         # Start the check_exit_flag thread
         self.parent_intro_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
         exit_thread.start()
                 
-        #audiobook_confirm = 'mp3_files/audiobook_confirmation.mp3' # NOT slushy. Requires a different file
-        #play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_confirm,))
-        #play_thread.start()
-        #play_thread.join()
         audiobook_select = 'mp3_files_slushy/audiobooks/story_choice.mp3'
         play_book_thread = threading.Thread(target=self.audio_player.play_audio, args=(audiobook_select,))
         play_book_thread.start()
@@ -70,6 +73,14 @@ class AudiobooksBehavior:
 
        
     def book1(self): # The invisible alligators
+        """"
+        if not self.speech_started:
+            self.speech_started = True
+            speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
+            speech_to_text_thread.daemon = True
+            speech_to_text_thread.start()
+        """
+        
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -151,6 +162,14 @@ class AudiobooksBehavior:
         
 
     def book2(self): # The day the crayons quit
+        """
+        if not self.speech_started:
+            self.speech_started = True
+            speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
+            speech_to_text_thread.daemon = True
+            speech_to_text_thread.start()
+        """
+        
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -372,7 +391,15 @@ class AudiobooksBehavior:
         self.led_controller.turn_on_led(self.current_color, 250)
 
     def book3(self): # how miro was built
-        self.stop_flag = False
+        #self.stop_flag = False
+        """
+        if not self.speech_started:
+            self.speech_started = True
+            speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
+            speech_to_text_thread.daemon = True
+            speech_to_text_thread.start()
+        """
+        
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -752,14 +779,15 @@ class AudiobooksBehavior:
                 self.remote_data = receive_data()
             except Exception as e:
                 pass
-
+            # or ((any(word in self.speech_to_text.last_text.lower() for word in stop_words_to_check)) and (any(word in self.speech_to_text.last_text.lower() for word in polite_words_to_check)))
             if self.aruco_detect.exit_behaviour or self.remote_data[4]==2:
                 self.stop_flag = True
                 self.audio_player.stop()
                 exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/i_will_stop.mp3',))
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
-                self.speech_to_text.stop = True
+                #self.speech_to_text.stop = True
+                #self.speech_started = False
                 print("[AUDIOBOOK] Exit behaviour detected, stopping relaxation exercise.")
                 
                 # Turn LEDs orange to indicate a transition period
