@@ -174,6 +174,8 @@ class breath_ex:
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
                 self.speech_to_text.stop = True
+                eye_thread = threading.Thread(target=self.cosmetics_movement.open_eyes, args=(0.2, ))
+                eye_thread.start()
                 print("[BREATHE EX] Exit behaviour detected, stopping breathing exercise.")
                 
             time.sleep(0.1)
