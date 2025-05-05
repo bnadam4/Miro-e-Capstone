@@ -147,7 +147,7 @@ class interactive_standby:
             self.remote_data = receive_data()
             print(self.remote_data)
         except Exception as e:
-            print(f"Failed to send data: {e}")
+            pass
 
         # Example: Update status when entering standby mode
         status_handler.update_status("Interactive Standby Mode")
