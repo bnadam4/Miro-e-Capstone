@@ -319,7 +319,7 @@ class interactive_standby:
                     self.speech_to_text.stop = True
                     break
                 #Aruco for all relax
-                elif (self.remote_data[0]==3 and self.remote_data[4]==8) or self.aruco_detect.relax_all :
+                if (self.remote_data[0]==3 and self.remote_data[4]==8) or self.aruco_detect.relax_all :
                     print("Activated the relax: All relax")
                     self.aruco_detect.relax_all = False
                     self.behaviour = MUSCLE_RELAXATION
@@ -366,7 +366,7 @@ class interactive_standby:
 
                 ###Audiobook activation####
                 #Audio only for intro
-                if (self.remote_data[0]==4 and self.remote_data[4]==1) or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and triggered:
+                elif (self.remote_data[0]==4 and self.remote_data[4]==1) or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and triggered:
                     print("Activated the audio book")
                     self.behaviour = AUDIOBOOK
                     self.sub_behaviour=0
@@ -374,7 +374,7 @@ class interactive_standby:
                     self.speech_to_text.stop = True
                     break
                 #Audio and aruco for
-                elif (self.remote_data[0]==4 and self.remote_data[4]==3) or self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built']) and triggered:
+                if (self.remote_data[0]==4 and self.remote_data[4]==3) or self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built']) and triggered:
                     print("Activated the audiobook3: how miro was built")
                     self.behaviour = AUDIOBOOK
                     self.aruco_detect.rupelstiltskin = False

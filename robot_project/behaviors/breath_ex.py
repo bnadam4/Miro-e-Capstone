@@ -251,7 +251,29 @@ class breath_ex:
                         
                     # Transition to the next state
                     self.state = state_transitions.get(self.state, self.state)
+                    
+                    if self.silent_cycle_count == 1:
+                        try:
+                            send_data(b'\x00\x02\x00\x00\x00')  
+                        except Exception as e:
+                            pass
+                    elif self.silent_cycle_count== 2:
+                        try:
+                            send_data(b'\x00\x03\x00\x00\x00')
+                        except Exception as e:
+                            pass
 
+                    elif self.silent_cycle_count== 3:
+                        try:
+                            send_data(b'\x00\x04\x00\x00\x00')
+                        except Exception as e:
+                            pass
+                    elif self.silent_cycle_count== 0:
+                        try:
+                            send_data(b'\x00\x05\x00\x00\x00')
+                        except Exception as e:
+                            pass
+                    
                     if self.state == breath_in:
                         print("Switched to breath in")
                         status_handler.update_status(f"Breathing in. Cycle {self.silent_cycle_count + 1} of {NUM_CYCLES}.")
@@ -411,7 +433,10 @@ class breath_ex:
                 self.illum.data[rear_right] = generate_illum(0, 0, 255, int(self.led_brightness))
 
                 self.pub_illum.publish(self.illum)
+                
 
+
+                
             # obsolete, handled in check_exit_flag now
             # if self.aruco_detect.breath_ex_reset:
             #     self.aruco_detect.breath_ex_reset = False

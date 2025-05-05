@@ -34,6 +34,8 @@ class RelaxBehavior:
 
         self.stop_flag = False
         self.parent_thread = None  # Store parent thread reference
+        self.parent_intro_thread= None
+        self.parent_head_thread=None
         self.timers = []  # List to track timers
 
         # Initialize touch detection
@@ -48,31 +50,31 @@ class RelaxBehavior:
         print("****************************\n\n")
         # Start the check_exit_flag thread
         
-        self.parent_thread = threading.current_thread()
+        self.parent_intro_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
         exit_thread.start()
-        
-                
+              
         relax_prompt = 'mp3_files_slushy/relax/relax_choice.mp3'
-        play_thread = threading.Thread(target=self.audio_player.play_audio, args=(relax_prompt,))
-        play_thread.start()
-        
-        # Schedule all movements
-        self.add_timer(1, self.joints_movement.nod, (2, 2))
-        self.add_timer(4, self.led_controller.toggle_led_sections, (7, (255, 0, 0), (0, 255, 0), (0, 0, 255), 250))
-        self.add_timer(9, self.cosmetics_movement.close_eyes, (1,))
-        self.add_timer(10, self.cosmetics_movement.open_eyes, (1,))
-        self.add_timer(12, self.joints_controller.move_neck, (2, 35))
-        self.add_timer(14, self.joints_controller.move_neck, (2, 0))
-        self.add_timer(15, self.cosmetics_movement.close_eyes, (1,))
-        self.add_timer(16, self.cosmetics_movement.open_eyes, (1,))
+        play_relax_thread = threading.Thread(target=self.audio_player.play_audio, args=(relax_prompt,))
+        play_relax_thread.start()
 
         # Wait for the first set of actions to finish
-        play_thread.join()
+        play_relax_thread.join()
+
+        start_time = time.time()
+        while  ((time.time() - start_time) < 15) and (self.stop_flag == False):
+            pass
+        time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
+        time_out_thread.start()
+        time_out_thread.join()
+        try:
+            send_data(b'\x01\x00\x00\x00\x02')  
+        except Exception as e:
+            pass
         
 
     def wait_for_head_touch(self, audio_path):
-        self.parent_thread = threading.current_thread()
+        self.parent_head_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
         exit_thread.start()
         print("Playing relaxation prompt audio...")
@@ -90,9 +92,9 @@ class RelaxBehavior:
                 return True
             time.sleep(0.1)
         print("Timeout. No head touch detected. Exiting relaxation.")
-        #time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
-        #time_out_thread.start()
-        #time_out_thread.join()
+        time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
+        time_out_thread.start()
+        time_out_thread.join()
         
         return False
 
@@ -243,13 +245,38 @@ class RelaxBehavior:
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
                 print("[RELAXATION] Exit behaviour detected, stopping relaxation exercise.")
+            elif self.aruco_detect.relax_all or self.remote_data[4]==8:
+                self.stop_flag = True
+                self.audio_player.stop()
+                self.stop_flag = False
+                self.full_relaxation()
+            elif self.aruco_detect.relax_arms or self.remote_data[4]==3:
+                self.stop_flag = True
+                self.audio_player.stop()
+                self.stop_flag = False
+                self.relax_arms()
+            elif self.aruco_detect.relax_back or self.remote_data[4]==5:
+                self.stop_flag = True
+                self.audio_player.stop()
+                self.stop_flag = False
+                self.relax_back()
+            elif self.aruco_detect.relax_tummy or self.remote_data[4]==6:
+                self.stop_flag = True
+                self.audio_player.stop()
+                self.stop_flag = False
+                self.relax_tummy()
+            elif self.aruco_detect.relax_legs or self.remote_data[4]==7:
+                self.stop_flag = True
+                self.audio_player.stop()
+                self.stop_flag = False
+                self.relax_legs()
                 
 
             time.sleep(0.1)
 
     def safe_execute(self, func, args):
         """Execute function only if stop flag is not set and parent thread is still alive."""
-        if not self.stop_flag and (self.parent_thread and self.parent_thread.is_alive()):
+        if not self.stop_flag and (self.parent_thread and self.parent_thread.is_alive()) or (self.parent_head_thread and self.parent_head_thread.is_alive()):
             func(*args)
         else:
             print(f"[RELAXATION] Skipping {func.__name__} because parent thread has exited.")
