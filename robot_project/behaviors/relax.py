@@ -126,6 +126,14 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        # Monitor play_audio thread
+        while play_thread.is_alive():
+            if self.stop_flag:
+                print("[AUDIOBOOK] Stopping relax...")
+                for timer in self.timers:
+                    timer.cancel()  # Cancel scheduled movements
+                break
+            time.sleep(0.1)
 
     def relax_arms(self):
         self.parent_thread = threading.current_thread()
@@ -155,6 +163,15 @@ class RelaxBehavior:
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
 
+        # Monitor play_audio thread
+        while play_thread.is_alive():
+            if self.stop_flag:
+                print("[AUDIOBOOK] Stopping relax...")
+                for timer in self.timers:
+                    timer.cancel()  # Cancel scheduled movements
+                break
+            time.sleep(0.1)
+
     def relax_tummy(self):
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -183,6 +200,15 @@ class RelaxBehavior:
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
 
+        # Monitor play_audio thread
+        while play_thread.is_alive():
+            if self.stop_flag:
+                print("[AUDIOBOOK] Stopping relax...")
+                for timer in self.timers:
+                    timer.cancel()  # Cancel scheduled movements
+                break
+            time.sleep(0.1)
+
     def relax_legs(self):
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -210,6 +236,14 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        # Monitor play_audio thread
+        while play_thread.is_alive():
+            if self.stop_flag:
+                print("[AUDIOBOOK] Stopping relax...")
+                for timer in self.timers:
+                    timer.cancel()  # Cancel scheduled movements
+                break
+            time.sleep(0.1)
 
     def full_relaxation(self):
         print("[RELAXATION] Starting full relaxation")
@@ -257,27 +291,27 @@ class RelaxBehavior:
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
                 print("[RELAXATION] Exit behaviour detected, stopping relaxation exercise.")
-            elif self.aruco_detect.relax_all or self.remote_data[4]==8:
+            elif self.remote_data[4]==8:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.full_relaxation()
-            elif self.aruco_detect.relax_arms or self.remote_data[4]==3:
+            elif self.remote_data[4]==3:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.relax_arms()
-            elif self.aruco_detect.relax_back or self.remote_data[4]==5:
+            elif self.remote_data[4]==5:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.relax_back()
-            elif self.aruco_detect.relax_tummy or self.remote_data[4]==6:
+            elif self.remote_data[4]==6:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.relax_tummy()
-            elif self.aruco_detect.relax_legs or self.remote_data[4]==7:
+            elif self.remote_data[4]==7:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False

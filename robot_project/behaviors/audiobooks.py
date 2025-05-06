@@ -796,23 +796,23 @@ class AudiobooksBehavior:
                 self.current_color = (255, 165, 0)  # Orange
                 self.led_controller.turn_on_led(self.current_color, 250)
             
-            """
-            elif self.aruco_detect.rupelstiltskin or self.remote_data[4]==3:
+            
+            elif self.remote_data[4]==3:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.book3()
-            elif self.aruco_detect.emperor or self.remote_data[4]==4:
+            elif self.remote_data[4]==4:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.book4()
-            elif self.aruco_detect.frog or self.remote_data[4]==5:
+            elif self.remote_data[4]==5:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.book4()
-            """  
+            
 
             time.sleep(0.1)
 
