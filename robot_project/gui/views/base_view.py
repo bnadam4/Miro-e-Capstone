@@ -70,9 +70,13 @@ class BaseView(tk.Frame):
         self.status_label = tk.Label(self, text="Status: Standby", font=("Arial", 12), anchor="w")
         self.status_label.place(relx=0.5, rely=0.95, anchor=tk.CENTER)  # Centered at the bottom
 
-        # Add a battery voltage label in the bottom right
+        # Add a battery image label in the top right
+        self.battery_image_label = tk.Label(self)
+        self.battery_image_label.place(relx=0.95, rely=0.1, anchor=tk.NE)  # Positioned at the top right
+
+        # Add a battery voltage label below the battery image label
         self.battery_label = tk.Label(self, text="Battery Voltage: -- V", font=("Arial", 12))
-        self.battery_label.place(relx=0.95, rely=0.1, anchor=tk.NE)  # Relative to the top right
+        self.battery_label.place(relx=0.95, rely=0.2, anchor=tk.NE)  # Positioned below the battery image label
 
         # Dynamically update wraplength after the GUI is rendered
         self.after(100, self.update_wraplengths)
@@ -153,8 +157,22 @@ class BaseView(tk.Frame):
 
     def update_battery_voltage(self, voltage):
         """
-        Update the battery voltage label.
+        Update the battery voltage label and display the corresponding battery image.
         """
-        self.battery_label.config(text=f"Battery Voltage: {voltage:.2f} V")
+        self.battery_label.config(text=f"{voltage:.2f} V")  # Update the voltage text
+
+        # Determine the battery image based on the voltage
+        if voltage > 5.3:
+            battery_image_path = "images/battery_full.png"
+        elif voltage > 5.1:
+            battery_image_path = "images/battery_medium.png"
+        else:
+            battery_image_path = "images/battery_low.png"
+
+        # Load and display the battery image
+        battery_image = Image.open(battery_image_path)
+        battery_image = battery_image.resize((50, 50), Image.Resampling.LANCZOS)  # Resize the image
+        self.battery_photo = ImageTk.PhotoImage(battery_image)
+        self.battery_image_label.config(image=self.battery_photo)
 
 

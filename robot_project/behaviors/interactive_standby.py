@@ -227,7 +227,7 @@ class interactive_standby:
                 self.speech_to_text.last_text= ''
                 self.speaking = False
 
-            if (any(word in self.speech_to_text.last_text.lower() for word in trigger_words_to_check) or triggered) and time.time() - self.start_time > 3.0:
+            if (any(word in self.speech_to_text.last_text.lower() for word in trigger_words_to_check) or triggered) and time.time() - self.start_time > 6.0:
                 #print("\nTrigger word heard\n")
                 self.activity_level = ACT_LISTEN
                 status_handler.update_status("Listening for commands")
