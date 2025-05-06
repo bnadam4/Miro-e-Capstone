@@ -72,7 +72,7 @@ class AudiobooksBehavior:
         
         start_time = time.time()
         while  ((time.time() - start_time) < 15) and (self.stop_flag == False):
-            pass
+            time.sleep(0.01)
         time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
         time_out_thread.start()
         time_out_thread.join()
@@ -796,6 +796,7 @@ class AudiobooksBehavior:
                 self.current_color = (255, 165, 0)  # Orange
                 self.led_controller.turn_on_led(self.current_color, 250)
             
+            """
             elif self.aruco_detect.rupelstiltskin or self.remote_data[4]==3:
                 self.stop_flag = True
                 self.audio_player.stop()
@@ -811,6 +812,7 @@ class AudiobooksBehavior:
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.book4()
+            """  
 
             time.sleep(0.1)
 
