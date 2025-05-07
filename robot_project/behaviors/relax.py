@@ -3,7 +3,7 @@
 # ----------------------------------------------
 # Title: relax.py
 # Description: Muscle Relaxation Exercise
-# Author: James 
+# Author: Jimmy Wang
 # Date created: Jan 4, 2024
 # Date modified: Feb 20, 2024
 # ----------------------------------------------
@@ -21,6 +21,7 @@ from IS_modules.node_detect_aruco import *
 from IS_modules.detect_touch import *
 from actuators.remote import connect_remote, receive_data, send_data, close_connection
 from actuators.status_handler import status_handler
+from actuators.speech_to_text import SpeechToText
 
 class RelaxBehavior:
     def __init__(self):
@@ -43,12 +44,15 @@ class RelaxBehavior:
         self.touch_detect = see_touch()
         self.remote_data=[0,0,0,0,0]
 
+        # Initialize speech recognition
+        self.speech_to_text = SpeechToText()
+
 
     def run(self):
         status_handler.update_status("Relax behavior started.")
         print("\n\n")
         print("****************************\n\n")
-        print("RELAX BEHAVIOUR STARTED")
+        print("RELAX BEHAVIOUR STARTED\n\n")
         print("****************************\n\n")
         # Start the check_exit_flag thread
         
@@ -63,19 +67,81 @@ class RelaxBehavior:
 
         # Wait for the first set of actions to finish
         play_relax_thread.join()
+        time.sleep(2.0)
 
         status_handler.update_status("Waiting for user input or timeout.")
         start_time = time.time()
+
+        # Start speech to text
+        self.speech_to_text.stop = False
+        speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
+        speech_to_text_thread.daemon = True
+        speech_to_text_thread.start()
+
+        ex_activated = False
         while  ((time.time() - start_time) < 15) and (self.stop_flag == False):
-            pass
-        status_handler.update_status("Timeout reached or user input received. Proceeding.")
-        time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
-        time_out_thread.start()
-        time_out_thread.join()
-        try:
-            send_data(b'\x01\x00\x00\x00\x02')  
-        except Exception as e:
-            pass
+            exercise_keywords = {
+            "full": ["all", "full"],
+            "arms": ["arms", "arm"],
+            "back": ["back"],
+            "tummy": ["tummy"],
+            "legs": ["legs", "leg"],
+            "kluge": ["or", "your"]
+            }
+
+            # Check for matching keywords in the last_text
+            matched_exercises = [key for key, words in exercise_keywords.items() if any(word in self.speech_to_text.last_text.lower() for word in words)]
+
+            if len(matched_exercises) > 1:
+                status_handler.update_status("Multiple relaxation commands detected. Ignoring input.")
+            elif "full" in matched_exercises:
+                ex_activated = True
+                status_handler.update_status("Full relaxation command received.")
+                self.audio_player.stop()
+                self.full_relaxation()
+            elif "arms" in matched_exercises:
+                ex_activated = True
+                status_handler.update_status("Arms relaxation command received.")
+                self.audio_player.stop()
+                self.relax_arms()
+            elif "back" in matched_exercises:
+                ex_activated = True
+                status_handler.update_status("Back relaxation command received.")
+                self.audio_player.stop()
+                self.relax_back()
+            elif "tummy" in matched_exercises:
+                ex_activated = True
+                status_handler.update_status("Tummy relaxation command received.")
+                self.audio_player.stop()
+                self.relax_tummy()
+            elif "legs" in matched_exercises:
+                ex_activated = True
+                status_handler.update_status("Legs relaxation command received.")
+                self.audio_player.stop()
+                self.relax_legs()
+
+            time.sleep(0.1)
+
+        if not ex_activated:
+            status_handler.update_status("Timeout reached or user input received. Proceeding.")
+            # Make sure to stop the speech_to_text thread
+            self.speech_to_text.stop = True
+            self.stop_flag = True
+            time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
+            time_out_thread.start()
+            time_out_thread.join()
+
+            # Send a signal to the remote to indicate that timeout has occurred
+            try:
+                send_data(b'\x01\x00\x00\x00\x02')  
+            except Exception as e:
+                pass
+
+        # make sure to stop the speech_to_text thread
+        self.speech_to_text.stop = True
+        time.sleep(0.1)
+
+        
         
 
     def wait_for_head_touch(self, audio_path):
@@ -100,6 +166,7 @@ class RelaxBehavior:
                 return True
             time.sleep(0.1)
         status_handler.update_status("Timeout reached. No head touch detected.")
+        self.stop_flag = True
         print("Timeout. No head touch detected. Exiting relaxation.")
         time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
         time_out_thread.start()
@@ -141,11 +208,13 @@ class RelaxBehavior:
         # Monitor play_audio thread
         while play_thread.is_alive():
             if self.stop_flag:
-                print("[AUDIOBOOK] Stopping relax...")
+                print("[RELAXATION] Stopping relax...")
+                self.speech_to_text.stop = True
                 for timer in self.timers:
                     timer.cancel()  # Cancel scheduled movements
                 break
             time.sleep(0.1)
+
 
     def relax_arms(self):
         status_handler.update_status("Starting arms relaxation.")
@@ -181,11 +250,14 @@ class RelaxBehavior:
         # Monitor play_audio thread
         while play_thread.is_alive():
             if self.stop_flag:
-                print("[AUDIOBOOK] Stopping relax...")
+                self.speech_to_text.stop = True
+                print("[RELAXATION] Stopping relax...")
                 for timer in self.timers:
                     timer.cancel()  # Cancel scheduled movements
                 break
             time.sleep(0.1)
+
+
 
     def relax_tummy(self):
         status_handler.update_status("Starting tummy relaxation.")
@@ -221,11 +293,14 @@ class RelaxBehavior:
         # Monitor play_audio thread
         while play_thread.is_alive():
             if self.stop_flag:
-                print("[AUDIOBOOK] Stopping relax...")
+                self.speech_to_text.stop = True
+                print("[RELAXATION] Stopping relax...")
                 for timer in self.timers:
                     timer.cancel()  # Cancel scheduled movements
                 break
             time.sleep(0.1)
+
+    
 
     def relax_legs(self):
         status_handler.update_status("Starting legs relaxation.")
@@ -257,14 +332,17 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        self.speech_to_text.stop = True
         # Monitor play_audio thread
         while play_thread.is_alive():
             if self.stop_flag:
-                print("[AUDIOBOOK] Stopping relax...")
+                self.speech_to_text.stop = True
+                print("[RELAXATION] Stopping relax...")
                 for timer in self.timers:
                     timer.cancel()  # Cancel scheduled movements
                 break
             time.sleep(0.1)
+ 
 
     def full_relaxation(self):
         status_handler.update_status("Starting full relaxation sequence.")
@@ -282,6 +360,7 @@ class RelaxBehavior:
 
     def relax_complete(self):
         status_handler.update_status("Relaxation complete. Playing end audio.")
+        self.speech_to_text.stop = True
         audio_file = 'mp3_files_slushy/relax/relax_end.mp3'
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
         play_thread.start()
@@ -293,6 +372,7 @@ class RelaxBehavior:
         self.add_timer(4, self.cosmetics_movement.eye_wink, (1, 1, "left"))
         self.add_timer(4, self.cosmetics_movement.eye_wink, (1, 1, "right"))
         self.add_timer(6, self.cosmetics_movement.wagging_tail, (2, 3))
+        self.stop_flag = True
 
         # Wait for the first set of actions to finish
         play_thread.join()
@@ -311,6 +391,7 @@ class RelaxBehavior:
             if self.aruco_detect.exit_behaviour or self.remote_data[4]==2:
                 status_handler.update_status("Exit behavior detected. Stopping relaxation.")
                 self.stop_flag = True
+                self.speech_to_text.stop = True
                 self.audio_player.stop()
                 exit_behaviour_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/i_will_stop.mp3',))
                 
@@ -323,22 +404,22 @@ class RelaxBehavior:
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.full_relaxation()
-            elif self.aruco_detect.relax_arms or self.remote_data[4]==3:
+            elif self.remote_data[4]==3:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.relax_arms()
-            elif self.aruco_detect.relax_back or self.remote_data[4]==5:
+            elif self.remote_data[4]==5:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.relax_back()
-            elif self.aruco_detect.relax_tummy or self.remote_data[4]==6:
+            elif self.remote_data[4]==6:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
                 self.relax_tummy()
-            elif self.aruco_detect.relax_legs or self.remote_data[4]==7:
+            elif self.remote_data[4]==7:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False

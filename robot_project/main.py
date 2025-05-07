@@ -136,24 +136,28 @@ def main():
                         pass
                 if sub_user_input== 2:
                     relax_behaviour.relax_arms()
+                    relax_behaviour.stop_flag = True
                     try:
                         send_data(b'\x01\x00\x00\x00\x02')  
                     except Exception as e:
                         pass
                 if sub_user_input== 3:
                     relax_behaviour.relax_back()
+                    relax_behaviour.stop_flag = True
                     try:
                         send_data(b'\x01\x00\x00\x00\x02')  
                     except Exception as e:
                         pass
                 if sub_user_input== 4:
                     relax_behaviour.relax_tummy()
+                    relax_behaviour.stop_flag = True
                     try:
                         send_data(b'\x01\x00\x00\x00\x02')  
                     except Exception as e:
                         pass
                 if sub_user_input== 5:
                     relax_behaviour.relax_legs()
+                    relax_behaviour.stop_flag = True
                     try:
                         send_data(b'\x01\x00\x00\x00\x02')  
                     except Exception as e:

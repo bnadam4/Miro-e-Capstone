@@ -169,6 +169,7 @@ class interactive_standby:
 
         # Make behaviour tracking variable
         self.behaviour = INTERACTIVE_STANDBY
+        self.activity_level = ACT_IDLE # default activity level
         self.sub_behaviour=0
 
         last_time = time.time()
@@ -306,6 +307,7 @@ class interactive_standby:
                     self.aruco_detect.breath_ex_ON = False
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
 
 
@@ -317,6 +319,7 @@ class interactive_standby:
                     self.sub_behaviour=0
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
                 #Aruco for all relax
                 if (self.remote_data[0]==3 and self.remote_data[4]==8) or self.aruco_detect.relax_all :
@@ -326,6 +329,7 @@ class interactive_standby:
                     self.sub_behaviour=1
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
                 #Audio and aruco for arms
                 elif (self.remote_data[0]==3 and self.remote_data[4]==3) or self.aruco_detect.relax_arms or any(word in self.speech_to_text.last_text.lower() for word in ['arms', 'arm']) and triggered:
@@ -335,6 +339,7 @@ class interactive_standby:
                     self.sub_behaviour=2
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
                 #Audio and aruco for back
                 elif (self.remote_data[0]==3 and self.remote_data[4]==5) or self.aruco_detect.relax_back or any(word in self.speech_to_text.last_text.lower() for word in ['back']) and triggered:
@@ -344,6 +349,7 @@ class interactive_standby:
                     self.behaviour = MUSCLE_RELAXATION
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
                 #Audio and aruco for tummy
                 elif (self.remote_data[0]==3 and self.remote_data[4]==6) or self.aruco_detect.relax_tummy or any(word in self.speech_to_text.last_text.lower() for word in ['tummy']) and triggered:
@@ -353,6 +359,7 @@ class interactive_standby:
                     self.behaviour = MUSCLE_RELAXATION
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
                 #Audio and aruco for legs
                 elif (self.remote_data[0]==3 and self.remote_data[4]==7) or self.aruco_detect.relax_legs or any(word in self.speech_to_text.last_text.lower() for word in ['legs', 'leg']) and triggered:
@@ -362,6 +369,7 @@ class interactive_standby:
                     self.behaviour = MUSCLE_RELAXATION
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
 
                 ###Audiobook activation####
@@ -372,6 +380,7 @@ class interactive_standby:
                     self.sub_behaviour=0
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
                 #Audio and aruco for
                 if (self.remote_data[0]==4 and self.remote_data[4]==3) or self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built']) and triggered:
@@ -382,6 +391,7 @@ class interactive_standby:
                     self.sub_behaviour=1
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
                 #Audio and aruco for 
                 elif (self.remote_data[0]==4 and self.remote_data[4]==4) or self.aruco_detect.emperor or any(word in self.speech_to_text.last_text.lower() for word in ['clock']) and triggered:
@@ -392,6 +402,7 @@ class interactive_standby:
                     self.sub_behaviour=2
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
                 #Audio and aruco for 
                 elif (self.remote_data[0]==4 and self.remote_data[4]==5) or self.aruco_detect.frog or any(word in self.speech_to_text.last_text.lower() for word in ['crayons']) and triggered:
@@ -402,6 +413,7 @@ class interactive_standby:
                     self.sub_behaviour=3
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
 
                 elif (self.remote_data[0]==5 and self.remote_data[4]==1) or self.aruco_detect.dance or any(word in self.speech_to_text.last_text.lower() for word in ['dance']) and triggered:
@@ -410,6 +422,7 @@ class interactive_standby:
                     self.aruco_detect.dance = False
                     self.stereovision.stop = True
                     self.speech_to_text.stop = True
+                    time.sleep(0.1)
                     break
 
 

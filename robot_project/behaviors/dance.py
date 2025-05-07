@@ -134,6 +134,9 @@ class DanceBehavior:
         play_thread = threading.Thread(target=self.audio_player.play_audio, args=(end_file,))
         play_thread.start()
         play_thread.join()
+        self.speech_to_text.stop = True
+        self.stop_flag = True
+        
         rospy.sleep(1.5)
 
         # Wait for all threads to finish (including the audio playback)

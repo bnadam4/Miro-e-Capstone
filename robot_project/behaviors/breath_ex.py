@@ -212,6 +212,7 @@ class breath_ex:
         rospy.sleep(1.0)
         intro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_intro.mp3',))
         intro_thread.start()
+        intro_thread.join() # Wait for intro to finish
 
         self.aruco_detect.breath_ex_ON = True
 
@@ -294,7 +295,6 @@ class breath_ex:
 
                     # Add delay between intro and ready prompt
                     if self.state == ready and self.last_state == intro:
-                        rospy.sleep(3.0)
                         # Play the ready prompt and wait for touch
                         ready_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Ready_Prompt.mp3',))
                         ready_thread.start()
@@ -319,6 +319,9 @@ class breath_ex:
                         else:
                             print("Timed out")
                             status_handler.update_status("Timed out waiting for head touch.")
+                            # Ensure speech to text is stopped
+                            self.speech_to_text.stop = True
+                            self.stop_flag = True
                             self.behaviour = INTERACTIVE_STANDBY
                             time_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout_1.mp3',))
                             time_out_thread.start()
@@ -374,6 +377,7 @@ class breath_ex:
                             print("Timed out")
                             status_handler.update_status("Timed out waiting for response to go again.")
                             self.behaviour = INTERACTIVE_STANDBY
+                            self.stop_flag = True
                             breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout.mp3',))
                             breath_out_thread.start()
                             breath_out_thread.join()
@@ -464,6 +468,10 @@ class breath_ex:
 
             if self.behaviour == INTERACTIVE_STANDBY:
                 print("Hit the break")
+                # Ensure speech to text is stopped
+                self.speech_to_text.stop = True
+                self.stop_flag = True
+                rospy.sleep(self.TICK)
                 break
 
         # Turn LEDs orange to indicate a transition period
