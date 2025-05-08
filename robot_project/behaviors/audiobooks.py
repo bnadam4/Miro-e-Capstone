@@ -59,7 +59,10 @@ class AudiobooksBehavior:
         speech_to_text_thread.daemon = True
         speech_to_text_thread.start()
         """
-        
+        try:
+            send_data(b'\x06\x00\x00\x00\x00')
+        except Exception as e:
+            print(f"Failed to send data: {e}")
         # Start the check_exit_flag thread
         self.parent_intro_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -799,23 +802,35 @@ class AudiobooksBehavior:
                 # Turn LEDs orange to indicate a transition period
                 self.current_color = (255, 165, 0)  # Orange
                 self.led_controller.turn_on_led(self.current_color, 250)
-            
+         
             
             elif self.remote_data[4]==3:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
+                try:
+                    send_data(b'\x06\x00\x00\x00\x00')
+                except Exception as e:
+                    pass
                 self.book3()
             elif self.remote_data[4]==4:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
+                try:
+                    send_data(b'\x06\x00\x00\x00\x00')
+                except Exception as e:
+                    pass
                 self.book4()
             elif self.remote_data[4]==5:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
-                self.book4()
+                try:
+                    send_data(b'\x06\x00\x00\x00\x00')
+                except Exception as e:
+                    pass
+                self.book2()
             
 
             time.sleep(0.1)

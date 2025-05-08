@@ -59,7 +59,10 @@ class RelaxBehavior:
         self.parent_intro_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
         exit_thread.start()
-              
+        try:
+            send_data(b'\x06\x00\x00\x00\x00')
+        except Exception as e:
+            print(f"Failed to send data: {e}")
         status_handler.update_status("Playing relaxation choice audio.")
         relax_prompt = 'mp3_files_slushy/relax/relax_choice.mp3'
         play_relax_thread = threading.Thread(target=self.audio_player.play_audio, args=(relax_prompt,))
@@ -405,31 +408,52 @@ class RelaxBehavior:
                 exit_behaviour_thread.start()
                 exit_behaviour_thread.join()
                 print("[RELAXATION] Exit behaviour detected, stopping relaxation exercise.")
+
             elif self.remote_data[4]==8:
                 status_handler.update_status("Full relaxation command received.")
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
+                try:
+                    send_data(b'\x06\x00\x00\x00\x00')
+                except Exception as e:
+                    print(f"Failed to send data: {e}")
                 self.full_relaxation()
             elif self.remote_data[4]==3:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
+                try:
+                    send_data(b'\x06\x00\x00\x00\x00')
+                except Exception as e:
+                    print(f"Failed to send data: {e}")
                 self.relax_arms()
             elif self.remote_data[4]==5:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
+                try:
+                    send_data(b'\x06\x00\x00\x00\x00')
+                except Exception as e:
+                    print(f"Failed to send data: {e}")
                 self.relax_back()
             elif self.remote_data[4]==6:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
+                try:
+                    send_data(b'\x06\x00\x00\x00\x00')
+                except Exception as e:
+                    print(f"Failed to send data: {e}")
                 self.relax_tummy()
             elif self.remote_data[4]==7:
                 self.stop_flag = True
                 self.audio_player.stop()
                 self.stop_flag = False
+                try:
+                    send_data(b'\x06\x00\x00\x00\x00')
+                except Exception as e:
+                    print(f"Failed to send data: {e}")
                 self.relax_legs()
                 
 

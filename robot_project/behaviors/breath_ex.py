@@ -177,6 +177,7 @@ class breath_ex:
                 eye_thread = threading.Thread(target=self.cosmetics_movement.open_eyes, args=(0.2, ))
                 eye_thread.start()
                 print("[BREATHE EX] Exit behaviour detected, stopping breathing exercise.")
+
                 
             time.sleep(0.1)
 
@@ -201,7 +202,10 @@ class breath_ex:
         speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
         speech_to_text_thread.daemon = True
         speech_to_text_thread.start()
-
+        try:
+            send_data(b'\x06\x00\x00\x00\x00')
+        except Exception as e:
+            print(f"Failed to send data: {e}")
         # Play the intro audio
         status_handler.update_status("Starting breathing exercise intro.")
         BE_intro_thread = threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/breath_confirm.mp3',))

@@ -101,6 +101,7 @@ class interactive_standby:
 
         self.time_counter=0
         self.remote_data=[0,0,0,0,0]
+        self.remote_main=False
 
     def random_delay(self, low, high):
         return random.randint(low, high)
@@ -145,7 +146,7 @@ class interactive_standby:
         #send_data('EEDDCCBBAA')
         try:
             self.remote_data = receive_data()
-            print(self.remote_data)
+            print(self.remote_data)            
         except Exception as e:
             pass
 
@@ -185,6 +186,9 @@ class interactive_standby:
         crinkle_time = 0
 
         last_react = 9
+        self.remote_main=True
+
+
 
         print("\n\n")
         print("****************************\n\n")
@@ -202,19 +206,28 @@ class interactive_standby:
             self.touch_detect.check_touch()
 
             self.time_counter= self.time_counter+1
+            if self.remote_main==True and self.time_counter==50:
+                try:
+                    send_data(b'\x06\x00\x00\x00\x00')
+                except Exception as e:
+                    pass
+                self.remote_main=False
             if self.time_counter==50:
                 try:
                     self.remote_data = receive_data()
                     print(self.remote_data)
-                    self.time_counter=0
+                    
                 except Exception as e:
                     print(f"Failed to send data: {e}")
-
+                self.time_counter=0
+         
             trigger_words_to_check = ['miro', 'mirror', 'nero', 'amira', 'amiru', 'mural', 'neural', 'emira', 'amero', 'mira']
             breath_words_to_check = ['breathe', 'breathing', 'breath']
             audiobooks_words_to_check = ['audiobook', 'audio', 'book', 'story']
             muscle_words_to_check = ['muscle', 'relaxation', 'stretch', 'relax']
             shutdown_words_to_check = ['shutdown', 'shut', 'down']
+
+
 
             if 'what' in self.speech_to_text.last_text.lower() and 'do' in self.speech_to_text.last_text.lower() and 'can' in self.speech_to_text.last_text.lower() and not self.speaking:
                 self.speaking = True
@@ -271,6 +284,11 @@ class interactive_standby:
 
                 if self.touch_detect.head_touched:
                     print("Head touched!")
+                    try:
+                        send_data(b'\x00\x00\x06\x00\x00')
+                    except Exception as e:
+                        print(f"Failed to send data: {e}")
+                    
                     audio_file = 'mp3_files_slushy/interactive_standby/shut_down.mp3'
                     play_thread = threading.Thread(target=self.audio_player.play_audio, args=(audio_file,))
                     play_thread.start()
@@ -291,6 +309,10 @@ class interactive_standby:
                     break
                 else:
                     print("Timed out")
+                    try:
+                        send_data(b'\x00\x00\x07\x00\x00')
+                    except Exception as e:
+                        print(f"Failed to send data: {e}")
                     breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/interactive_standby/shut_down_timeout.mp3',))
                     breath_out_thread.start()
                     breath_out_thread.join()
@@ -298,7 +320,9 @@ class interactive_standby:
                 self.touch_detect.head_touched = False # Reset head touch
                 self.aruco_detect.shut_down = False # Reset shutdown variable
                 
-            if time.time() - self.start_time > 10.0 and not self.speaking: # Ensure that false starts do not occur
+            if not self.speaking: # Ensure that false starts do not occur
+                #remote this from if statement above: time.time() - self.start_time > 10.0 and
+                
                 ###Breathing exercise activation####
                 #Audio only for intro
                 if self.remote_data[0]==2 or self.aruco_detect.breath_ex_ON or any(word in self.speech_to_text.last_text.lower() for word in breath_words_to_check) and triggered:
@@ -332,7 +356,7 @@ class interactive_standby:
                     time.sleep(0.1)
                     break
                 #Audio and aruco for arms
-                elif (self.remote_data[0]==3 and self.remote_data[4]==3) or self.aruco_detect.relax_arms or any(word in self.speech_to_text.last_text.lower() for word in ['arms', 'arm']) and triggered:
+                if (self.remote_data[0]==3 and self.remote_data[4]==3) or self.aruco_detect.relax_arms or any(word in self.speech_to_text.last_text.lower() for word in ['arms', 'arm']) and triggered:
                     print("Activated the relax: Arms")
                     self.aruco_detect.relax_arms = False
                     self.behaviour = MUSCLE_RELAXATION
@@ -342,7 +366,7 @@ class interactive_standby:
                     time.sleep(0.1)
                     break
                 #Audio and aruco for back
-                elif (self.remote_data[0]==3 and self.remote_data[4]==5) or self.aruco_detect.relax_back or any(word in self.speech_to_text.last_text.lower() for word in ['back']) and triggered:
+                if (self.remote_data[0]==3 and self.remote_data[4]==5) or self.aruco_detect.relax_back or any(word in self.speech_to_text.last_text.lower() for word in ['back']) and triggered:
                     print("Activated the relax: Back")
                     self.sub_behaviour=3
                     self.aruco_detect.relax_back = False
@@ -352,7 +376,7 @@ class interactive_standby:
                     time.sleep(0.1)
                     break
                 #Audio and aruco for tummy
-                elif (self.remote_data[0]==3 and self.remote_data[4]==6) or self.aruco_detect.relax_tummy or any(word in self.speech_to_text.last_text.lower() for word in ['tummy']) and triggered:
+                if (self.remote_data[0]==3 and self.remote_data[4]==6) or self.aruco_detect.relax_tummy or any(word in self.speech_to_text.last_text.lower() for word in ['tummy']) and triggered:
                     print("Activated the relax: Tummy")
                     self.aruco_detect.relax_tummy = False
                     self.sub_behaviour=4
@@ -362,7 +386,7 @@ class interactive_standby:
                     time.sleep(0.1)
                     break
                 #Audio and aruco for legs
-                elif (self.remote_data[0]==3 and self.remote_data[4]==7) or self.aruco_detect.relax_legs or any(word in self.speech_to_text.last_text.lower() for word in ['legs', 'leg']) and triggered:
+                if (self.remote_data[0]==3 and self.remote_data[4]==7) or self.aruco_detect.relax_legs or any(word in self.speech_to_text.last_text.lower() for word in ['legs', 'leg']) and triggered:
                     print("Activated the relax: Legs")
                     self.aruco_detect.relax_legs = False
                     self.sub_behaviour=5
@@ -374,7 +398,7 @@ class interactive_standby:
 
                 ###Audiobook activation####
                 #Audio only for intro
-                elif (self.remote_data[0]==4 and self.remote_data[4]==1) or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and triggered:
+                if (self.remote_data[0]==4 and self.remote_data[4]==1) or any(word in self.speech_to_text.last_text.lower() for word in audiobooks_words_to_check) and triggered:
                     print("Activated the audio book")
                     self.behaviour = AUDIOBOOK
                     self.sub_behaviour=0
@@ -383,7 +407,7 @@ class interactive_standby:
                     time.sleep(0.1)
                     break
                 #Audio and aruco for
-                if (self.remote_data[0]==4 and self.remote_data[4]==3) or self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built']) and triggered:
+                if (self.remote_data[0]==4 and self.remote_data[4]==3) or self.aruco_detect.rupelstiltskin or any(word in self.speech_to_text.last_text.lower() for word in ['built','built']) and triggered:
                     print("Activated the audiobook3: how miro was built")
                     self.behaviour = AUDIOBOOK
                     self.aruco_detect.rupelstiltskin = False
@@ -394,7 +418,7 @@ class interactive_standby:
                     time.sleep(0.1)
                     break
                 #Audio and aruco for 
-                elif (self.remote_data[0]==4 and self.remote_data[4]==4) or self.aruco_detect.emperor or any(word in self.speech_to_text.last_text.lower() for word in ['clock']) and triggered:
+                if (self.remote_data[0]==4 and self.remote_data[4]==4) or self.aruco_detect.emperor or any(word in self.speech_to_text.last_text.lower() for word in ['clock','backwards']) and triggered:
                     print("Activated the audiobook4: The clock that ran backwards")
                     self.behaviour = AUDIOBOOK
                     self.aruco_detect.emperor = False
@@ -405,7 +429,7 @@ class interactive_standby:
                     time.sleep(0.1)
                     break
                 #Audio and aruco for 
-                elif (self.remote_data[0]==4 and self.remote_data[4]==5) or self.aruco_detect.frog or any(word in self.speech_to_text.last_text.lower() for word in ['crayons']) and triggered:
+                if (self.remote_data[0]==4 and self.remote_data[4]==5) or self.aruco_detect.frog or any(word in self.speech_to_text.last_text.lower() for word in ['crayons']) and triggered:
                     print("Activated the audiobook4: The day the crayons quit")
                     self.behaviour = AUDIOBOOK
                     self.aruco_detect.frog = False
@@ -416,7 +440,7 @@ class interactive_standby:
                     time.sleep(0.1)
                     break
 
-                elif (self.remote_data[0]==5 and self.remote_data[4]==1) or self.aruco_detect.dance or any(word in self.speech_to_text.last_text.lower() for word in ['dance']) and triggered:
+                if (self.remote_data[0]==5 and self.remote_data[4]==1) or self.aruco_detect.dance or any(word in self.speech_to_text.last_text.lower() for word in ['dance']) and triggered:
                     print("Activated the dance")
                     self.behaviour = DANCE
                     self.aruco_detect.dance = False
@@ -424,7 +448,6 @@ class interactive_standby:
                     self.speech_to_text.stop = True
                     time.sleep(0.1)
                     break
-
 
             ##### Interactive Standby #####
 
@@ -691,3 +714,7 @@ class interactive_standby:
         ear_thread.start()
         threading.Timer(1.0, lambda: threading.Thread(target=self.cosmetics_movement.ears_inwards, args=(1, )).start()).start()
         play_thread.join()
+        try:
+            send_data(b'\x00\x00\x02\x00\x00')
+        except Exception as e:
+            print(f"Failed to send data: {e}")

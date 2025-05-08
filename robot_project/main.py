@@ -57,11 +57,13 @@ def signal_handler(sig, frame):
 
 def main():
     remote_connect_flag= connect_remote()#establish a bluetooth connection with remote
+    """
     if remote_connect_flag:
         try:
             send_data(b'\x00\x00\x02\x00\x00')
         except Exception as e:
             print(f"Failed to send data: {e}")
+    """
 
     global command_queue  # Make command_queue accessible in the signal handler
     command_queue = queue.Queue()

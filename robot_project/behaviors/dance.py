@@ -67,7 +67,10 @@ class DanceBehavior:
         speech_to_text_thread = threading.Thread(target=self.speech_to_text.loop)
         speech_to_text_thread.daemon = True
         speech_to_text_thread.start()
-
+        try:
+            send_data(b'\x06\x00\x00\x00\x00')
+        except Exception as e:
+            print(f"Failed to send data: {e}")
         # Start the check_exit_flag thread
         self.parent_thread = threading.current_thread()
         exit_thread = threading.Thread(target=self.check_exit_flag)
@@ -213,6 +216,7 @@ class DanceBehavior:
                 # Turn LEDs orange to indicate a transition period
                 self.current_color = (255, 165, 0)  # Orange
                 self.led_controller.turn_on_led(self.current_color, 250)
+
 
             time.sleep(0.1)
 
