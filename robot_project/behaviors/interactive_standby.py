@@ -2,7 +2,7 @@
 #
 # Author: Bryce Adam
 # Date created: October 8, 2024
-# Last modified: April 2, 2025
+# Last modified: May 8, 2025
 #
 # Main default program for MiRo when it is not undergoing some pre-programmed activity
 
@@ -589,7 +589,7 @@ class interactive_standby:
                         crinkle_time = time.time()
                     crinkle_counter += 1
 
-                    if crinkle_counter > 3:
+                    if crinkle_counter > 5:
                         if self.speech_to_text.right_crinkle:
                             print("Crinkling Right Ear")
                         elif self.speech_to_text.left_crinkle:
@@ -668,7 +668,7 @@ class interactive_standby:
             if current_time - last_blink >= blink_delay:
                 print("Blinking")
                 self.speaking = True
-                speak_delay = 0.5
+                speak_delay = 0.6
                 if not self.petted and not self.crinkled:
                     self.blink()
                 last_blink = current_time

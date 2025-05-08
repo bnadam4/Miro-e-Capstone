@@ -205,6 +205,8 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        self.speech_to_text.stop = True
+        time.sleep(0.1)
         # Monitor play_audio thread
         while play_thread.is_alive():
             if self.stop_flag:
@@ -246,6 +248,8 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        self.speech_to_text.stop = True
+        time.sleep(0.1)
 
         # Monitor play_audio thread
         while play_thread.is_alive():
@@ -289,6 +293,8 @@ class RelaxBehavior:
 
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
+        self.speech_to_text.stop = True
+        time.sleep(0.1)
 
         # Monitor play_audio thread
         while play_thread.is_alive():
@@ -333,6 +339,7 @@ class RelaxBehavior:
         # Wait for all threads to finish (including the audio playback)
         play_thread.join()
         self.speech_to_text.stop = True
+        time.sleep(0.1)
         # Monitor play_audio thread
         while play_thread.is_alive():
             if self.stop_flag:

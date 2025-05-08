@@ -166,9 +166,9 @@ class AudiobooksBehavior:
         # Wait for all threads to finish (including the audio playback)
         self.add_timer(0, self.joints_movement.nod, (2,1))
         # Turn LEDs orange to indicate a transition period
+        self.stop_flag = True
         self.current_color = (255, 165, 0)  # Orange
         self.led_controller.turn_on_led(self.current_color, 250)
-        play_end_thread.join()
         
         
 
@@ -398,6 +398,7 @@ class AudiobooksBehavior:
             time.sleep(0.1)
         # Wait for all threads to finish (including the audio playback)
         # Turn LEDs orange to indicate a transition period
+        self.stop_flag = True
         self.current_color = (255, 165, 0)  # Orange
         self.led_controller.turn_on_led(self.current_color, 250)
 
@@ -598,6 +599,7 @@ class AudiobooksBehavior:
             time.sleep(0.1)
         # Wait for all threads to finish (including the audio playback)
         # Turn LEDs orange to indicate a transition period
+        self.stop_flag = True
         self.current_color = (255, 165, 0)  # Orange
         self.led_controller.turn_on_led(self.current_color, 250)        
 
@@ -738,6 +740,7 @@ class AudiobooksBehavior:
             time.sleep(0.1)
         # Wait for all threads to finish (including the audio playback)
         # Turn LEDs orange to indicate a transition period
+        self.stop_flag = True
         self.current_color = (255, 165, 0)  # Orange
         self.led_controller.turn_on_led(self.current_color, 250)     
 
@@ -764,6 +767,7 @@ class AudiobooksBehavior:
             time.sleep(0.1)
         # Wait for all threads to finish (including the audio playback)
         # Turn LEDs orange to indicate a transition period
+        self.stop_flag = True
         self.current_color = (255, 165, 0)  # Orange
         self.led_controller.turn_on_led(self.current_color, 250)  
 

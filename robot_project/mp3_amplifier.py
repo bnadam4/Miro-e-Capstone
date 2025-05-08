@@ -12,32 +12,40 @@ import os
 import subprocess
 
 # Input and output folder paths
-input_folder = "mp3_files_unamplified"
-output_folder = "mp3_files"
+input_folder = "mp3_files_slushy"
+output_folder = "mp3_files_slushy_4x"
 
 # Volume multiplier
-volume_multiplier = "2.0"
+volume_multiplier = "4.0"
 
 # Create output folder if it doesn't exist
 os.makedirs(output_folder, exist_ok=True)
 
-# Iterate through all mp3 files in the input folder
-for filename in os.listdir(input_folder):
-    if filename.lower().endswith(".mp3"):
-        input_path = os.path.join(input_folder, filename)
-        output_path = os.path.join(output_folder, filename)
+# Walk through input folder and all subfolders
+for root, _, files in os.walk(input_folder):
+    for filename in files:
+        if filename.lower().endswith(".mp3"):
+            input_path = os.path.join(root, filename)
 
-        # ffmpeg command to increase volume
-        command = [
-            "ffmpeg",
-            "-i", input_path,
-            "-filter:a", f"volume={volume_multiplier}",
-            "-y",  # Overwrite output file if it exists
-            output_path
-        ]
+            # Determine relative path to maintain subfolder structure
+            relative_path = os.path.relpath(input_path, input_folder)
+            output_subfolder = os.path.join(output_folder, os.path.dirname(relative_path))
+            output_path = os.path.join(output_subfolder, filename)
 
-        print(f"Amplifying {filename}...")
-        subprocess.run(command, check=True)
-        print(f"Saved amplified file to {output_path}\n")
+            # Create output subfolder if it doesn't exist
+            os.makedirs(output_subfolder, exist_ok=True)
+
+            # ffmpeg command to increase volume
+            command = [
+                "ffmpeg",
+                "-i", input_path,
+                "-filter:a", f"volume={volume_multiplier}",
+                "-y",  # Overwrite output file if it exists
+                output_path
+            ]
+
+            print(f"Amplifying {input_path}...")
+            subprocess.run(command, check=True)
+            print(f"Saved amplified file to {output_path}\n")
 
 print("All files processed.")

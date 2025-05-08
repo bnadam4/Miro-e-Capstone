@@ -378,6 +378,7 @@ class breath_ex:
                             status_handler.update_status("Timed out waiting for response to go again.")
                             self.behaviour = INTERACTIVE_STANDBY
                             self.stop_flag = True
+                            self.speech_to_text.stop = True
                             breath_out_thread= threading.Thread(target=self.audio_player.play_audio, args=('mp3_files_slushy/breath_ex/BrEx_Timeout.mp3',))
                             breath_out_thread.start()
                             breath_out_thread.join()
