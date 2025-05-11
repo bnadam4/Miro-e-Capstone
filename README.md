@@ -1,31 +1,83 @@
-# Miro-e-Capstone
+# MiRo-e Capstone: C.A.R.E. Project  
+### *Child Anxiety Relief Experience*
 
-Welcome to the **MiRo-E** Social Robot Project repository! This ongoing capstone project focuses on the development of **MiRo-E**, a social robot designed to support pediatric patients in healthcare settings. Our goal is to create a therapeutic and interactive robot that helps alleviate pediatric anxiety through non-pharmacological interventions. This project is being developed, with key features currently being implemented and refined.
+Welcome to the **MiRo-E Social Robot Project** repository! This capstone project explores the therapeutic potential of **MiRo-E**, a commercially available robot developed by [Consequential Robotics](https://consequentialrobotics.com/miroe), in pediatric healthcare environments.
 
-## Project Overview
+Our goal is to design an **interactive, non-pharmacological tool** to help alleviate anxiety in young patients using personalized, engaging activities.
 
-**MiRo-E** is an interactive, comforting robot designed to serve as a companion for children in hospitals. It aims to provide therapeutic support to young patients by engaging them in activities such as guided breathing exercises, interactive games, and other relaxation techniques. The robot is also equipped with the ability to recognize QR/ARUCO codes, which trigger various activities, making it a versatile tool for both patients and healthcare professionals.
 
-### Key Features Under Development
+## 🧠 Project Overview
 
-The development of **MiRo-E** is focused on the following core features:
+The **C.A.R.E. Project** is focused on creating a supportive experience for pediatric patients by using MiRo-E to guide them through:
 
-- **Guided Breathing Exercises:** Helping children manage anxiety through calming breathing techniques.
-- **Interactive Play Modes:** Engaging children with games and activities to distract and entertain them during their hospital stay.
-- **QR/ARUCO Code Recognition:** Enabling easy activity initiation by scanning QR or ARUCO codes.
-- **Sensor Integration:** Detecting motion and touch to tailor interactions based on the child’s needs.
+- **Guided Breathing Exercises**
+- **Muscle Relaxation Activities**
+- **Audiobook Storytelling**
+- **Dance & Movement Games**
 
-## Development Setup
+These therapeutic activities are designed to reduce anxiety and can be triggered through multiple input methods:
+- **QR/ARUCO Codes**
+- **Voice Commands**
+- **Remote Control Interface**
 
-The **MiRo-E** project is built using the following technology stack:
+## 🤖 MiRo-E Features
 
-- **Operating System:** Ubuntu
-- **Robot Operating System (ROS):** Utilized for robot control, sensor management, and communication.
-- **Programming Language:** Python, with libraries such as OpenCV, and ROS Py.
+MiRo-E is equipped with multiple sensors that allow it to perceive and respond to its environment. Key features include:
 
-## Project Structure
+### 🎯 Interactive LED Color Modes
 
-The project consists of two main processes:
+- **Blue** – Idle exploration mode  
+  - MiRo looks around curiously  
+  - Responds to touch on head/back  
+  - Ears and tail can be gently crinkled  
 
-1. **Supervisor Process:** This process allows a supervisor (e.g., healthcare staff) to power on the robot, activate various modes and activities, and monitor the robot’s progress. The supervisor can manage transitions between different modes through an app or software interface.
-2. **End-User Process:** This process relates to the interaction between the robot and the child. Children will engage with the robot through touch sensors, QR/ARUCO code scanning, or voice commands. The robot will then initiate a pre-programmed activity and interact with the child until the activity concludes.
+- **Green** – Face detection active
+
+- **Yellow** – Listening mode (triggered after hearing “MiRo” for 10 seconds)
+
+### 🎭 Activity Modes
+![image](https://github.com/user-attachments/assets/d479e009-7a52-4aaf-bdc8-ef97deb19ea5)
+
+
+| Activity               | Description                                                                 |
+|------------------------|-----------------------------------------------------------------------------|
+| **Breathing Exercises**| Guides children through calming breathing routines.                         |
+| **Muscle Relaxation**  | Leads light stretching to ease physical tension.                            |
+| **Audiobooks**         | Narrates a story while responding with motions and animations.              |
+| **Dance**              | Encourages play and movement to uplift mood.                                |
+
+
+## 🕹️ Activity Triggers
+
+MiRo-E can be activated in several ways for maximum accessibility:
+![image](https://github.com/user-attachments/assets/98b78a6c-60ae-49a1-9965-d9ff67d30ce7)
+
+
+- **QR/ARUCO Code Recognition** – Show a corresponding code to MiRo's camera.
+- **Voice Command** – Say “**MiRo**” followed by the activity name.
+- **Remote Control** – Tap the corresponding icon on the screen.
+
+
+## 🛠️ Development Setup
+
+### 🔧 Robot System
+
+- **Operating System**: Ubuntu
+- **Robot Operating System (ROS)**: Manages control, sensors, and messaging
+- **Programming Language**: Python  
+  - Microsoft Azure API  
+  - OpenCV  
+  - Pillow  
+  - ROS Py
+
+### 🖲️ Remote Control Device
+
+- **Components**: ESP32 microcontroller, Bluetooth, 5” touchscreen
+- **Programming Language**: C
+- **Framework**: ESP-IDF
+
+
+## 📷 Hardware Overview
+
+![image](https://github.com/user-attachments/assets/11bc610d-2be3-4ad5-91e1-8f9788c3b3ea)
+
